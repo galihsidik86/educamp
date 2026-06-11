@@ -162,6 +162,18 @@ export type Kkn = {
 };
 export const useKkn = () => useApi<{ items: Kkn[] }>(['kkn'], '/mahasiswa/kkn');
 
+export type PengumumanItem = {
+  id: string;
+  judul: string;
+  isi: string;
+  target: string;
+  pengirim: string | null;
+  isPenting: boolean;
+  tanggal: string;
+};
+export const useMahasiswaPengumuman = () =>
+  useApi<{ items: PengumumanItem[] }>(['mahasiswa-pengumuman'], '/mahasiswa/pengumuman');
+
 export type AbsensiStatus = 'hadir' | 'izin' | 'sakit' | 'alpa';
 export type AbsensiKelas = {
   kelasId: string;

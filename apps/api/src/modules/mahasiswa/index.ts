@@ -7,6 +7,7 @@ import { krsRouter } from './krs.js';
 import { jadwalRouter } from './jadwal.js';
 import { nilaiRouter } from './nilai.js';
 import { absensiRouter } from './absensi.js';
+import { pengumumanRouter } from './pengumuman.js';
 import { keuanganRouter } from './keuangan.js';
 import { triDharmaRouter } from './tri-dharma.js';
 
@@ -23,5 +24,6 @@ mahasiswaRouter.use(krsRouter);
 mahasiswaRouter.use(jadwalRouter);
 mahasiswaRouter.use(nilaiRouter);
 mahasiswaRouter.use(absensiRouter);
+mahasiswaRouter.use(pengumumanRouter);
 mahasiswaRouter.use(keuanganRouter);
 mahasiswaRouter.use(triDharmaRouter);

@@ -234,6 +234,52 @@ export function useKelasActions() {
 }
 
 // ============================================================
+// Pengumuman akademik (CRUD)
+// ============================================================
+
+export type Pengumuman = {
+  id: string;
+  judul: string;
+  isi: string;
+  target: string; // "all" | "mahasiswa" | "dosen" | "prodi:<id>"
+  pengirim: string | null;
+  isPenting: boolean;
+  tanggal: string;
+  createdAt: string;
+  updatedAt: string;
+};
+export type PengumumanInput = {
+  judul: string;
+  isi: string;
+  target: string;
+  pengirim?: string | null;
+  isPenting?: boolean;
+  tanggal?: string | null;
+};
+export const usePengumumanAkademik = () =>
+  useApi<{ items: Pengumuman[] }>(['pengumuman-akademik'], '/akademik/pengumuman');
+
+export function usePengumumanActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['pengumuman-akademik'] });
+  return {
+    create: useMutation({
+      mutationFn: (body: PengumumanInput) => apiPost('/akademik/pengumuman', body),
+      onSuccess: inv,
+    }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<PengumumanInput> }) =>
+        api(`/akademik/pengumuman/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => api(`/akademik/pengumuman/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// ============================================================
 // Laporan kehadiran
 // ============================================================
 

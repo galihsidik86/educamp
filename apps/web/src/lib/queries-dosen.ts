@@ -90,6 +90,22 @@ export function useUpdateNilai(kelasId: string | undefined) {
 }
 
 // ============================================================
+// Pengumuman (read-only untuk dosen)
+// ============================================================
+
+export type PengumumanItem = {
+  id: string;
+  judul: string;
+  isi: string;
+  target: string;
+  pengirim: string | null;
+  isPenting: boolean;
+  tanggal: string;
+};
+export const useDosenPengumuman = () =>
+  useApi<{ items: PengumumanItem[] }>(['dosen-pengumuman'], '/dosen/pengumuman');
+
+// ============================================================
 // Absensi
 // ============================================================
 

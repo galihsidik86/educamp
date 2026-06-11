@@ -10,6 +10,7 @@ import { kurikulumRouter } from './kurikulum.js';
 import { periodeRouter } from './periode.js';
 import { krsRouter } from './krs.js';
 import { keuanganRouter } from './keuangan.js';
+import { pengumumanRouter } from './pengumuman.js';
 import { auditRouter } from './audit.js';
 
 export const akademikRouter = Router();
@@ -29,4 +30,5 @@ akademikRouter.use(kurikulumRouter);
 akademikRouter.use(periodeRouter);
 akademikRouter.use(krsRouter);
 akademikRouter.use(keuanganRouter);
+akademikRouter.use(pengumumanRouter);
 akademikRouter.use(auditRouter);
