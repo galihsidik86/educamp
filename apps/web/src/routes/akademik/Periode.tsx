@@ -52,12 +52,14 @@ export function AdminPeriode() {
   );
 }
 
-function SemesterRow({ semester, onAktifkan }: { semester: { id: string; kode: string; jenis: string; isAktif: boolean; krsMulai: string | null; krsSelesai: string | null; nilaiMulai: string | null; nilaiSelesai: string | null }; onAktifkan: () => void }) {
+function SemesterRow({ semester, onAktifkan }: { semester: { id: string; kode: string; jenis: string; isAktif: boolean; krsMulai: string | null; krsSelesai: string | null; prsMulai: string | null; prsSelesai: string | null; nilaiMulai: string | null; nilaiSelesai: string | null }; onAktifkan: () => void }) {
   const { updateSemester } = usePeriodeActions();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     krsMulai: semester.krsMulai?.slice(0, 16) ?? '',
     krsSelesai: semester.krsSelesai?.slice(0, 16) ?? '',
+    prsMulai: semester.prsMulai?.slice(0, 16) ?? '',
+    prsSelesai: semester.prsSelesai?.slice(0, 16) ?? '',
     nilaiMulai: semester.nilaiMulai?.slice(0, 16) ?? '',
     nilaiSelesai: semester.nilaiSelesai?.slice(0, 16) ?? '',
   });
@@ -65,14 +67,26 @@ function SemesterRow({ semester, onAktifkan }: { semester: { id: string; kode: s
 
   const save = async () => {
     setErr(null);
+    // Kalau salah satu ujung PRS diisi, dua-duanya harus diisi & selesai > mulai
+    if (!!form.prsMulai !== !!form.prsSelesai) {
+      setErr('Periode PRS harus diisi keduanya (mulai dan selesai) atau dikosongkan');
+      return;
+    }
+    if (form.prsMulai && form.prsSelesai && form.prsMulai >= form.prsSelesai) {
+      setErr('PRS Selesai harus lebih lambat dari PRS Mulai');
+      return;
+    }
     try {
+      // Selalu kirim semua field — string kosong = null di backend, memungkinkan clear.
       await updateSemester.mutateAsync({
         id: semester.id,
         patch: {
-          krsMulai: form.krsMulai || undefined,
-          krsSelesai: form.krsSelesai || undefined,
-          nilaiMulai: form.nilaiMulai || undefined,
-          nilaiSelesai: form.nilaiSelesai || undefined,
+          krsMulai: form.krsMulai,
+          krsSelesai: form.krsSelesai,
+          prsMulai: form.prsMulai,
+          prsSelesai: form.prsSelesai,
+          nilaiMulai: form.nilaiMulai,
+          nilaiSelesai: form.nilaiSelesai,
         },
       });
       setEditing(false);
@@ -87,6 +101,9 @@ function SemesterRow({ semester, onAktifkan }: { semester: { id: string; kode: s
           {semester.isAktif && <span style={{ marginLeft: 8 }}><StatusPill status="aktif" /></span>}
           <div className="muted" style={{ fontSize: 'var(--text-xs)', marginTop: 4 }}>
             KRS: {formatTanggalWaktu(semester.krsMulai)} – {formatTanggalWaktu(semester.krsSelesai)}<br />
+            PRS: {semester.prsMulai
+              ? <>{formatTanggalWaktu(semester.prsMulai)} – {formatTanggalWaktu(semester.prsSelesai)}</>
+              : <em>belum diatur</em>}<br />
             Penilaian: {formatTanggalWaktu(semester.nilaiMulai)} – {formatTanggalWaktu(semester.nilaiSelesai)}
           </div>
         </div>
@@ -113,12 +130,21 @@ function SemesterRow({ semester, onAktifkan }: { semester: { id: string; kode: s
               <Input label="KRS Selesai" type="datetime-local" value={form.krsSelesai} onChange={(e) => setForm({ ...form, krsSelesai: (e.target as HTMLInputElement).value })} />
             </div>
             <div style={{ flex: 1, minWidth: 200 }}>
+              <Input label="PRS Mulai" type="datetime-local" value={form.prsMulai} onChange={(e) => setForm({ ...form, prsMulai: (e.target as HTMLInputElement).value })} />
+            </div>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <Input label="PRS Selesai" type="datetime-local" value={form.prsSelesai} onChange={(e) => setForm({ ...form, prsSelesai: (e.target as HTMLInputElement).value })} />
+            </div>
+            <div style={{ flex: 1, minWidth: 200 }}>
               <Input label="Nilai Mulai" type="datetime-local" value={form.nilaiMulai} onChange={(e) => setForm({ ...form, nilaiMulai: (e.target as HTMLInputElement).value })} />
             </div>
             <div style={{ flex: 1, minWidth: 200 }}>
               <Input label="Nilai Selesai" type="datetime-local" value={form.nilaiSelesai} onChange={(e) => setForm({ ...form, nilaiSelesai: (e.target as HTMLInputElement).value })} />
             </div>
           </div>
+          <p className="muted" style={{ fontSize: 'var(--text-xs)', marginTop: 8, marginBottom: 0 }}>
+            PRS opsional. Bila diisi, mahasiswa dapat menambah atau men-drop kelas pada rentang ini setelah KRS ditutup.
+          </p>
           <div className="row" style={{ justifyContent: 'flex-end', marginTop: 12 }}>
             <Button variant="primary" leftIcon={<Save size={14} />} onClick={save} disabled={updateSemester.isPending}>
               {updateSemester.isPending ? 'Menyimpan…' : 'Simpan'}

@@ -262,7 +262,7 @@ export function usePeriodeActions() {
       },
     }),
     updateSemester: useMutation({
-      mutationFn: ({ id, patch }: { id: string; patch: Partial<{ krsMulai: string; krsSelesai: string; nilaiMulai: string; nilaiSelesai: string }> }) =>
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<{ krsMulai: string; krsSelesai: string; prsMulai: string; prsSelesai: string; nilaiMulai: string; nilaiSelesai: string }> }) =>
         api(`/akademik/periode/semester/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
       onSuccess: inv,
     }),
