@@ -575,6 +575,78 @@ html, body, #root {
 .krs-cetak__ttd { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); margin-top: var(--space-6); text-align: center; }
 .krs-cetak__sign { height: 80px; }
 
+/* ============================================================
+   Kartu Mahasiswa
+   ============================================================ */
+.kartu-page { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); padding: var(--space-3); }
+.kartu-page__toolbar { display: flex; gap: var(--space-2); justify-content: flex-end; width: 100%; max-width: 920px; }
+
+.kartu {
+  width: 85.6mm;
+  height: 54mm;
+  border-radius: 4mm;
+  background:
+    radial-gradient(ellipse 30mm 20mm at 90% 0%, color-mix(in srgb, var(--accent-fg, gold) 22%, transparent), transparent),
+    linear-gradient(135deg, var(--brand-primary, #0c2340) 0%, color-mix(in srgb, var(--brand-primary, #0c2340) 80%, black) 100%);
+  color: white;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 4mm;
+  font-size: 8pt;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+  position: relative;
+  overflow: hidden;
+}
+.kartu::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url('/@ds/assets/pattern-geometric.svg') center/40mm repeat;
+  opacity: 0.06;
+  pointer-events: none;
+}
+.kartu__head { display: flex; gap: 3mm; align-items: center; position: relative; z-index: 1; }
+.kartu__head strong { font-size: 8pt; letter-spacing: 0.03em; }
+.kartu__head-sub { font-size: 7pt; opacity: 0.85; }
+.kartu__logo { filter: brightness(0) invert(1); }
+.kartu__body { display: grid; grid-template-columns: 22mm 1fr; gap: 4mm; align-items: center; position: relative; z-index: 1; padding: 2mm 0; }
+.kartu__photo {
+  width: 22mm;
+  height: 28mm;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 2mm;
+  display: grid;
+  place-items: center;
+  color: rgba(255,255,255,0.7);
+}
+.kartu__fields { display: grid; gap: 1mm; min-width: 0; }
+.kartu__field { display: grid; grid-template-columns: 18mm 1fr; gap: 2mm; align-items: baseline; min-width: 0; }
+.kartu__field-label { font-size: 6.5pt; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.04em; }
+.kartu__field-value { font-size: 9pt; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kartu__foot { display: flex; justify-content: space-between; align-items: flex-end; position: relative; z-index: 1; }
+.kartu__sign { display: grid; gap: 0.5mm; }
+.kartu__sign .muted { color: rgba(255,255,255,0.7) !important; }
+.kartu__sign-line { width: 22mm; height: 8mm; border-bottom: 0.5pt solid rgba(255,255,255,0.6); }
+.kartu__qr-placeholder {
+  width: 14mm;
+  height: 14mm;
+  background: white;
+  color: var(--brand-primary, #0c2340);
+  border-radius: 1mm;
+  display: grid;
+  place-items: center;
+  padding: 1mm;
+  text-align: center;
+}
+
+@media print {
+  body.kartu-print-mode .app,
+  body.kartu-print-mode .app__content { background: white; padding: 0 !important; }
+  body.kartu-print-mode .kartu-page { padding: 0; min-height: 100vh; justify-content: center; }
+  body.kartu-print-mode .kartu { box-shadow: none; }
+}
+
 @media print {
   body.print-mode .app,
   body.print-mode .app__content { background: white; padding: 0 !important; }

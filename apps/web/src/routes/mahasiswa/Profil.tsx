@@ -1,4 +1,6 @@
-import { Card, Alert } from '@/ds';
+import { Card, Alert, Button } from '@/ds';
+import { useNavigate } from 'react-router-dom';
+import { IdCard } from 'lucide-react';
 import { useProfil } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
@@ -7,6 +9,7 @@ import { formatTanggal } from '@/lib/format';
 
 export function MahasiswaProfil() {
   const { data, isLoading, error } = useProfil();
+  const navigate = useNavigate();
 
   if (isLoading) return <p className="muted">Memuat profil…</p>;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat profil">Coba muat ulang.</Alert>;
@@ -21,7 +24,14 @@ export function MahasiswaProfil() {
         eyebrow="PROFIL MAHASISWA"
         title={data.nama}
         subtitle={`NIM ${data.nim} · ${data.prodi.nama}`}
-        right={<StatusPill status={data.status} />}
+        right={
+          <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
+            <StatusPill status={data.status} />
+            <Button variant="ghost" size="sm" leftIcon={<IdCard size={14} />} onClick={() => navigate('/mahasiswa/profil/kartu')}>
+              Cetak Kartu
+            </Button>
+          </div>
+        }
       />
 
       <div className="grid-2col">

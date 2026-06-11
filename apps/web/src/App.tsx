@@ -12,6 +12,7 @@ import { MahasiswaNilaiTranskripCetak } from './routes/mahasiswa/NilaiTranskripC
 import { MahasiswaAbsensi } from './routes/mahasiswa/Absensi';
 import { MahasiswaAbsensiCetak } from './routes/mahasiswa/AbsensiCetak';
 import { MahasiswaPengumuman } from './routes/mahasiswa/Pengumuman';
+import { MahasiswaKartu } from './routes/mahasiswa/KartuMahasiswa';
 import { MahasiswaJadwal } from './routes/mahasiswa/Jadwal';
 import { MahasiswaNilai } from './routes/mahasiswa/Nilai';
 import { MahasiswaKeuangan } from './routes/mahasiswa/Keuangan';
@@ -86,7 +87,8 @@ export function App() {
         <Route path="pengabdian" element={<MahasiswaPengabdian />} />
         <Route path="kkn"        element={<MahasiswaKkn />} />
         <Route path="notifikasi" element={<NotifikasiPage />} />
-        <Route path="profil"     element={<MahasiswaProfil />} />
+        <Route path="profil"             element={<MahasiswaProfil />} />
+        <Route path="profil/kartu"       element={<MahasiswaKartu />} />
       </Route>
 
       {/* Dosen */}
