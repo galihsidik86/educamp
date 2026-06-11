@@ -1,0 +1,41 @@
+{
+  "name": "tazkia-siakad",
+  "private": true,
+  "version": "0.1.0",
+  "description": "STMIK Tazkia SIAKAD — academic information system (monorepo)",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm-run-all -p dev:api dev:web",
+    "dev:api": "npm --workspace apps/api run dev",
+    "dev:web": "npm --workspace apps/web run dev",
+    "build": "npm-run-all -s build:api build:web",
+    "build:api": "npm --workspace apps/api run build",
+    "build:web": "npm --workspace apps/web run build",
+    "prisma:generate": "npm --workspace apps/api run prisma:generate",
+    "prisma:migrate": "npm --workspace apps/api run prisma:migrate",
+    "prisma:seed": "npm --workspace apps/api run prisma:seed",
+    "prisma:studio": "npm --workspace apps/api run prisma:studio",
+    "db:reset": "npm --workspace apps/api run db:reset",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "prod:build": "docker compose -f docker-compose.prod.yml build",
+    "prod:up": "docker compose -f docker-compose.prod.yml up -d",
+    "prod:down": "docker compose -f docker-compose.prod.yml down",
+    "prod:logs": "docker compose -f docker-compose.prod.yml logs -f",
+    "prod:seed": "docker compose -f docker-compose.prod.yml exec api npx tsx prisma/seed.ts",
+    "test": "npm-run-all -s test:api test:web",
+    "test:api": "npm --workspace apps/api run test",
+    "test:web": "npm --workspace apps/web run test",
+    "test:unit": "npm --workspace apps/api run test:unit && npm --workspace apps/web run test",
+    "test:integration": "npm --workspace apps/api run test:integration"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

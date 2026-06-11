@@ -1,0 +1,103 @@
+/* ============================================================
+   TAZKIA SIAKAD — UI KIT LAYOUT STYLES (product surfaces)
+   Uses design-system tokens from styles.css.
+   ============================================================ */
+
+.app { display: flex; min-height: 100vh; background: var(--surface-page); }
+
+/* ---------- Sidebar ---------- */
+.sb {
+  width: var(--sidebar-w); flex: 0 0 auto; position: relative;
+  background: linear-gradient(195deg, var(--blue-800), var(--blue-950));
+  color: #fff; display: flex; flex-direction: column;
+  padding: 20px 16px; gap: 6px;
+}
+.sb::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: url("../../assets/pattern-geometric.svg"); background-size: 80px;
+  color: #fff; opacity: 0.05;
+}
+.sb > * { position: relative; z-index: 1; }
+.sb__logo { padding: 4px 8px 18px; }
+.sb__logo img { height: 42px; }
+.sb__section { font-size: 10.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(187,206,254,0.6); padding: 14px 10px 6px; }
+.sb__item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-md);
+  color: rgba(255,255,255,0.78); font-size: var(--text-base); font-weight: var(--fw-medium);
+  cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+  transition: background var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
+}
+.sb__item svg { width: 19px; height: 19px; flex: 0 0 auto; }
+.sb__item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.sb__item--active { background: rgba(255,255,255,0.13); color: #fff; font-weight: var(--fw-semibold); box-shadow: inset 3px 0 0 var(--gold-400); }
+.sb__badge { margin-left: auto; background: var(--gold-400); color: var(--blue-950); font-size: 10px; font-weight: 800; border-radius: 999px; padding: 1px 7px; }
+.sb__user { margin-top: auto; display: flex; align-items: center; gap: 11px; padding: 12px 10px; border-top: 1px solid rgba(255,255,255,0.12); }
+.sb__user .nm { font-size: var(--text-sm); font-weight: 700; color: #fff; line-height: 1.2; }
+.sb__user .rl { font-size: var(--text-xs); color: rgba(187,206,254,0.8); font-family: var(--font-mono); }
+
+/* ---------- Main column ---------- */
+.main { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
+.topbar {
+  height: var(--topbar-h); flex: 0 0 auto; background: var(--surface-card);
+  border-bottom: 1px solid var(--border-default); display: flex; align-items: center;
+  gap: 16px; padding: 0 var(--page-gutter); position: sticky; top: 0; z-index: var(--z-sticky);
+}
+.topbar__title { font-size: var(--text-lg); font-weight: var(--fw-extra); color: var(--text-strong); letter-spacing: -0.02em; white-space: nowrap; }
+.topbar__crumb { font-size: var(--text-xs); color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+.topbar > div:first-child { flex: 0 0 auto; }
+.topbar__search { margin-left: auto; position: relative; flex: 0 1 280px; min-width: 130px; }
+.topbar__search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--text-subtle); }
+.topbar__search input { width: 100%; height: 38px; border-radius: var(--radius-md); border: 1px solid var(--border-default); background: var(--surface-page); padding: 0 12px 0 36px; font-size: var(--text-sm); font-family: var(--font-sans); color: var(--text-strong); }
+.topbar__search input:focus { outline: none; border-color: var(--action); box-shadow: var(--shadow-focus); }
+
+.content { padding: var(--page-gutter); display: flex; flex-direction: column; gap: var(--space-6); max-width: var(--container-max); width: 100%; }
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.page-head h1 { font-size: var(--text-2xl); }
+.grid { display: grid; gap: var(--space-5); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.col-span-2 { grid-column: span 2; }
+
+/* ---------- Data table ---------- */
+.tbl { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.tbl thead th {
+  text-align: left; font-size: var(--text-2xs); font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--text-muted); padding: 12px 16px;
+  border-bottom: 1px solid var(--border-default); background: var(--surface-sunken); white-space: nowrap;
+}
+.tbl tbody td { padding: 13px 16px; border-bottom: 1px solid var(--border-subtle); color: var(--text-body); vertical-align: middle; }
+.tbl tbody tr:last-child td { border-bottom: none; }
+.tbl tbody tr:hover { background: var(--brand-soft); }
+.tbl .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-strong); }
+.tbl .kode { font-family: var(--font-mono); font-weight: 600; color: var(--blue-700); }
+.tbl .mk-name { color: var(--text-strong); font-weight: 600; }
+
+/* ---------- Schedule grid ---------- */
+.sched { display: grid; grid-template-columns: 64px repeat(5, 1fr); gap: 8px; }
+.sched__head { font-size: var(--text-xs); font-weight: 700; color: var(--text-muted); text-align: center; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.sched__time { font-size: var(--text-2xs); color: var(--text-subtle); font-family: var(--font-mono); text-align: right; padding-right: 6px; padding-top: 4px; }
+.sched__col { display: flex; flex-direction: column; gap: 8px; }
+.sched__cell {
+  border-radius: var(--radius-md); padding: 9px 11px; min-height: 56px;
+  border-left: 3px solid; font-size: var(--text-xs);
+}
+.sched__cell .mk { font-weight: 700; color: var(--text-strong); font-size: var(--text-sm); }
+.sched__cell .meta { color: var(--text-muted); margin-top: 2px; }
+
+/* ---------- Login ---------- */
+.login { min-height: 100vh; display: grid; grid-template-columns: 1.05fr 1fr; }
+.login__brand {
+  position: relative; overflow: hidden; color: #fff; padding: 56px;
+  background: linear-gradient(195deg, var(--blue-800), var(--blue-950)); display: flex; flex-direction: column;
+}
+.login__brand::before { content: ""; position: absolute; inset: 0; background-image: url("../../assets/pattern-geometric.svg"); background-size: 90px; opacity: 0.07; }
+.login__brand::after { content: ""; position: absolute; right: -120px; bottom: -120px; width: 360px; height: 360px; border-radius: 50%; background: radial-gradient(circle, var(--gold-500), transparent 65%); opacity: 0.4; }
+.login__brand > * { position: relative; z-index: 1; }
+.login__form { display: flex; align-items: center; justify-content: center; padding: 40px; background: var(--surface-card); }
+.login__form-inner { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 18px; }
+
+.muted { color: var(--text-muted); }
+.list-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); }
+.list-row:last-child { border-bottom: none; }
+.dot-time { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--blue-700); font-weight: 600; width: 86px; flex: 0 0 auto; }

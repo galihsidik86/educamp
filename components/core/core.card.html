@@ -1,0 +1,74 @@
+<!-- @dsCard group="Components" viewport="700x300" name="Core — Button, Badge, Avatar, Card" subtitle="Actions, status, identity, surfaces" -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--surface-page); font-family: var(--font-sans); }
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-strong); margin-bottom: 8px; }
+  .panel { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 16px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script type="text/babel">
+const { Button, IconButton, Badge, Avatar, Card } = window.TazkiaSIAKADDesignSystem_e8738f;
+const Ic = (n) => <i data-lucide={n}></i>;
+function Demo() {
+  React.useEffect(() => { lucide.createIcons(); });
+  return (
+    <div className="stack">
+      <div className="panel">
+        <div className="lbl">Button — variants & sizes</div>
+        <div className="row">
+          <Button variant="primary" leftIcon={Ic('save')}>Simpan KRS</Button>
+          <Button variant="accent">Prestasi</Button>
+          <Button variant="secondary">Batal</Button>
+          <Button variant="ghost">Lihat detail</Button>
+          <Button variant="danger">Hapus</Button>
+          <Button variant="primary" disabled>Disabled</Button>
+        </div>
+        <div className="row" style={{marginTop:10}}>
+          <Button size="sm" variant="secondary">Small</Button>
+          <Button size="md" variant="primary">Medium</Button>
+          <Button size="lg" variant="primary" rightIcon={Ic('arrow-right')}>Large</Button>
+          <IconButton label="Notifikasi">{Ic('bell')}</IconButton>
+          <IconButton solid label="Tambah">{Ic('plus')}</IconButton>
+        </div>
+      </div>
+      <div className="row" style={{gap:24}}>
+        <div className="panel" style={{flex:'1 1 0'}}>
+          <div className="lbl">Badge</div>
+          <div className="row">
+            <Badge variant="success" dot>Lulus</Badge>
+            <Badge variant="brand" dot>Aktif</Badge>
+            <Badge variant="warning">Menunggu</Badge>
+            <Badge variant="danger">Mengulang</Badge>
+            <Badge variant="accent">Cum Laude</Badge>
+            <Badge variant="neutral">Cuti</Badge>
+          </div>
+        </div>
+        <div className="panel" style={{flex:'0 0 auto'}}>
+          <div className="lbl">Avatar</div>
+          <div className="row">
+            <Avatar name="Ahmad Fauzi" size="sm" />
+            <Avatar name="Siti Nurhaliza" size="md" />
+            <Avatar name="Budi Santoso" size="lg" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+</body>
+</html>

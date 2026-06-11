@@ -1,0 +1,45 @@
+# build artifacts
+**/node_modules
+**/dist
+**/build
+**/.next
+**/out
+
+# env (kecuali example)
+.env
+.env.local
+.env.*.local
+
+# logs
+*.log
+
+# editor / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# git
+.git
+.gitignore
+
+# tests / coverage
+coverage
+*.lcov
+
+# docs - kecuali yang relevan ke runtime
+*.md
+!apps/api/prisma/migrations/**/README*
+
+# tooling
+.eslintcache
+.npm
+
+# Tazkia design-system bundle file lama (tidak dipakai runtime)
+_ds_bundle.js
+_ds_manifest.json
+_adherence.oxlintrc.json
+"Tazkia SIAKAD Design System.zip"
+
+# host MySQL data (kalau pernah ada)
+docker/mysql-data/

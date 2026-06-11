@@ -1,0 +1,73 @@
+# ============================================================
+# Tazkia SIAKAD — production compose
+# Pakai bersama .env (jangan commit). Lihat DEPLOY.md.
+# Web di-expose ke host (default port 80) — API hanya internal.
+# ============================================================
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: siakad_mysql_prod
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Jakarta
+    command: >-
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=512M
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    # tidak di-expose ke host secara default — uncomment jika butuh akses langsung
+    # ports:
+    #   - "127.0.0.1:3306:3306"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: siakad/api:latest
+    container_name: siakad_api_prod
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-30d}
+      # request browser ke /api dipangkas oleh nginx → tidak ada Origin lintas-domain
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
+      API_PORT: 4000
+      TZ: Asia/Jakarta
+    depends_on:
+      mysql:
+        condition: service_healthy
+    # tidak di-expose ke host — nginx web container yang proxy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    image: siakad/web:latest
+    container_name: siakad_web_prod
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-80}:80"
+    depends_on:
+      api:
+        condition: service_started
+
+volumes:
+  mysql_data:
+    name: siakad_mysql_data

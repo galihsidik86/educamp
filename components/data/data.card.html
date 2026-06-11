@@ -1,0 +1,51 @@
+<!-- @dsCard group="Components" viewport="700x330" name="Data — StatCard, Tabs, ProgressBar" subtitle="Dashboard tiles, navigation, progress" -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--surface-page); font-family: var(--font-sans); }
+  .stack { display: flex; flex-direction: column; gap: 16px; }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+  .lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-strong); margin-bottom: 10px; }
+  .panel { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 16px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script type="text/babel">
+const NS = window.TazkiaSIAKADDesignSystem_e8738f;
+const Ic = (n) => <i data-lucide={n}></i>;
+
+const { StatCard, Tabs, ProgressBar } = NS;
+function Demo() {
+  const [tab, setTab] = React.useState('khs');
+  React.useEffect(() => { lucide.createIcons(); });
+  return (
+    <div className="stack">
+      <div className="row">
+        <div style={{flex:'1 1 0'}}><StatCard label="IPK Kumulatif" value="3.78" icon={Ic('award')} delta="+0.06 semester ini" deltaDir="up" /></div>
+        <div style={{flex:'1 1 0'}}><StatCard label="SKS Tempuh" value="108" icon={Ic('layers')} delta="dari 144 SKS" /></div>
+        <div style={{flex:'1 1 0'}}><StatCard label="Tagihan" value="Rp 0" icon={Ic('wallet')} delta="Lunas" deltaDir="up" /></div>
+      </div>
+      <div className="panel">
+        <Tabs value={tab} onChange={setTab} tabs={[{value:'krs',label:'KRS'},{value:'khs',label:'KHS'},{value:'transkrip',label:'Transkrip'}]} />
+        <div style={{marginTop:16,display:'flex',flexDirection:'column',gap:14}}>
+          <ProgressBar label="SKS Tempuh" value={108} max={144} variant="success" />
+          <ProgressBar label="Kelengkapan Profil" value={80} max={100} variant="primary" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+</body>
+</html>

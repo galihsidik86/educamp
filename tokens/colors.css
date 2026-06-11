@@ -1,0 +1,151 @@
+/* ============================================================
+   TAZKIA SIAKAD — COLOR TOKENS
+   Brand anchor: Tazkia Blue (kecerdasan, stabilitas, ukhuwah)
+   Accent: Emas / Gold (prestasi, nilai keislaman)
+   Support: Tumbuh / Green (bertumbuh & berkembang bersih)
+   ============================================================ */
+
+:root {
+  /* ---- Base palette: Tazkia Blue (primary) ---- */
+  --blue-50:  #EEF3FF;
+  --blue-100: #DCE6FF;
+  --blue-200: #BBCEFE;
+  --blue-300: #8FACFB;
+  --blue-400: #5E81F4;
+  --blue-500: #3A5CE4;
+  --blue-600: #2A45C9;  /* primary action */
+  --blue-700: #2138A1;
+  --blue-800: #1D3180;  /* brand navy */
+  --blue-900: #172657;
+  --blue-950: #0F183A;
+
+  /* ---- Base palette: Emas / Gold (accent) ---- */
+  --gold-50:  #FCF8EC;
+  --gold-100: #F8EDC9;
+  --gold-200: #F0DA8E;
+  --gold-300: #E7C256;
+  --gold-400: #D9A92F;
+  --gold-500: #C28D1E;  /* accent */
+  --gold-600: #A2711A;
+  --gold-700: #80581A;
+  --gold-800: #69481B;
+  --gold-900: #5A3E1B;
+
+  /* ---- Base palette: Tumbuh / Green (support + success) ---- */
+  --green-50:  #E9F8F0;
+  --green-100: #C9EEDC;
+  --green-200: #97DDBC;
+  --green-300: #5DC596;
+  --green-400: #2EAA76;
+  --green-500: #1B8E5F;  /* success */
+  --green-600: #14724D;
+  --green-700: #135B3F;
+  --green-800: #134833;
+  --green-900: #0F3A2A;
+
+  /* ---- Base palette: status reds & ambers ---- */
+  --red-50:  #FDECEC;
+  --red-100: #FBD5D6;
+  --red-200: #F5AAAD;
+  --red-400: #E8545C;
+  --red-500: #D62A37;  /* danger */
+  --red-600: #B41F2B;
+  --red-700: #8E1A24;
+
+  --amber-50:  #FDF3E2;
+  --amber-100: #FAE3BC;
+  --amber-300: #F0BC5C;
+  --amber-500: #E0951A;  /* warning */
+  --amber-600: #B9760F;
+  --amber-700: #8E5A0E;
+
+  /* ---- Base palette: Neutrals (cool slate, slight blue tint) ---- */
+  --neutral-0:   #FFFFFF;
+  --neutral-50:  #F6F8FC;
+  --neutral-100: #EDF1F8;
+  --neutral-150: #E4EAF3;
+  --neutral-200: #D9E0EC;
+  --neutral-300: #C2CCDB;
+  --neutral-400: #98A4B8;
+  --neutral-500: #6C7A90;
+  --neutral-600: #4E5A6E;
+  --neutral-700: #394354;
+  --neutral-800: #242C3A;
+  --neutral-900: #161C28;
+  --neutral-950: #0C111A;
+
+  /* ============================================================
+     SEMANTIC ALIASES — reference these in components, not the raw scale
+     ============================================================ */
+
+  /* Brand */
+  --brand:          var(--blue-800);   /* institutional navy */
+  --brand-strong:   var(--blue-900);
+  --brand-soft:     var(--blue-50);
+  --brand-on:       var(--neutral-0);
+
+  --accent:         var(--gold-500);
+  --accent-strong:  var(--gold-600);
+  --accent-soft:    var(--gold-50);
+  --accent-on:      var(--neutral-0);
+
+  /* Interactive / actions */
+  --action:         var(--blue-600);
+  --action-hover:   var(--blue-700);
+  --action-active:  var(--blue-800);
+  --action-soft:    var(--blue-50);
+  --action-on:      var(--neutral-0);
+
+  --focus-ring:     color-mix(in oklch, var(--blue-500) 55%, transparent);
+
+  /* Surfaces */
+  --surface-page:    var(--neutral-50);
+  --surface-card:    var(--neutral-0);
+  --surface-sunken:  var(--neutral-100);
+  --surface-raised:  var(--neutral-0);
+  --surface-inverse: var(--blue-900);
+  --surface-brand:   var(--blue-800);
+
+  /* Text */
+  --text-strong:   var(--neutral-900);
+  --text-body:     var(--neutral-700);
+  --text-muted:    var(--neutral-500);
+  --text-subtle:   var(--neutral-400);
+  --text-inverse:  var(--neutral-0);
+  --text-onbrand:  color-mix(in oklch, var(--neutral-0) 92%, var(--blue-200));
+  --text-link:     var(--blue-600);
+
+  /* Borders & dividers */
+  --border-subtle:  var(--neutral-150);
+  --border-default: var(--neutral-200);
+  --border-strong:  var(--neutral-300);
+  --border-brand:   var(--blue-800);
+
+  /* ---- Status (each: fg / surface / border) ---- */
+  --success-fg:      var(--green-700);
+  --success-surface: var(--green-50);
+  --success-border:  var(--green-200);
+  --success-solid:   var(--green-500);
+
+  --warning-fg:      var(--amber-700);
+  --warning-surface: var(--amber-50);
+  --warning-border:  var(--amber-100);
+  --warning-solid:   var(--amber-500);
+
+  --danger-fg:       var(--red-700);
+  --danger-surface:  var(--red-50);
+  --danger-border:   var(--red-100);
+  --danger-solid:    var(--red-500);
+
+  --info-fg:         var(--blue-700);
+  --info-surface:    var(--blue-50);
+  --info-border:     var(--blue-200);
+  --info-solid:      var(--blue-600);
+
+  /* Academic status semantics (used across SIAKAD) */
+  --status-lulus:    var(--green-500);   /* passed */
+  --status-aktif:    var(--blue-600);    /* active */
+  --status-pending:  var(--amber-500);   /* awaiting */
+  --status-cuti:     var(--neutral-400); /* on leave */
+  --status-mengulang:var(--red-500);     /* repeating */
+}

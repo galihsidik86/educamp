@@ -1,0 +1,126 @@
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import { Login } from './routes/Login';
+import { AppShell } from './components/AppShell';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { MahasiswaDashboard } from './routes/mahasiswa/Dashboard';
+import { MahasiswaKrs } from './routes/mahasiswa/Krs';
+import { MahasiswaKrsRiwayat } from './routes/mahasiswa/KrsRiwayat';
+import { MahasiswaKrsCetak } from './routes/mahasiswa/KrsCetak';
+import { MahasiswaJadwal } from './routes/mahasiswa/Jadwal';
+import { MahasiswaNilai } from './routes/mahasiswa/Nilai';
+import { MahasiswaKeuangan } from './routes/mahasiswa/Keuangan';
+import { MahasiswaPenelitian } from './routes/mahasiswa/Penelitian';
+import { MahasiswaPengabdian } from './routes/mahasiswa/Pengabdian';
+import { MahasiswaKkn } from './routes/mahasiswa/Kkn';
+import { MahasiswaProfil } from './routes/mahasiswa/Profil';
+import { DosenDashboard } from './routes/dosen/Dashboard';
+import { DosenJadwal } from './routes/dosen/Jadwal';
+import { DosenProfil } from './routes/dosen/Profil';
+import { DosenInputNilaiList } from './routes/dosen/InputNilai';
+import { DosenInputNilaiDetail } from './routes/dosen/InputNilaiDetail';
+import { DosenBimbingan } from './routes/dosen/Bimbingan';
+import { DosenBimbinganDetail } from './routes/dosen/BimbinganDetail';
+import { DosenPenelitian } from './routes/dosen/Penelitian';
+import { DosenPengabdian } from './routes/dosen/Pengabdian';
+import { AkademikDashboard } from './routes/akademik/Dashboard';
+import { AkademikProfil } from './routes/akademik/Profil';
+import { AkademikLaporan } from './routes/akademik/Laporan';
+import { AdminMahasiswaPage } from './routes/akademik/Mahasiswa';
+import { AdminDosenPage } from './routes/akademik/Dosen';
+import { AdminProdi } from './routes/akademik/Prodi';
+import { AdminMataKuliah } from './routes/akademik/MataKuliah';
+import { AdminKelas } from './routes/akademik/Kelas';
+import { AdminPeriode } from './routes/akademik/Periode';
+import { AdminValidasiKrsList, AdminValidasiKrsDetail } from './routes/akademik/ValidasiKrs';
+import { AdminKeuangan } from './routes/akademik/Keuangan';
+import { AdminAuditLog } from './routes/akademik/AuditLog';
+import { NotifikasiPage } from './routes/Notifikasi';
+import { useAuth } from './lib/auth';
+import { roleHomePath } from './lib/routing';
+
+export function App() {
+  const { state } = useAuth();
+
+  if (state.status === 'loading') {
+    return (
+      <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh' }}>
+        <Loader2 />
+      </div>
+    );
+  }
+
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+
+      {/* Mahasiswa */}
+      <Route
+        path="/mahasiswa"
+        element={<ProtectedRoute role="mahasiswa"><AppShell role="mahasiswa" /></ProtectedRoute>}
+      >
+        <Route index element={<MahasiswaDashboard />} />
+        <Route path="krs"            element={<MahasiswaKrs />} />
+        <Route path="krs/riwayat"    element={<MahasiswaKrsRiwayat />} />
+        <Route path="krs/cetak"      element={<MahasiswaKrsCetak />} />
+        <Route path="jadwal"     element={<MahasiswaJadwal />} />
+        <Route path="nilai"      element={<MahasiswaNilai />} />
+        <Route path="keuangan"   element={<MahasiswaKeuangan />} />
+        <Route path="penelitian" element={<MahasiswaPenelitian />} />
+        <Route path="pengabdian" element={<MahasiswaPengabdian />} />
+        <Route path="kkn"        element={<MahasiswaKkn />} />
+        <Route path="notifikasi" element={<NotifikasiPage />} />
+        <Route path="profil"     element={<MahasiswaProfil />} />
+      </Route>
+
+      {/* Dosen */}
+      <Route
+        path="/dosen"
+        element={<ProtectedRoute role="dosen"><AppShell role="dosen" /></ProtectedRoute>}
+      >
+        <Route index element={<DosenDashboard />} />
+        <Route path="jadwal"             element={<DosenJadwal />} />
+        <Route path="nilai"              element={<DosenInputNilaiList />} />
+        <Route path="nilai/:kelasId"     element={<DosenInputNilaiDetail />} />
+        <Route path="bimbingan"          element={<DosenBimbingan />} />
+        <Route path="bimbingan/:mahasiswaId" element={<DosenBimbinganDetail />} />
+        <Route path="penelitian"         element={<DosenPenelitian />} />
+        <Route path="pengabdian"         element={<DosenPengabdian />} />
+        <Route path="notifikasi"         element={<NotifikasiPage />} />
+        <Route path="profil"             element={<DosenProfil />} />
+      </Route>
+
+      {/* Akademik (Admin) */}
+      <Route
+        path="/akademik"
+        element={<ProtectedRoute role="akademik"><AppShell role="akademik" /></ProtectedRoute>}
+      >
+        <Route index element={<AkademikDashboard />} />
+        <Route path="mahasiswa"     element={<AdminMahasiswaPage />} />
+        <Route path="dosen"         element={<AdminDosenPage />} />
+        <Route path="prodi"         element={<AdminProdi />} />
+        <Route path="mata-kuliah"   element={<AdminMataKuliah />} />
+        <Route path="kelas"         element={<AdminKelas />} />
+        <Route path="periode"       element={<AdminPeriode />} />
+        <Route path="krs"           element={<AdminValidasiKrsList />} />
+        <Route path="krs/:mahasiswaId" element={<AdminValidasiKrsDetail />} />
+        <Route path="keuangan"      element={<AdminKeuangan />} />
+        <Route path="laporan"       element={<AkademikLaporan />} />
+        <Route path="audit"         element={<AdminAuditLog />} />
+        <Route path="notifikasi"    element={<NotifikasiPage />} />
+        <Route path="profil"        element={<AkademikProfil />} />
+      </Route>
+
+      {/* Default */}
+      <Route
+        path="/"
+        element={
+          state.status === 'authenticated'
+            ? <Navigate to={roleHomePath(state.user.role)} replace />
+            : <Navigate to="/login" replace />
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
