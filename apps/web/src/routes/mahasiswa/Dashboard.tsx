@@ -1,9 +1,10 @@
 import { Card, StatCard, Alert } from '@/ds';
-import { GraduationCap, Wallet, ClipboardList, CalendarDays, Bell } from 'lucide-react';
+import { GraduationCap, Wallet, ClipboardList, CalendarDays } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useDashboard } from '@/lib/queries';
-import { formatRupiah, formatIp, formatTanggal, formatTanggalWaktu, capitalize } from '@/lib/format';
+import { formatRupiah, formatIp, formatTanggalWaktu, capitalize } from '@/lib/format';
 import { PageHead } from '@/components/PageHead';
+import { PengumumanWidget } from '@/components/PengumumanWidget';
 
 export function MahasiswaDashboard() {
   const { state } = useAuth();
@@ -69,27 +70,7 @@ export function MahasiswaDashboard() {
           </div>
         </Card>
 
-        <Card>
-          <h3 style={{ margin: 0, color: 'var(--text-strong)' }}>
-            <Bell size={16} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-            Pengumuman
-          </h3>
-          <div style={{ marginTop: 12 }}>
-            {!data || data.pengumuman.length === 0 ? (
-              <p className="muted" style={{ margin: 0 }}>Belum ada pengumuman.</p>
-            ) : (
-              <ul style={{ padding: 0, margin: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {data.pengumuman.map((p) => (
-                  <li key={p.id}>
-                    <strong style={{ color: 'var(--text-strong)', fontSize: 'var(--text-sm)' }}>{p.judul}</strong>
-                    <div className="muted" style={{ fontSize: 'var(--text-2xs)', marginBottom: 4 }}>{formatTanggal(p.tanggal)}</div>
-                    <p className="muted" style={{ margin: 0, fontSize: 'var(--text-xs)' }}>{p.isi}</p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </Card>
+        <PengumumanWidget items={data?.pengumuman ?? []} seeAllPath="/mahasiswa/pengumuman" />
       </div>
     </div>
   );

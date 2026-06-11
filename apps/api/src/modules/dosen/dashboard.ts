@@ -8,7 +8,7 @@ dashboardRouter.get('/dashboard', async (req, res) => {
   const d = await getDosenForUser(req.user!.sub);
   const semester = await getActiveSemester();
 
-  const [kelasAktif, totalBimbingan, penelitianAktif, pengabdianAktif] = await Promise.all([
+  const [kelasAktif, totalBimbingan, penelitianAktif, pengabdianAktif, pengumuman] = await Promise.all([
     prisma.kelas.findMany({
       where: { dosenId: d.id, semesterId: semester.id },
       include: {
@@ -21,6 +21,11 @@ dashboardRouter.get('/dashboard', async (req, res) => {
     prisma.mahasiswa.count({ where: { dpaId: d.id } }),
     prisma.penelitian.count({ where: { ketuaDosenId: d.id, status: { in: ['disetujui', 'berjalan'] } } }),
     prisma.pengabdian.count({ where: { ketuaDosenId: d.id, status: { in: ['disetujui', 'berjalan'] } } }),
+    prisma.pengumuman.findMany({
+      where: { OR: [{ target: 'all' }, { target: 'dosen' }, { target: `prodi:${d.prodiId}` }] },
+      orderBy: [{ isPenting: 'desc' }, { tanggal: 'desc' }],
+      take: 5,
+    }),
   ]);
 
   const totalSks = kelasAktif.reduce((s, k) => s + k.mataKuliah.sks, 0);
@@ -49,6 +54,7 @@ dashboardRouter.get('/dashboard', async (req, res) => {
     penelitianAktif,
     pengabdianAktif,
     jadwalHariIni,
+    pengumuman,
     today,
   });
 });

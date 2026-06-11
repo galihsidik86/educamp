@@ -11,6 +11,7 @@ dashboardRouter.get('/dashboard', async (_req, res) => {
     mhsAktif, mhsLulus, mhsCuti,
     totalDosen, totalProdi, totalMK, totalKelas,
     krsPending, tagihanBelumLunas, sumBelum,
+    pengumuman,
   ] = await Promise.all([
     prisma.mahasiswa.count({ where: { status: 'aktif' } }),
     prisma.mahasiswa.count({ where: { status: 'lulus' } }),
@@ -25,6 +26,10 @@ dashboardRouter.get('/dashboard', async (_req, res) => {
       _sum: { jumlah: true },
       where: { status: { in: ['belum_bayar', 'cicil', 'jatuh_tempo'] } },
     }),
+    prisma.pengumuman.findMany({
+      orderBy: [{ isPenting: 'desc' }, { tanggal: 'desc' }],
+      take: 5,
+    }),
   ]);
 
   res.json({
@@ -37,5 +42,6 @@ dashboardRouter.get('/dashboard', async (_req, res) => {
     krsPending,
     tagihanBelumLunas,
     totalTagihanBelum: Number(sumBelum._sum.jumlah ?? 0),
+    pengumuman,
   });
 });

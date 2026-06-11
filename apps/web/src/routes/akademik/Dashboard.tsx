@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useAkademikDashboard } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
+import { PengumumanWidget } from '@/components/PengumumanWidget';
 import { formatRupiah } from '@/lib/format';
 
 export function AkademikDashboard() {
@@ -39,16 +40,20 @@ export function AkademikDashboard() {
         <StatCard label="Total Belum Lunas" value={isLoading ? '…' : formatRupiah(data?.totalTagihanBelum ?? 0)} icon={<Wallet size={20} />} />
       </div>
 
-      {data && (
-        <Card>
-          <h3 style={{ marginTop: 0, color: 'var(--text-strong)' }}>Status mahasiswa</h3>
-          <div className="row" style={{ gap: 'var(--space-6)', flexWrap: 'wrap' }}>
-            <Bar label="Aktif" value={data.mahasiswa.aktif} max={data.mahasiswa.total} variant="success" />
-            <Bar label="Cuti" value={data.mahasiswa.cuti} max={data.mahasiswa.total} variant="neutral" />
-            <Bar label="Lulus" value={data.mahasiswa.lulus} max={data.mahasiswa.total} variant="info" />
-          </div>
-        </Card>
-      )}
+      <div className="grid-2col">
+        {data && (
+          <Card>
+            <h3 style={{ marginTop: 0, color: 'var(--text-strong)' }}>Status mahasiswa</h3>
+            <div className="row" style={{ gap: 'var(--space-6)', flexWrap: 'wrap' }}>
+              <Bar label="Aktif" value={data.mahasiswa.aktif} max={data.mahasiswa.total} variant="success" />
+              <Bar label="Cuti" value={data.mahasiswa.cuti} max={data.mahasiswa.total} variant="neutral" />
+              <Bar label="Lulus" value={data.mahasiswa.lulus} max={data.mahasiswa.total} variant="info" />
+            </div>
+          </Card>
+        )}
+
+        <PengumumanWidget items={data?.pengumuman ?? []} seeAllPath="/akademik/pengumuman" seeAllLabel="Kelola" />
+      </div>
     </div>
   );
 }

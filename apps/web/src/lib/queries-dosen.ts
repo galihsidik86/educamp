@@ -15,6 +15,7 @@ export type DosenDashboardData = {
   penelitianAktif: number;
   pengabdianAktif: number;
   jadwalHariIni: Array<{ kode: string; nama: string; kodeKelas: string; jamMulai: string | null; jamSelesai: string | null; ruangan: string | null }>;
+  pengumuman: Array<{ id: string; judul: string; isi: string; tanggal: string; isPenting: boolean }>;
   today: string;
 };
 export const useDosenDashboard = () => useApi<DosenDashboardData>(['dosen-dashboard'], '/dosen/dashboard');

@@ -16,6 +16,7 @@ export type AkademikDashboard = {
   krsPending: number;
   tagihanBelumLunas: number;
   totalTagihanBelum: number;
+  pengumuman: Array<{ id: string; judul: string; isi: string; tanggal: string; isPenting: boolean }>;
 };
 export const useAkademikDashboard = () =>
   useApi<AkademikDashboard>(['akademik-dashboard'], '/akademik/dashboard');

@@ -3,6 +3,7 @@ import { Users, BookOpen, FileText, HeartHandshake, CalendarDays, GraduationCap 
 import { useAuth } from '@/lib/auth';
 import { useDosenDashboard } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
+import { PengumumanWidget } from '@/components/PengumumanWidget';
 import { capitalize } from '@/lib/format';
 
 export function DosenDashboard() {
@@ -32,34 +33,38 @@ export function DosenDashboard() {
         <StatCard label="Pengabdian Aktif" value={isLoading ? '…' : (data?.pengabdianAktif ?? 0)} icon={<HeartHandshake size={20} />} />
       </div>
 
-      <Card>
-        <h3 style={{ margin: 0, color: 'var(--text-strong)' }}>
-          <CalendarDays size={16} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-          Jadwal mengajar hari ini ({data ? capitalize(data.today) : '—'})
-        </h3>
-        <div style={{ marginTop: 12 }}>
-          {!data || data.jadwalHariIni.length === 0 ? (
-            <p className="muted" style={{ margin: 0 }}>Tidak ada jadwal mengajar hari ini.</p>
-          ) : (
-            <ul style={{ padding: 0, margin: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {data.jadwalHariIni.map((j) => (
-                <li key={j.kode} className="row" style={{ justifyContent: 'space-between' }}>
-                  <div>
-                    <strong style={{ color: 'var(--text-strong)' }}>{j.nama}</strong>
-                    <div className="muted" style={{ fontSize: 'var(--text-xs)' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)' }}>{j.kode}</span> · Kelas {j.kodeKelas}
-                      {j.ruangan ? ` · ${j.ruangan}` : ''}
+      <div className="grid-2col">
+        <Card>
+          <h3 style={{ margin: 0, color: 'var(--text-strong)' }}>
+            <CalendarDays size={16} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+            Jadwal mengajar hari ini ({data ? capitalize(data.today) : '—'})
+          </h3>
+          <div style={{ marginTop: 12 }}>
+            {!data || data.jadwalHariIni.length === 0 ? (
+              <p className="muted" style={{ margin: 0 }}>Tidak ada jadwal mengajar hari ini.</p>
+            ) : (
+              <ul style={{ padding: 0, margin: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {data.jadwalHariIni.map((j) => (
+                  <li key={j.kode} className="row" style={{ justifyContent: 'space-between' }}>
+                    <div>
+                      <strong style={{ color: 'var(--text-strong)' }}>{j.nama}</strong>
+                      <div className="muted" style={{ fontSize: 'var(--text-xs)' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)' }}>{j.kode}</span> · Kelas {j.kodeKelas}
+                        {j.ruangan ? ` · ${j.ruangan}` : ''}
+                      </div>
                     </div>
-                  </div>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}>
-                    {j.jamMulai}–{j.jamSelesai}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </Card>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}>
+                      {j.jamMulai}–{j.jamSelesai}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </Card>
+
+        <PengumumanWidget items={data?.pengumuman ?? []} seeAllPath="/dosen/pengumuman" />
+      </div>
     </div>
   );
 }
