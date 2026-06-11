@@ -68,6 +68,125 @@ mahasiswaRouter.get('/mahasiswa/:id', async (req, res) => {
   res.json(m);
 });
 
+const importRowSchema = z.object({
+  nim: z.string().regex(/^\d{7,12}$/),
+  nama: z.string().min(3).max(120),
+  email: z.string().email(),
+  jenisKelamin: z.enum(['L', 'P']),
+  angkatan: z.coerce.number().int().min(1990).max(2100),
+  prodiKode: z.string().min(1),
+  dpaNidn: z.string().optional().nullable(),
+  tempatLahir: z.string().max(60).optional().nullable(),
+  tanggalLahir: z.string().optional().nullable(),
+  alamat: z.string().max(500).optional().nullable(),
+  telepon: z.string().max(30).optional().nullable(),
+});
+
+const importBodySchema = z.object({
+  rows: z.array(z.record(z.string(), z.string().nullable().optional())).max(500),
+});
+
+/**
+ * Bulk import mahasiswa via array of CSV row.
+ * Setiap baris divalidasi independen. Sukses = create user+mahasiswa.
+ * Default password = NIM (sama dengan endpoint create satuan).
+ * Return per-baris status agar bisa ditampilkan di UI sebagai laporan.
+ */
+mahasiswaRouter.post('/mahasiswa/import', async (req, res) => {
+  const { rows } = importBodySchema.parse(req.body);
+  if (rows.length === 0) throw BadRequest('Tidak ada baris untuk diimpor');
+
+  // pre-fetch lookup map: prodi (kode → id), dosen (nidn → id)
+  const [prodiList, dosenList] = await Promise.all([
+    prisma.prodi.findMany({ select: { id: true, kode: true } }),
+    prisma.dosen.findMany({ select: { id: true, nidn: true } }),
+  ]);
+  const prodiByKode = new Map(prodiList.map((p) => [p.kode, p.id]));
+  const dosenByNidn = new Map(dosenList.map((d) => [d.nidn, d.id]));
+
+  type ImportResult = {
+    row: number;
+    nim: string | null;
+    status: 'created' | 'failed';
+    message?: string;
+  };
+  const results: ImportResult[] = [];
+  let created = 0;
+  let failed = 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    const raw = rows[i]!;
+    const rowNo = i + 1;
+    // null/'' → undefined supaya zod optional kena
+    const clean = Object.fromEntries(
+      Object.entries(raw).map(([k, v]) => [k, v === '' || v == null ? undefined : v]),
+    );
+    const parsed = importRowSchema.safeParse(clean);
+    if (!parsed.success) {
+      failed++;
+      results.push({ row: rowNo, nim: (clean.nim as string | undefined) ?? null, status: 'failed', message: parsed.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ') });
+      continue;
+    }
+    const r = parsed.data;
+    const prodiId = prodiByKode.get(r.prodiKode);
+    if (!prodiId) {
+      failed++;
+      results.push({ row: rowNo, nim: r.nim, status: 'failed', message: `Kode prodi tidak ditemukan: ${r.prodiKode}` });
+      continue;
+    }
+    const dpaId = r.dpaNidn ? dosenByNidn.get(r.dpaNidn) : null;
+    if (r.dpaNidn && !dpaId) {
+      failed++;
+      results.push({ row: rowNo, nim: r.nim, status: 'failed', message: `NIDN DPA tidak ditemukan: ${r.dpaNidn}` });
+      continue;
+    }
+    // cek duplikat
+    const [dupEmail, dupNim] = await Promise.all([
+      prisma.user.findUnique({ where: { email: r.email }, select: { id: true } }),
+      prisma.mahasiswa.findUnique({ where: { nim: r.nim }, select: { id: true } }),
+    ]);
+    if (dupEmail) { failed++; results.push({ row: rowNo, nim: r.nim, status: 'failed', message: `Email sudah dipakai: ${r.email}` }); continue; }
+    if (dupNim) { failed++; results.push({ row: rowNo, nim: r.nim, status: 'failed', message: `NIM sudah dipakai: ${r.nim}` }); continue; }
+
+    try {
+      const passwordHash = await hashPassword(r.nim); // default password = NIM
+      await prisma.user.create({
+        data: {
+          email: r.email,
+          passwordHash,
+          role: 'mahasiswa',
+          mahasiswa: {
+            create: {
+              nim: r.nim, nama: r.nama,
+              jenisKelamin: r.jenisKelamin,
+              tempatLahir: r.tempatLahir ?? null,
+              tanggalLahir: r.tanggalLahir ? new Date(r.tanggalLahir) : null,
+              alamat: r.alamat ?? null,
+              telepon: r.telepon ?? null,
+              angkatan: r.angkatan,
+              prodiId,
+              dpaId: dpaId ?? null,
+            },
+          },
+        },
+      });
+      created++;
+      results.push({ row: rowNo, nim: r.nim, status: 'created' });
+    } catch (e: any) {
+      failed++;
+      results.push({ row: rowNo, nim: r.nim, status: 'failed', message: e?.message ?? 'gagal create' });
+    }
+  }
+
+  void writeAudit(req, {
+    action: 'mahasiswa.import',
+    entity: 'mahasiswa',
+    metadata: { totalRows: rows.length, created, failed },
+  });
+
+  res.json({ totalRows: rows.length, created, failed, results });
+});
+
 mahasiswaRouter.post('/mahasiswa', async (req, res) => {
   const body = createSchema.parse(req.body);
 

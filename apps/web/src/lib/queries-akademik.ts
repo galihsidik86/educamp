@@ -89,8 +89,20 @@ export function useMahasiswaActions() {
       mutationFn: ({ id, password }: { id: string; password?: string }) =>
         apiPost(`/akademik/mahasiswa/${id}/reset-password`, password ? { password } : {}),
     }),
+    importCsv: useMutation({
+      mutationFn: (rows: Array<Record<string, string>>) =>
+        apiPost<ImportResult>('/akademik/mahasiswa/import', { rows }),
+      onSuccess: inv,
+    }),
   };
 }
+
+export type ImportResult = {
+  totalRows: number;
+  created: number;
+  failed: number;
+  results: Array<{ row: number; nim: string | null; status: 'created' | 'failed'; message?: string }>;
+};
 
 // ============================================================
 // Dosen CRUD
