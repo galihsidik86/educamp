@@ -9,6 +9,8 @@ import { MahasiswaKrsRiwayat } from './routes/mahasiswa/KrsRiwayat';
 import { MahasiswaKrsCetak } from './routes/mahasiswa/KrsCetak';
 import { MahasiswaNilaiKhsCetak } from './routes/mahasiswa/NilaiKhsCetak';
 import { MahasiswaNilaiTranskripCetak } from './routes/mahasiswa/NilaiTranskripCetak';
+import { MahasiswaAbsensi } from './routes/mahasiswa/Absensi';
+import { MahasiswaAbsensiCetak } from './routes/mahasiswa/AbsensiCetak';
 import { MahasiswaJadwal } from './routes/mahasiswa/Jadwal';
 import { MahasiswaNilai } from './routes/mahasiswa/Nilai';
 import { MahasiswaKeuangan } from './routes/mahasiswa/Keuangan';
@@ -21,6 +23,9 @@ import { DosenJadwal } from './routes/dosen/Jadwal';
 import { DosenProfil } from './routes/dosen/Profil';
 import { DosenInputNilaiList } from './routes/dosen/InputNilai';
 import { DosenInputNilaiDetail } from './routes/dosen/InputNilaiDetail';
+import { DosenAbsensiList } from './routes/dosen/Absensi';
+import { DosenAbsensiKelas } from './routes/dosen/AbsensiKelas';
+import { DosenAbsensiPertemuan } from './routes/dosen/AbsensiPertemuan';
 import { DosenBimbingan } from './routes/dosen/Bimbingan';
 import { DosenBimbinganDetail } from './routes/dosen/BimbinganDetail';
 import { DosenPenelitian } from './routes/dosen/Penelitian';
@@ -28,6 +33,7 @@ import { DosenPengabdian } from './routes/dosen/Pengabdian';
 import { AkademikDashboard } from './routes/akademik/Dashboard';
 import { AkademikProfil } from './routes/akademik/Profil';
 import { AkademikLaporan } from './routes/akademik/Laporan';
+import { AkademikLaporanKehadiran } from './routes/akademik/LaporanKehadiran';
 import { AdminMahasiswaPage } from './routes/akademik/Mahasiswa';
 import { AdminDosenPage } from './routes/akademik/Dosen';
 import { AdminProdi } from './routes/akademik/Prodi';
@@ -69,6 +75,8 @@ export function App() {
         <Route path="nilai"                  element={<MahasiswaNilai />} />
         <Route path="nilai/khs/cetak"        element={<MahasiswaNilaiKhsCetak />} />
         <Route path="nilai/transkrip/cetak"  element={<MahasiswaNilaiTranskripCetak />} />
+        <Route path="absensi"                element={<MahasiswaAbsensi />} />
+        <Route path="absensi/cetak"          element={<MahasiswaAbsensiCetak />} />
         <Route path="keuangan"   element={<MahasiswaKeuangan />} />
         <Route path="penelitian" element={<MahasiswaPenelitian />} />
         <Route path="pengabdian" element={<MahasiswaPengabdian />} />
@@ -86,6 +94,9 @@ export function App() {
         <Route path="jadwal"             element={<DosenJadwal />} />
         <Route path="nilai"              element={<DosenInputNilaiList />} />
         <Route path="nilai/:kelasId"     element={<DosenInputNilaiDetail />} />
+        <Route path="absensi"                              element={<DosenAbsensiList />} />
+        <Route path="absensi/:kelasId"                     element={<DosenAbsensiKelas />} />
+        <Route path="absensi/:kelasId/:pertemuanId"        element={<DosenAbsensiPertemuan />} />
         <Route path="bimbingan"          element={<DosenBimbingan />} />
         <Route path="bimbingan/:mahasiswaId" element={<DosenBimbinganDetail />} />
         <Route path="penelitian"         element={<DosenPenelitian />} />
@@ -109,7 +120,8 @@ export function App() {
         <Route path="krs"           element={<AdminValidasiKrsList />} />
         <Route path="krs/:mahasiswaId" element={<AdminValidasiKrsDetail />} />
         <Route path="keuangan"      element={<AdminKeuangan />} />
-        <Route path="laporan"       element={<AkademikLaporan />} />
+        <Route path="laporan"             element={<AkademikLaporan />} />
+        <Route path="laporan/kehadiran"   element={<AkademikLaporanKehadiran />} />
         <Route path="audit"         element={<AdminAuditLog />} />
         <Route path="notifikasi"    element={<NotifikasiPage />} />
         <Route path="profil"        element={<AkademikProfil />} />

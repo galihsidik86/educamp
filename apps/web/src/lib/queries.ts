@@ -162,6 +162,22 @@ export type Kkn = {
 };
 export const useKkn = () => useApi<{ items: Kkn[] }>(['kkn'], '/mahasiswa/kkn');
 
+export type AbsensiStatus = 'hadir' | 'izin' | 'sakit' | 'alpa';
+export type AbsensiKelas = {
+  kelasId: string;
+  kodeMK: string; namaMK: string; sks: number; kodeKelas: string; dosen: string;
+  totalPertemuan: number;
+  totalDinilai: number;
+  ringkasan: { hadir: number; izin: number; sakit: number; alpa: number };
+  persentaseHadir: number | null;
+  detail: Array<{
+    pertemuanKe: number; tanggal: string; topik: string | null;
+    status: AbsensiStatus | null; catatan: string | null;
+  }>;
+};
+export const useMahasiswaAbsensi = () =>
+  useApi<{ items: AbsensiKelas[] }>(['mahasiswa-absensi'], '/mahasiswa/absensi');
+
 export type Profil = {
   id: string; nim: string; nama: string; jenisKelamin: 'L' | 'P';
   tempatLahir: string | null; tanggalLahir: string | null; alamat: string | null;

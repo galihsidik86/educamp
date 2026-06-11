@@ -4,6 +4,8 @@ import { getActiveSemester } from '../../lib/context.js';
 
 export const laporanRouter = Router();
 
+const KRITIS_THRESHOLD = 75; // persentase kehadiran minimal untuk lolos UAS
+
 /**
  * Laporan singkat — counter per prodi/angkatan/status, untuk pelaporan PDDikti.
  */
@@ -82,5 +84,99 @@ laporanRouter.get('/laporan', async (_req, res) => {
     }),
     krsSemester: Object.fromEntries(krsStat.map((s) => [s.status, s._count._all])),
     nilaiSelesai,
+  });
+});
+
+/**
+ * Laporan rekap kehadiran per kelas pada satu semester.
+ * Filter opsional: ?prodiId=, ?semesterId=. Default = semester aktif.
+ */
+laporanRouter.get('/laporan/kehadiran', async (req, res) => {
+  const semesterId = (req.query.semesterId as string | undefined) ?? (await getActiveSemester()).id;
+  const prodiId = req.query.prodiId as string | undefined;
+
+  const kelas = await prisma.kelas.findMany({
+    where: {
+      semesterId,
+      ...(prodiId && { mataKuliah: { prodiId } }),
+    },
+    include: {
+      mataKuliah: { include: { prodi: { select: { kode: true, nama: true } } } },
+      dosen: { select: { nama: true, gelarDepan: true, gelarBelakang: true } },
+      pertemuan: {
+        select: {
+          id: true,
+          absensi: { select: { mahasiswaId: true, status: true } },
+        },
+      },
+      krs: {
+        where: { status: 'disetujui' },
+        select: { mahasiswaId: true },
+      },
+    },
+    orderBy: [{ mataKuliah: { kode: 'asc' } }, { kodeKelas: 'asc' }],
+  });
+
+  const items = kelas.map((k) => {
+    const totalPertemuan = k.pertemuan.length;
+    const totalPeserta = k.krs.length;
+    const c = { hadir: 0, izin: 0, sakit: 0, alpa: 0 };
+    // map mahasiswaId -> {hadir, total}
+    const perMhs = new Map<string, { hadir: number; total: number }>();
+    for (const p of k.pertemuan) {
+      for (const a of p.absensi) {
+        c[a.status]++;
+        const cur = perMhs.get(a.mahasiswaId) ?? { hadir: 0, total: 0 };
+        cur.total++;
+        if (a.status === 'hadir') cur.hadir++;
+        perMhs.set(a.mahasiswaId, cur);
+      }
+    }
+    const totalAbsensiTerisi = c.hadir + c.izin + c.sakit + c.alpa;
+    const persentaseRata = totalAbsensiTerisi > 0
+      ? Math.round((c.hadir / totalAbsensiTerisi) * 100)
+      : null;
+    let kritis = 0;
+    for (const v of perMhs.values()) {
+      if (v.total === 0) continue;
+      if ((v.hadir / v.total) * 100 < KRITIS_THRESHOLD) kritis++;
+    }
+    return {
+      kelasId: k.id,
+      kodeMK: k.mataKuliah.kode,
+      namaMK: k.mataKuliah.nama,
+      kodeKelas: k.kodeKelas,
+      prodi: k.mataKuliah.prodi,
+      dosen: [k.dosen.gelarDepan, k.dosen.nama, k.dosen.gelarBelakang].filter(Boolean).join(' '),
+      totalPertemuan,
+      totalPeserta,
+      totalAbsensiTerisi,
+      ringkasan: c,
+      persentaseRata,
+      kritis,
+    };
+  });
+
+  // Ringkasan global
+  const totalKelas = items.length;
+  const totalPertemuan = items.reduce((s, i) => s + i.totalPertemuan, 0);
+  const totalKritis = items.reduce((s, i) => s + i.kritis, 0);
+  const totalAbsensiHadir = items.reduce((s, i) => s + i.ringkasan.hadir, 0);
+  const totalAbsensiSemua = items.reduce((s, i) => s + i.totalAbsensiTerisi, 0);
+  const persentaseGlobal = totalAbsensiSemua > 0
+    ? Math.round((totalAbsensiHadir / totalAbsensiSemua) * 100)
+    : null;
+
+  res.json({
+    semester: { id: semesterId },
+    threshold: KRITIS_THRESHOLD,
+    ringkasan: {
+      totalKelas,
+      totalPertemuan,
+      totalAbsensiSemua,
+      persentaseGlobal,
+      totalKritis,
+    },
+    items,
   });
 });

@@ -90,6 +90,85 @@ export function useUpdateNilai(kelasId: string | undefined) {
 }
 
 // ============================================================
+// Absensi
+// ============================================================
+
+export type AbsensiStatus = 'hadir' | 'izin' | 'sakit' | 'alpa';
+
+export type PertemuanItem = {
+  id: string;
+  pertemuanKe: number;
+  tanggal: string;
+  topik: string | null;
+  catatan: string | null;
+  totalAbsensi: number;
+  ringkasan: { hadir: number; izin: number; sakit: number; alpa: number };
+};
+export type PertemuanList = {
+  kelas: { id: string; kodeMK: string; namaMK: string; kodeKelas: string };
+  items: PertemuanItem[];
+};
+export const useDosenPertemuan = (kelasId: string | undefined) =>
+  useApi<PertemuanList>(['dosen-pertemuan', kelasId], `/dosen/kelas/${kelasId}/pertemuan`, { enabled: !!kelasId });
+
+export type KehadiranRekap = {
+  kelas: { id: string; kodeMK: string; namaMK: string; kodeKelas: string };
+  totalPertemuan: number;
+  threshold: number;
+  pertemuan: Array<{ id: string; pertemuanKe: number; tanggal: string; topik: string | null }>;
+  items: Array<{
+    mahasiswaId: string; nim: string; nama: string;
+    ringkasan: { hadir: number; izin: number; sakit: number; alpa: number };
+    totalDinilai: number;
+    persentaseHadir: number | null;
+    kritis: boolean;
+  }>;
+};
+export const useDosenKehadiranRekap = (kelasId: string | undefined) =>
+  useApi<KehadiranRekap>(['dosen-kehadiran-rekap', kelasId], `/dosen/kelas/${kelasId}/kehadiran-rekap`, { enabled: !!kelasId });
+
+export type AbsensiPertemuan = {
+  pertemuan: { id: string; pertemuanKe: number; tanggal: string; topik: string | null };
+  kelas: { id: string; kodeMK: string; namaMK: string; kodeKelas: string };
+  peserta: Array<{
+    mahasiswaId: string; nim: string; nama: string;
+    status: AbsensiStatus | null;
+    catatan: string | null;
+  }>;
+};
+export const useDosenAbsensiPertemuan = (pertemuanId: string | undefined) =>
+  useApi<AbsensiPertemuan>(['dosen-absensi-pertemuan', pertemuanId], `/dosen/pertemuan/${pertemuanId}/absensi`, { enabled: !!pertemuanId });
+
+export function useDosenAbsensiActions(kelasId?: string, pertemuanId?: string) {
+  const qc = useQueryClient();
+  const inv = () => Promise.all([
+    qc.invalidateQueries({ queryKey: ['dosen-pertemuan', kelasId] }),
+    qc.invalidateQueries({ queryKey: ['dosen-absensi-pertemuan', pertemuanId] }),
+  ]);
+  return {
+    createPertemuan: useMutation({
+      mutationFn: (body: { pertemuanKe?: number; tanggal: string; topik?: string | null; catatan?: string | null }) =>
+        apiPost(`/dosen/kelas/${kelasId}/pertemuan`, body),
+      onSuccess: inv,
+    }),
+    updatePertemuan: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<{ pertemuanKe: number; tanggal: string; topik: string | null; catatan: string | null }> }) =>
+        api(`/dosen/pertemuan/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    deletePertemuan: useMutation({
+      mutationFn: (id: string) => api(`/dosen/pertemuan/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+    setAbsensi: useMutation({
+      mutationFn: ({ pertemuanId: pid, items }: { pertemuanId: string; items: Array<{ mahasiswaId: string; status: AbsensiStatus; catatan?: string | null }> }) =>
+        apiPost(`/dosen/pertemuan/${pid}/absensi`, { items }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// ============================================================
 // Bimbingan Akademik
 // ============================================================
 

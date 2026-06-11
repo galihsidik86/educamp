@@ -234,6 +234,40 @@ export function useKelasActions() {
 }
 
 // ============================================================
+// Laporan kehadiran
+// ============================================================
+
+export type LaporanKehadiran = {
+  semester: { id: string };
+  threshold: number;
+  ringkasan: {
+    totalKelas: number;
+    totalPertemuan: number;
+    totalAbsensiSemua: number;
+    persentaseGlobal: number | null;
+    totalKritis: number;
+  };
+  items: Array<{
+    kelasId: string;
+    kodeMK: string; namaMK: string; kodeKelas: string;
+    prodi: { kode: string; nama: string };
+    dosen: string;
+    totalPertemuan: number;
+    totalPeserta: number;
+    totalAbsensiTerisi: number;
+    ringkasan: { hadir: number; izin: number; sakit: number; alpa: number };
+    persentaseRata: number | null;
+    kritis: number;
+  }>;
+};
+export const useLaporanKehadiran = (filters: { prodiId?: string; semesterId?: string } = {}) => {
+  const qs = new URLSearchParams();
+  if (filters.prodiId) qs.set('prodiId', filters.prodiId);
+  if (filters.semesterId) qs.set('semesterId', filters.semesterId);
+  return useApi<LaporanKehadiran>(['laporan-kehadiran', qs.toString()], `/akademik/laporan/kehadiran?${qs}`);
+};
+
+// ============================================================
 // Periode (TA + Semester)
 // ============================================================
 
