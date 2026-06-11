@@ -7,6 +7,8 @@ import { MahasiswaDashboard } from './routes/mahasiswa/Dashboard';
 import { MahasiswaKrs } from './routes/mahasiswa/Krs';
 import { MahasiswaKrsRiwayat } from './routes/mahasiswa/KrsRiwayat';
 import { MahasiswaKrsCetak } from './routes/mahasiswa/KrsCetak';
+import { MahasiswaNilaiKhsCetak } from './routes/mahasiswa/NilaiKhsCetak';
+import { MahasiswaNilaiTranskripCetak } from './routes/mahasiswa/NilaiTranskripCetak';
 import { MahasiswaJadwal } from './routes/mahasiswa/Jadwal';
 import { MahasiswaNilai } from './routes/mahasiswa/Nilai';
 import { MahasiswaKeuangan } from './routes/mahasiswa/Keuangan';
@@ -64,7 +66,9 @@ export function App() {
         <Route path="krs/riwayat"    element={<MahasiswaKrsRiwayat />} />
         <Route path="krs/cetak"      element={<MahasiswaKrsCetak />} />
         <Route path="jadwal"     element={<MahasiswaJadwal />} />
-        <Route path="nilai"      element={<MahasiswaNilai />} />
+        <Route path="nilai"                  element={<MahasiswaNilai />} />
+        <Route path="nilai/khs/cetak"        element={<MahasiswaNilaiKhsCetak />} />
+        <Route path="nilai/transkrip/cetak"  element={<MahasiswaNilaiTranskripCetak />} />
         <Route path="keuangan"   element={<MahasiswaKeuangan />} />
         <Route path="penelitian" element={<MahasiswaPenelitian />} />
         <Route path="pengabdian" element={<MahasiswaPengabdian />} />

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Alert, Card } from '@/ds';
 import { useKhs, useTranskrip } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
@@ -13,6 +14,9 @@ export function MahasiswaNilai() {
   const [tab, setTab] = useState<Tab>('khs');
   const khs = useKhs();
   const transkrip = useTranskrip();
+  const navigate = useNavigate();
+  const canPrintKhs = (khs.data?.semesters.length ?? 0) > 0;
+  const canPrintTranskrip = (transkrip.data?.items.length ?? 0) > 0;
 
   return (
     <div className="stack">
@@ -20,8 +24,14 @@ export function MahasiswaNilai() {
         title="Nilai & Transkrip"
         subtitle="KHS per semester serta transkrip kumulatif."
         right={
-          <Button variant="ghost" size="sm" leftIcon={<Printer size={14} />} onClick={() => window.print()}>
-            Cetak
+          <Button
+            variant="ghost"
+            size="sm"
+            leftIcon={<Printer size={14} />}
+            disabled={tab === 'khs' ? !canPrintKhs : !canPrintTranskrip}
+            onClick={() => navigate(tab === 'khs' ? '/mahasiswa/nilai/khs/cetak' : '/mahasiswa/nilai/transkrip/cetak')}
+          >
+            {tab === 'khs' ? 'Cetak KHS' : 'Cetak Transkrip'}
           </Button>
         }
       />
