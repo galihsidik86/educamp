@@ -28,6 +28,7 @@ export async function resetDb() {
     prisma.kkn.deleteMany({}),
     prisma.mbkmKonversi.deleteMany({}),
     prisma.mbkm.deleteMany({}),
+    prisma.skripsi.deleteMany({}),
     // EDOM: kuesioner cascade ke aspek+response+jawaban
     prisma.edomKuesioner.deleteMany({}),
     prisma.penelitianMahasiswa.deleteMany({}),

@@ -144,6 +144,7 @@ model Mahasiswa {
   kkn                 Kkn[]
   mbkm                Mbkm[]
   edomResponse        EdomResponse[]
+  skripsi             Skripsi[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -181,6 +182,8 @@ model Dosen {
   pengabdian         Pengabdian[]
   kknBimbingan       Kkn[]               @relation("DplKkn")
   mbkmBimbingan      Mbkm[]              @relation("DplMbkm")
+  pembimbing1Skripsi Skripsi[]           @relation("Pembimbing1Skripsi")
+  pembimbing2Skripsi Skripsi[]           @relation("Pembimbing2Skripsi")
 
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -724,6 +727,55 @@ model MbkmKonversi {
 
   @@unique([mbkmId, mataKuliahId])
   @@index([mataKuliahId])
+}
+
+// ============================================================
+// SKRIPSI / Tugas Akhir
+// Mahasiswa mengajukan judul → akademik validasi + assign pembimbing →
+// lifecycle: diajukan → disetujui → proposal → penelitian → sidang → lulus
+// ============================================================
+
+enum StatusSkripsi {
+  diajukan
+  disetujui
+  proposal
+  penelitian
+  sidang
+  lulus
+  ditolak
+  batal
+}
+
+model Skripsi {
+  id              String         @id @default(uuid())
+  mahasiswaId     String
+  mahasiswa       Mahasiswa      @relation(fields: [mahasiswaId], references: [id])
+
+  judul           String         @db.Text
+  abstrak         String?        @db.Text
+  topik           String?
+
+  status          StatusSkripsi  @default(diajukan)
+  catatan         String?        @db.Text
+
+  pembimbing1Id   String?
+  pembimbing1     Dosen?         @relation("Pembimbing1Skripsi", fields: [pembimbing1Id], references: [id])
+  pembimbing2Id   String?
+  pembimbing2     Dosen?         @relation("Pembimbing2Skripsi", fields: [pembimbing2Id], references: [id])
+
+  tanggalAjuan      DateTime     @default(now())
+  tanggalDisetujui  DateTime?
+  tanggalSidang     DateTime?
+  nilaiHuruf        String?
+  linkDokumen       String?      @db.Text
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([mahasiswaId])
+  @@index([status])
+  @@index([pembimbing1Id])
+  @@index([pembimbing2Id])
 }
 
 // ============================================================

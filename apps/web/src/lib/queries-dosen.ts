@@ -91,6 +91,29 @@ export function useUpdateNilai(kelasId: string | undefined) {
 }
 
 // ============================================================
+// Skripsi bimbingan dosen
+// ============================================================
+
+export type DosenSkripsiItem = {
+  id: string;
+  judul: string;
+  topik: string | null;
+  status: string;
+  catatan: string | null;
+  tanggalAjuan: string;
+  tanggalDisetujui: string | null;
+  tanggalSidang: string | null;
+  nilaiHuruf: string | null;
+  linkDokumen: string | null;
+  peran: 'pembimbing1' | 'pembimbing2';
+  pembimbing1: string | null;
+  pembimbing2: string | null;
+  mahasiswa: { id: string; nim: string; nama: string; prodi: { kode: string; nama: string } };
+};
+export const useDosenSkripsi = () =>
+  useApi<{ items: DosenSkripsiItem[] }>(['dosen-skripsi'], '/dosen/skripsi');
+
+// ============================================================
 // Pengumuman (read-only untuk dosen)
 // ============================================================
 

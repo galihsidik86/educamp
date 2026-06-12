@@ -211,6 +211,40 @@ export function useMbkmActions() {
   };
 }
 
+export type StatusSkripsi = 'diajukan' | 'disetujui' | 'proposal' | 'penelitian' | 'sidang' | 'lulus' | 'ditolak' | 'batal';
+
+export type SkripsiItem = {
+  id: string;
+  judul: string;
+  abstrak: string | null;
+  topik: string | null;
+  status: StatusSkripsi;
+  catatan: string | null;
+  tanggalAjuan: string;
+  tanggalDisetujui: string | null;
+  tanggalSidang: string | null;
+  nilaiHuruf: string | null;
+  linkDokumen: string | null;
+  pembimbing1: string | null;
+  pembimbing2: string | null;
+};
+export const useSkripsi = () => useApi<{ items: SkripsiItem[] }>(['skripsi'], '/mahasiswa/skripsi');
+
+export type SkripsiAjukanInput = { judul: string; abstrak?: string; topik?: string };
+export function useSkripsiActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['skripsi'] });
+  return {
+    ajukan: useMutation({ mutationFn: (input: SkripsiAjukanInput) => apiPost('/mahasiswa/skripsi', input), onSuccess: inv }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<{ linkDokumen: string; abstrak: string }> }) =>
+        api(`/mahasiswa/skripsi/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    batal: useMutation({ mutationFn: (id: string) => api(`/mahasiswa/skripsi/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+  };
+}
+
 export type EdomKelasItem = {
   kelasId: string;
   kodeMK: string; namaMK: string; sks: number; kodeKelas: string; dosen: string;

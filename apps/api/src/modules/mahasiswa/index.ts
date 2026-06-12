@@ -10,6 +10,7 @@ import { absensiRouter } from './absensi.js';
 import { pengumumanRouter } from './pengumuman.js';
 import { mbkmRouter } from './mbkm.js';
 import { edomRouter } from './edom.js';
+import { skripsiRouter } from './skripsi.js';
 import { keuanganRouter } from './keuangan.js';
 import { triDharmaRouter } from './tri-dharma.js';
 
@@ -29,5 +30,6 @@ mahasiswaRouter.use(absensiRouter);
 mahasiswaRouter.use(pengumumanRouter);
 mahasiswaRouter.use(mbkmRouter);
 mahasiswaRouter.use(edomRouter);
+mahasiswaRouter.use(skripsiRouter);
 mahasiswaRouter.use(keuanganRouter);
 mahasiswaRouter.use(triDharmaRouter);

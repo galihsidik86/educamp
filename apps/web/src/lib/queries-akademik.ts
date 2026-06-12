@@ -247,6 +247,61 @@ export function useKelasActions() {
 }
 
 // ============================================================
+// Skripsi akademik
+// ============================================================
+
+export type AdminSkripsiItem = {
+  id: string;
+  judul: string;
+  abstrak: string | null;
+  topik: string | null;
+  status: 'diajukan' | 'disetujui' | 'proposal' | 'penelitian' | 'sidang' | 'lulus' | 'ditolak' | 'batal';
+  catatan: string | null;
+  tanggalAjuan: string;
+  tanggalDisetujui: string | null;
+  tanggalSidang: string | null;
+  nilaiHuruf: string | null;
+  linkDokumen: string | null;
+  mahasiswa: { id: string; nim: string; nama: string; prodi: { kode: string; nama: string } };
+  pembimbing1: { id: string; nidn: string; nama: string } | null;
+  pembimbing2: { id: string; nidn: string; nama: string } | null;
+};
+
+export const useAdminSkripsi = (filters: { status?: string; prodiId?: string; q?: string } = {}) => {
+  const qs = new URLSearchParams();
+  if (filters.status) qs.set('status', filters.status);
+  if (filters.prodiId) qs.set('prodiId', filters.prodiId);
+  if (filters.q) qs.set('q', filters.q);
+  return useApi<{ items: AdminSkripsiItem[] }>(['admin-skripsi', qs.toString()], `/akademik/skripsi?${qs}`);
+};
+
+export type AdminSkripsiPatch = Partial<{
+  pembimbing1Id: string | null;
+  pembimbing2Id: string | null;
+  status: AdminSkripsiItem['status'];
+  catatan: string | null;
+  topik: string | null;
+  tanggalSidang: string | null;
+  nilaiHuruf: string | null;
+}>;
+
+export function useAdminSkripsiActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['admin-skripsi'] });
+  return {
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: AdminSkripsiPatch }) =>
+        api(`/akademik/skripsi/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => api(`/akademik/skripsi/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// ============================================================
 // EDOM akademik
 // ============================================================
 

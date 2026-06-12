@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import {
   LayoutDashboard, ClipboardList, CalendarDays, GraduationCap, Wallet,
   UserRound, BookOpen, Users, FileText, Briefcase, HeartHandshake, Building2, MapPin,
-  ShieldCheck, Layers, Bell, History, CalendarCheck, Megaphone, ClipboardCheck,
+  ShieldCheck, Layers, Bell, History, CalendarCheck, Megaphone, ClipboardCheck, ScrollText,
 } from 'lucide-react';
 import type { Role } from '@/lib/auth';
 
@@ -31,6 +31,7 @@ const itemsByRole: Record<Role, { group: string; items: NavItem[] }[]> = {
         { to: '/mahasiswa/kkn',        label: 'KKN',               icon: <MapPin size={18} /> },
         { to: '/mahasiswa/mbkm',       label: 'MBKM',              icon: <Briefcase size={18} /> },
         { to: '/mahasiswa/edom',       label: 'EDOM',              icon: <ClipboardCheck size={18} /> },
+        { to: '/mahasiswa/skripsi',    label: 'Skripsi',           icon: <ScrollText size={18} /> },
         { to: '/mahasiswa/pengumuman', label: 'Pengumuman',        icon: <Megaphone size={18} /> },
         { to: '/mahasiswa/notifikasi', label: 'Notifikasi',        icon: <Bell size={18} /> },
         { to: '/mahasiswa/profil',     label: 'Profil',            icon: <UserRound size={18} /> },
@@ -46,6 +47,7 @@ const itemsByRole: Record<Role, { group: string; items: NavItem[] }[]> = {
         { to: '/dosen/absensi',      label: 'Absensi Kelas',      icon: <CalendarCheck size={18} /> },
         { to: '/dosen/nilai',        label: 'Input Nilai',        icon: <GraduationCap size={18} /> },
         { to: '/dosen/bimbingan',    label: 'Bimbingan Akademik', icon: <Users size={18} /> },
+        { to: '/dosen/skripsi',      label: 'Skripsi Bimbingan',  icon: <ScrollText size={18} /> },
       ],
     },
     {
@@ -79,6 +81,7 @@ const itemsByRole: Record<Role, { group: string; items: NavItem[] }[]> = {
         { to: '/akademik/kkn',            label: 'Kelola KKN',    icon: <MapPin size={18} /> },
         { to: '/akademik/mbkm',           label: 'Kelola MBKM',   icon: <Briefcase size={18} /> },
         { to: '/akademik/edom',           label: 'Kelola EDOM',   icon: <ClipboardCheck size={18} /> },
+        { to: '/akademik/skripsi',        label: 'Kelola Skripsi',icon: <ScrollText size={18} /> },
         { to: '/akademik/keuangan',       label: 'Keuangan',      icon: <Wallet size={18} /> },
         { to: '/akademik/laporan',           label: 'Laporan',           icon: <Briefcase size={18} />, end: true },
         { to: '/akademik/laporan/kehadiran', label: 'Laporan Kehadiran', icon: <CalendarCheck size={18} /> },

@@ -22,6 +22,7 @@ import { MahasiswaKkn } from './routes/mahasiswa/Kkn';
 import { MahasiswaMbkm } from './routes/mahasiswa/Mbkm';
 import { MahasiswaEdom } from './routes/mahasiswa/Edom';
 import { MahasiswaEdomDetail } from './routes/mahasiswa/EdomDetail';
+import { MahasiswaSkripsi } from './routes/mahasiswa/Skripsi';
 import { MahasiswaProfil } from './routes/mahasiswa/Profil';
 import { DosenDashboard } from './routes/dosen/Dashboard';
 import { DosenJadwal } from './routes/dosen/Jadwal';
@@ -29,6 +30,7 @@ import { DosenProfil } from './routes/dosen/Profil';
 import { DosenInputNilaiList } from './routes/dosen/InputNilai';
 import { DosenInputNilaiDetail } from './routes/dosen/InputNilaiDetail';
 import { DosenPengumuman } from './routes/dosen/Pengumuman';
+import { DosenSkripsi } from './routes/dosen/Skripsi';
 import { DosenAbsensiList } from './routes/dosen/Absensi';
 import { DosenAbsensiKelas } from './routes/dosen/AbsensiKelas';
 import { DosenAbsensiPertemuan } from './routes/dosen/AbsensiPertemuan';
@@ -45,6 +47,7 @@ import { AdminKknPage } from './routes/akademik/Kkn';
 import { AdminMbkmPage } from './routes/akademik/Mbkm';
 import { AkademikEdom } from './routes/akademik/Edom';
 import { AkademikEdomRekap } from './routes/akademik/EdomRekap';
+import { AdminSkripsiPage } from './routes/akademik/Skripsi';
 import { AdminMahasiswaPage } from './routes/akademik/Mahasiswa';
 import { AdminDosenPage } from './routes/akademik/Dosen';
 import { AdminProdi } from './routes/akademik/Prodi';
@@ -96,6 +99,7 @@ export function App() {
         <Route path="mbkm"       element={<MahasiswaMbkm />} />
         <Route path="edom"             element={<MahasiswaEdom />} />
         <Route path="edom/:kelasId"    element={<MahasiswaEdomDetail />} />
+        <Route path="skripsi"          element={<MahasiswaSkripsi />} />
         <Route path="notifikasi" element={<NotifikasiPage />} />
         <Route path="profil"             element={<MahasiswaProfil />} />
         <Route path="profil/kartu"       element={<MahasiswaKartu />} />
@@ -114,6 +118,7 @@ export function App() {
         <Route path="absensi/:kelasId"                     element={<DosenAbsensiKelas />} />
         <Route path="absensi/:kelasId/:pertemuanId"        element={<DosenAbsensiPertemuan />} />
         <Route path="pengumuman"                           element={<DosenPengumuman />} />
+        <Route path="skripsi"                              element={<DosenSkripsi />} />
         <Route path="bimbingan"          element={<DosenBimbingan />} />
         <Route path="bimbingan/:mahasiswaId" element={<DosenBimbinganDetail />} />
         <Route path="penelitian"         element={<DosenPenelitian />} />
@@ -144,6 +149,7 @@ export function App() {
         <Route path="mbkm"                element={<AdminMbkmPage />} />
         <Route path="edom"                element={<AkademikEdom />} />
         <Route path="edom/:id/rekap"      element={<AkademikEdomRekap />} />
+        <Route path="skripsi"             element={<AdminSkripsiPage />} />
         <Route path="audit"         element={<AdminAuditLog />} />
         <Route path="notifikasi"    element={<NotifikasiPage />} />
         <Route path="profil"        element={<AkademikProfil />} />
