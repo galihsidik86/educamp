@@ -838,7 +838,7 @@ model EdomJawaban {
   responseId String
   response   EdomResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
   aspekId    String
-  aspek      EdomAspek    @relation(fields: [aspekId], references: [id])
+  aspek      EdomAspek    @relation(fields: [aspekId], references: [id], onDelete: Cascade)
   nilai      Int          // 1-5 likert
 
   @@unique([responseId, aspekId])
