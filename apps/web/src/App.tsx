@@ -19,6 +19,7 @@ import { MahasiswaKeuangan } from './routes/mahasiswa/Keuangan';
 import { MahasiswaPenelitian } from './routes/mahasiswa/Penelitian';
 import { MahasiswaPengabdian } from './routes/mahasiswa/Pengabdian';
 import { MahasiswaKkn } from './routes/mahasiswa/Kkn';
+import { MahasiswaMbkm } from './routes/mahasiswa/Mbkm';
 import { MahasiswaProfil } from './routes/mahasiswa/Profil';
 import { DosenDashboard } from './routes/dosen/Dashboard';
 import { DosenJadwal } from './routes/dosen/Jadwal';
@@ -38,6 +39,8 @@ import { AkademikProfil } from './routes/akademik/Profil';
 import { AkademikLaporan } from './routes/akademik/Laporan';
 import { AkademikLaporanKehadiran } from './routes/akademik/LaporanKehadiran';
 import { AkademikPengumuman } from './routes/akademik/Pengumuman';
+import { AdminKknPage } from './routes/akademik/Kkn';
+import { AdminMbkmPage } from './routes/akademik/Mbkm';
 import { AdminMahasiswaPage } from './routes/akademik/Mahasiswa';
 import { AdminDosenPage } from './routes/akademik/Dosen';
 import { AdminProdi } from './routes/akademik/Prodi';
@@ -86,6 +89,7 @@ export function App() {
         <Route path="penelitian" element={<MahasiswaPenelitian />} />
         <Route path="pengabdian" element={<MahasiswaPengabdian />} />
         <Route path="kkn"        element={<MahasiswaKkn />} />
+        <Route path="mbkm"       element={<MahasiswaMbkm />} />
         <Route path="notifikasi" element={<NotifikasiPage />} />
         <Route path="profil"             element={<MahasiswaProfil />} />
         <Route path="profil/kartu"       element={<MahasiswaKartu />} />
@@ -130,6 +134,8 @@ export function App() {
         <Route path="laporan"             element={<AkademikLaporan />} />
         <Route path="laporan/kehadiran"   element={<AkademikLaporanKehadiran />} />
         <Route path="pengumuman"          element={<AkademikPengumuman />} />
+        <Route path="kkn"                 element={<AdminKknPage />} />
+        <Route path="mbkm"                element={<AdminMbkmPage />} />
         <Route path="audit"         element={<AdminAuditLog />} />
         <Route path="notifikasi"    element={<NotifikasiPage />} />
         <Route path="profil"        element={<AkademikProfil />} />

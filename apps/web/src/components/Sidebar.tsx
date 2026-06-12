@@ -29,6 +29,7 @@ const itemsByRole: Record<Role, { group: string; items: NavItem[] }[]> = {
         { to: '/mahasiswa/penelitian', label: 'Penelitian',        icon: <FileText size={18} /> },
         { to: '/mahasiswa/pengabdian', label: 'Pengabdian',        icon: <HeartHandshake size={18} /> },
         { to: '/mahasiswa/kkn',        label: 'KKN',               icon: <MapPin size={18} /> },
+        { to: '/mahasiswa/mbkm',       label: 'MBKM',              icon: <Briefcase size={18} /> },
         { to: '/mahasiswa/pengumuman', label: 'Pengumuman',        icon: <Megaphone size={18} /> },
         { to: '/mahasiswa/notifikasi', label: 'Notifikasi',        icon: <Bell size={18} /> },
         { to: '/mahasiswa/profil',     label: 'Profil',            icon: <UserRound size={18} /> },
@@ -74,6 +75,8 @@ const itemsByRole: Record<Role, { group: string; items: NavItem[] }[]> = {
       items: [
         { to: '/akademik/periode',        label: 'Periode KRS',   icon: <CalendarDays size={18} /> },
         { to: '/akademik/krs',            label: 'Validasi KRS',  icon: <ClipboardList size={18} /> },
+        { to: '/akademik/kkn',            label: 'Kelola KKN',    icon: <MapPin size={18} /> },
+        { to: '/akademik/mbkm',           label: 'Kelola MBKM',   icon: <Briefcase size={18} /> },
         { to: '/akademik/keuangan',       label: 'Keuangan',      icon: <Wallet size={18} /> },
         { to: '/akademik/laporan',           label: 'Laporan',           icon: <Briefcase size={18} />, end: true },
         { to: '/akademik/laporan/kehadiran', label: 'Laporan Kehadiran', icon: <CalendarCheck size={18} /> },

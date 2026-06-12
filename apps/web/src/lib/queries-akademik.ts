@@ -247,6 +247,117 @@ export function useKelasActions() {
 }
 
 // ============================================================
+// MBKM akademik (list + edit + konversi)
+// ============================================================
+
+export type AdminMbkmItem = {
+  id: string;
+  jenis: string;
+  namaProgram: string; mitra: string; lokasi: string | null;
+  periode: string;
+  tanggalMulai: string | null; tanggalSelesai: string | null;
+  status: 'pengajuan' | 'disetujui' | 'berjalan' | 'selesai' | 'ditolak';
+  catatan: string | null;
+  linkProposal: string | null; linkLaporan: string | null; linkSertifikat: string | null;
+  mahasiswa: { id: string; nim: string; nama: string; prodi: { kode: string; nama: string } };
+  dpl: { id: string; nidn: string; nama: string } | null;
+  konversi: Array<{ id: string; mataKuliahId: string; kodeMK: string; namaMK: string; sks: number; nilaiHuruf: string | null; bobot: number | null }>;
+  totalSksKonversi: number;
+};
+export type AdminMbkmList = { items: AdminMbkmItem[]; periodeList: string[] };
+
+export const useAdminMbkm = (filters: { periode?: string; status?: string; jenis?: string } = {}) => {
+  const qs = new URLSearchParams();
+  if (filters.periode) qs.set('periode', filters.periode);
+  if (filters.status) qs.set('status', filters.status);
+  if (filters.jenis) qs.set('jenis', filters.jenis);
+  return useApi<AdminMbkmList>(['admin-mbkm', qs.toString()], `/akademik/mbkm?${qs}`);
+};
+
+export function useAdminMbkmActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['admin-mbkm'] });
+  return {
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<{
+        dplDosenId: string | null; tanggalMulai: string | null; tanggalSelesai: string | null;
+        status: AdminMbkmItem['status']; catatan: string | null; lokasi: string | null;
+      }> }) => api(`/akademik/mbkm/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => api(`/akademik/mbkm/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+    addKonversi: useMutation({
+      mutationFn: ({ id, mataKuliahId, nilaiHuruf }: { id: string; mataKuliahId: string; nilaiHuruf?: string }) =>
+        apiPost(`/akademik/mbkm/${id}/konversi`, { mataKuliahId, nilaiHuruf }),
+      onSuccess: inv,
+    }),
+    setNilai: useMutation({
+      mutationFn: ({ id, konversiId, nilaiHuruf }: { id: string; konversiId: string; nilaiHuruf: string }) =>
+        api(`/akademik/mbkm/${id}/konversi/${konversiId}`, { method: 'PATCH', body: JSON.stringify({ nilaiHuruf }) }),
+      onSuccess: inv,
+    }),
+    removeKonversi: useMutation({
+      mutationFn: ({ id, konversiId }: { id: string; konversiId: string }) =>
+        api(`/akademik/mbkm/${id}/konversi/${konversiId}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// ============================================================
+// KKN akademik (list + edit)
+// ============================================================
+
+export type AdminKknItem = {
+  id: string;
+  periode: string;
+  lokasi: string;
+  desa: string | null;
+  kecamatan: string | null;
+  kabupaten: string | null;
+  status: 'pendaftaran' | 'ditugaskan' | 'berjalan' | 'selesai';
+  tanggalMulai: string | null;
+  tanggalSelesai: string | null;
+  nilai: string | null;
+  mahasiswa: { id: string; nim: string; nama: string; prodi: { kode: string; nama: string } };
+  dpl: { id: string; nidn: string; nama: string } | null;
+};
+export type AdminKknList = { items: AdminKknItem[]; periodeList: string[] };
+
+export const useAdminKkn = (filters: { periode?: string; status?: string } = {}) => {
+  const qs = new URLSearchParams();
+  if (filters.periode) qs.set('periode', filters.periode);
+  if (filters.status) qs.set('status', filters.status);
+  return useApi<AdminKknList>(['admin-kkn', qs.toString()], `/akademik/kkn?${qs}`);
+};
+
+export type AdminKknPatch = Partial<{
+  lokasi: string; desa: string | null; kecamatan: string | null; kabupaten: string | null;
+  dplDosenId: string | null;
+  tanggalMulai: string | null; tanggalSelesai: string | null;
+  nilai: string | null;
+  status: 'pendaftaran' | 'ditugaskan' | 'berjalan' | 'selesai';
+}>;
+export function useAdminKknActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['admin-kkn'] });
+  return {
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: AdminKknPatch }) =>
+        api(`/akademik/kkn/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => api(`/akademik/kkn/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// ============================================================
 // Pengumuman akademik (CRUD)
 // ============================================================
 

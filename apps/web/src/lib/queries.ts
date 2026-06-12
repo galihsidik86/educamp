@@ -162,6 +162,55 @@ export type Kkn = {
 };
 export const useKkn = () => useApi<{ items: Kkn[] }>(['kkn'], '/mahasiswa/kkn');
 
+export type KknDaftarInput = { periode: string; lokasi: string; desa?: string; kecamatan?: string; kabupaten?: string };
+export function useKknActions() {
+  const qc = useQueryClient();
+  return {
+    daftar: useMutation({
+      mutationFn: (input: KknDaftarInput) => apiPost('/mahasiswa/kkn', input),
+      onSuccess: () => qc.invalidateQueries({ queryKey: ['kkn'] }),
+    }),
+  };
+}
+
+export type JenisMbkm =
+  | 'pertukaran_mahasiswa' | 'magang_industri' | 'asistensi_mengajar' | 'penelitian'
+  | 'proyek_kemanusiaan' | 'kewirausahaan' | 'studi_independen' | 'kkn_tematik';
+export type StatusMbkm = 'pengajuan' | 'disetujui' | 'berjalan' | 'selesai' | 'ditolak';
+
+export type MbkmItem = {
+  id: string;
+  jenis: JenisMbkm;
+  namaProgram: string; mitra: string; lokasi: string | null;
+  periode: string;
+  tanggalMulai: string | null; tanggalSelesai: string | null;
+  status: StatusMbkm;
+  catatan: string | null;
+  linkProposal: string | null; linkLaporan: string | null; linkSertifikat: string | null;
+  dpl: string | null;
+  konversi: Array<{ id: string; kodeMK: string; namaMK: string; sks: number; nilaiHuruf: string | null; bobot: number | null }>;
+  totalSksKonversi: number;
+};
+export const useMbkm = () => useApi<{ items: MbkmItem[] }>(['mbkm'], '/mahasiswa/mbkm');
+
+export type MbkmDaftarInput = {
+  jenis: JenisMbkm; namaProgram: string; mitra: string; lokasi?: string;
+  periode: string; tanggalMulai?: string; tanggalSelesai?: string; linkProposal?: string;
+};
+export function useMbkmActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['mbkm'] });
+  return {
+    daftar: useMutation({ mutationFn: (input: MbkmDaftarInput) => apiPost('/mahasiswa/mbkm', input), onSuccess: inv }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<{ linkProposal: string; linkLaporan: string; linkSertifikat: string }> }) =>
+        api(`/mahasiswa/mbkm/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    cancel: useMutation({ mutationFn: (id: string) => api(`/mahasiswa/mbkm/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+  };
+}
+
 export type PengumumanItem = {
   id: string;
   judul: string;

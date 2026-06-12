@@ -142,6 +142,7 @@ model Mahasiswa {
   penelitianMahasiswa PenelitianMahasiswa[]
   pengabdianMahasiswa PengabdianMahasiswa[]
   kkn                 Kkn[]
+  mbkm                Mbkm[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -178,6 +179,7 @@ model Dosen {
   penelitian         Penelitian[]
   pengabdian         Pengabdian[]
   kknBimbingan       Kkn[]               @relation("DplKkn")
+  mbkmBimbingan      Mbkm[]              @relation("DplMbkm")
 
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -289,6 +291,7 @@ model MataKuliah {
   kelas         Kelas[]
   prasyarat     Prasyarat[]         @relation("MKUtama")
   prasyaratDari Prasyarat[]         @relation("MKPrasyarat")
+  mbkmKonversi  MbkmKonversi[]
 
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
@@ -643,6 +646,81 @@ model Kkn {
   updatedAt      DateTime  @updatedAt
 
   @@index([mahasiswaId])
+}
+
+// ============================================================
+// MBKM — Merdeka Belajar Kampus Merdeka
+// 8 Bentuk Kegiatan Pembelajaran (BKP) yang diakui di SKS
+// ============================================================
+
+enum JenisMbkm {
+  pertukaran_mahasiswa
+  magang_industri
+  asistensi_mengajar
+  penelitian
+  proyek_kemanusiaan
+  kewirausahaan
+  studi_independen
+  kkn_tematik
+}
+
+enum StatusMbkm {
+  pengajuan
+  disetujui
+  berjalan
+  selesai
+  ditolak
+}
+
+model Mbkm {
+  id              String         @id @default(uuid())
+  mahasiswaId     String
+  mahasiswa       Mahasiswa      @relation(fields: [mahasiswaId], references: [id])
+
+  jenis           JenisMbkm
+  namaProgram     String         // "Studi Independen Bersertifikat Bangkit"
+  mitra           String         // "Bangkit Academy by Google/GoTo/Tokopedia"
+  lokasi          String?
+  periode         String         // semester "20251"
+
+  dplDosenId      String?
+  dplDosen        Dosen?         @relation("DplMbkm", fields: [dplDosenId], references: [id])
+
+  tanggalMulai    DateTime?
+  tanggalSelesai  DateTime?
+
+  status          StatusMbkm     @default(pengajuan)
+  catatan         String?        @db.Text
+
+  linkProposal    String?        @db.Text
+  linkLaporan     String?        @db.Text
+  linkSertifikat  String?        @db.Text
+
+  konversi        MbkmKonversi[]
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([mahasiswaId])
+  @@index([status])
+  @@index([periode])
+}
+
+model MbkmKonversi {
+  id           String     @id @default(uuid())
+  mbkmId       String
+  mbkm         Mbkm       @relation(fields: [mbkmId], references: [id], onDelete: Cascade)
+  mataKuliahId String
+  mataKuliah   MataKuliah @relation(fields: [mataKuliahId], references: [id])
+
+  nilaiHuruf   String?    // A, AB, B, …
+  bobot        Float?
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([mbkmId, mataKuliahId])
+  @@index([mataKuliahId])
 }
 
 // ============================================================

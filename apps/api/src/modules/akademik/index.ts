@@ -10,6 +10,8 @@ import { kurikulumRouter } from './kurikulum.js';
 import { periodeRouter } from './periode.js';
 import { krsRouter } from './krs.js';
 import { keuanganRouter } from './keuangan.js';
+import { kknRouter } from './kkn.js';
+import { mbkmRouter } from './mbkm.js';
 import { pengumumanRouter } from './pengumuman.js';
 import { auditRouter } from './audit.js';
 
@@ -30,5 +32,7 @@ akademikRouter.use(kurikulumRouter);
 akademikRouter.use(periodeRouter);
 akademikRouter.use(krsRouter);
 akademikRouter.use(keuanganRouter);
+akademikRouter.use(kknRouter);
+akademikRouter.use(mbkmRouter);
 akademikRouter.use(pengumumanRouter);
 akademikRouter.use(auditRouter);
