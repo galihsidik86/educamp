@@ -145,6 +145,7 @@ model Mahasiswa {
   mbkm                Mbkm[]
   edomResponse        EdomResponse[]
   skripsi             Skripsi[]
+  yudisium            Yudisium[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -776,6 +777,67 @@ model Skripsi {
   @@index([status])
   @@index([pembimbing1Id])
   @@index([pembimbing2Id])
+}
+
+// ============================================================
+// WISUDA / YUDISIUM
+// Periode wisuda dibuat akademik, mahasiswa daftar jika memenuhi syarat
+// IPK + SKS + skripsi lulus + tidak ada nilai E.
+// ============================================================
+
+model PeriodeWisuda {
+  id                  String    @id @default(uuid())
+  kode                String    @unique // "2026-1"
+  nama                String                  // "Wisuda Periode I 2026"
+  tanggal             DateTime
+  isPendaftaranBuka   Boolean   @default(true)
+  batasIpk            Float?                  // mis. 2.00
+  batasSks            Int?                    // mis. 144
+
+  yudisium            Yudisium[]
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+enum StatusYudisium {
+  pendaftaran   // baru daftar, belum diverifikasi
+  verifikasi    // sedang dicek akademik
+  layak         // memenuhi syarat, siap wisuda
+  tidak_layak   // ditolak
+  wisuda        // sudah diwisuda, no ijazah keluar
+  batal
+}
+
+enum PredikatYudisium {
+  cumlaude
+  sangat_memuaskan
+  memuaskan
+  tidak_lulus
+}
+
+model Yudisium {
+  id              String           @id @default(uuid())
+  mahasiswaId     String
+  mahasiswa       Mahasiswa        @relation(fields: [mahasiswaId], references: [id])
+  periodeWisudaId String
+  periodeWisuda   PeriodeWisuda    @relation(fields: [periodeWisudaId], references: [id])
+
+  status          StatusYudisium   @default(pendaftaran)
+  ipk             Float                              // snapshot saat daftar
+  sksLulus        Int                                // snapshot saat daftar
+  predikat        PredikatYudisium?
+  catatan         String?          @db.Text
+  noIjazah        String?
+  noSkl           String?
+  tanggalLulus    DateTime?
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([mahasiswaId, periodeWisudaId])
+  @@index([periodeWisudaId])
+  @@index([status])
 }
 
 // ============================================================

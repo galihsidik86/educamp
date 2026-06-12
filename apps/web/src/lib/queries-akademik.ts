@@ -247,6 +247,81 @@ export function useKelasActions() {
 }
 
 // ============================================================
+// Periode Wisuda + Yudisium akademik
+// ============================================================
+
+export type PeriodeWisudaItem = {
+  id: string;
+  kode: string;
+  nama: string;
+  tanggal: string;
+  isPendaftaranBuka: boolean;
+  batasIpk: number | null;
+  batasSks: number | null;
+  _count: { yudisium: number };
+};
+export type PeriodeWisudaInput = {
+  kode: string;
+  nama: string;
+  tanggal: string;
+  isPendaftaranBuka?: boolean;
+  batasIpk?: number | null;
+  batasSks?: number | null;
+};
+export const usePeriodeWisuda = () =>
+  useApi<{ items: PeriodeWisudaItem[] }>(['periode-wisuda'], '/akademik/periode-wisuda');
+
+export function usePeriodeWisudaActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['periode-wisuda'] });
+  return {
+    create: useMutation({ mutationFn: (body: PeriodeWisudaInput) => apiPost('/akademik/periode-wisuda', body), onSuccess: inv }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<PeriodeWisudaInput> }) =>
+        api(`/akademik/periode-wisuda/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({ mutationFn: (id: string) => api(`/akademik/periode-wisuda/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+  };
+}
+
+export type AdminYudisiumItem = {
+  id: string;
+  status: 'pendaftaran' | 'verifikasi' | 'layak' | 'tidak_layak' | 'wisuda' | 'batal';
+  ipk: number;
+  sksLulus: number;
+  predikat: 'cumlaude' | 'sangat_memuaskan' | 'memuaskan' | 'tidak_lulus' | null;
+  catatan: string | null;
+  noIjazah: string | null;
+  noSkl: string | null;
+  tanggalLulus: string | null;
+  mahasiswa: { id: string; nim: string; nama: string; angkatan: number; prodi: { kode: string; nama: string } };
+  periodeWisuda: { id: string; kode: string; nama: string; tanggal: string };
+};
+
+export const useAdminYudisium = (filters: { status?: string; periodeWisudaId?: string } = {}) => {
+  const qs = new URLSearchParams();
+  if (filters.status) qs.set('status', filters.status);
+  if (filters.periodeWisudaId) qs.set('periodeWisudaId', filters.periodeWisudaId);
+  return useApi<{ items: AdminYudisiumItem[] }>(['admin-yudisium', qs.toString()], `/akademik/yudisium?${qs}`);
+};
+
+export function useAdminYudisiumActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['admin-yudisium'] });
+  return {
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<{
+        status: AdminYudisiumItem['status'];
+        predikat: AdminYudisiumItem['predikat'] | null;
+        catatan: string | null; noIjazah: string | null; noSkl: string | null; tanggalLulus: string | null;
+      }> }) => api(`/akademik/yudisium/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// ============================================================
 // Skripsi akademik
 // ============================================================
 

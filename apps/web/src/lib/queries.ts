@@ -211,6 +211,50 @@ export function useMbkmActions() {
   };
 }
 
+export type StatusYudisium = 'pendaftaran' | 'verifikasi' | 'layak' | 'tidak_layak' | 'wisuda' | 'batal';
+export type PredikatYudisium = 'cumlaude' | 'sangat_memuaskan' | 'memuaskan' | 'tidak_lulus';
+
+export type YudisiumKelayakan = {
+  ipk: number;
+  sksLulus: number;
+  adaE: boolean;
+  lulusSkripsi: boolean;
+  predikat: PredikatYudisium;
+  layak: boolean;
+  periodeTersedia: Array<{
+    id: string; kode: string; nama: string; tanggal: string;
+    batasIpk: number | null; batasSks: number | null;
+    memenuhiSyarat: boolean; sudahDaftar: boolean;
+  }>;
+};
+export const useYudisiumKelayakan = () =>
+  useApi<YudisiumKelayakan>(['yudisium-kelayakan'], '/mahasiswa/yudisium/kelayakan');
+
+export type YudisiumItem = {
+  id: string;
+  status: StatusYudisium;
+  ipk: number; sksLulus: number;
+  predikat: PredikatYudisium | null;
+  catatan: string | null;
+  noIjazah: string | null;
+  noSkl: string | null;
+  tanggalLulus: string | null;
+  periode: { id: string; kode: string; nama: string; tanggal: string };
+};
+export const useYudisium = () => useApi<{ items: YudisiumItem[] }>(['yudisium'], '/mahasiswa/yudisium');
+
+export function useYudisiumActions() {
+  const qc = useQueryClient();
+  const inv = () => Promise.all([
+    qc.invalidateQueries({ queryKey: ['yudisium'] }),
+    qc.invalidateQueries({ queryKey: ['yudisium-kelayakan'] }),
+  ]);
+  return {
+    daftar: useMutation({ mutationFn: (periodeWisudaId: string) => apiPost('/mahasiswa/yudisium/daftar', { periodeWisudaId }), onSuccess: inv }),
+    batal: useMutation({ mutationFn: (id: string) => api(`/mahasiswa/yudisium/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+  };
+}
+
 export type StatusSkripsi = 'diajukan' | 'disetujui' | 'proposal' | 'penelitian' | 'sidang' | 'lulus' | 'ditolak' | 'batal';
 
 export type SkripsiItem = {

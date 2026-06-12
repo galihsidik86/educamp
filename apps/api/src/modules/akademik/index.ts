@@ -14,6 +14,7 @@ import { kknRouter } from './kkn.js';
 import { mbkmRouter } from './mbkm.js';
 import { edomRouter } from './edom.js';
 import { skripsiRouter } from './skripsi.js';
+import { yudisiumRouter } from './yudisium.js';
 import { pengumumanRouter } from './pengumuman.js';
 import { auditRouter } from './audit.js';
 
@@ -38,5 +39,6 @@ akademikRouter.use(kknRouter);
 akademikRouter.use(mbkmRouter);
 akademikRouter.use(edomRouter);
 akademikRouter.use(skripsiRouter);
+akademikRouter.use(yudisiumRouter);
 akademikRouter.use(pengumumanRouter);
 akademikRouter.use(auditRouter);
