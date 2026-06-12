@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import {
   LayoutDashboard, ClipboardList, CalendarDays, GraduationCap, Wallet,
   UserRound, BookOpen, Users, FileText, Briefcase, HeartHandshake, Building2, MapPin,
-  ShieldCheck, Layers, Bell, History, CalendarCheck, Megaphone, ClipboardCheck, ScrollText, Award, Gift, Mail,
+  ShieldCheck, Layers, Bell, History, CalendarCheck, Megaphone, ClipboardCheck, ScrollText, Award, Gift, Mail, MessageSquare,
 } from 'lucide-react';
 import type { Role } from '@/lib/auth';
 
@@ -21,6 +21,7 @@ const itemsByRole: Record<Role, { group: string; items: NavItem[] }[]> = {
         { to: '/mahasiswa/absensi',      label: 'Absensi',           icon: <CalendarCheck size={18} /> },
         { to: '/mahasiswa/materi',       label: 'Materi Kuliah',     icon: <BookOpen size={18} /> },
         { to: '/mahasiswa/tugas',        label: 'Tugas',             icon: <FileText size={18} /> },
+        { to: '/mahasiswa/forum',        label: 'Forum Diskusi',     icon: <MessageSquare size={18} /> },
         { to: '/mahasiswa/nilai',        label: 'Nilai & Transkrip', icon: <GraduationCap size={18} /> },
       ],
     },
@@ -52,6 +53,7 @@ const itemsByRole: Record<Role, { group: string; items: NavItem[] }[]> = {
         { to: '/dosen/absensi',      label: 'Absensi Kelas',      icon: <CalendarCheck size={18} /> },
         { to: '/dosen/materi',       label: 'Materi Ajar',        icon: <BookOpen size={18} /> },
         { to: '/dosen/tugas',        label: 'Tugas',              icon: <FileText size={18} /> },
+        { to: '/dosen/forum',        label: 'Forum Diskusi',      icon: <MessageSquare size={18} /> },
         { to: '/dosen/nilai',        label: 'Input Nilai',        icon: <GraduationCap size={18} /> },
         { to: '/dosen/bimbingan',    label: 'Bimbingan Akademik', icon: <Users size={18} /> },
         { to: '/dosen/skripsi',      label: 'Skripsi Bimbingan',  icon: <ScrollText size={18} /> },

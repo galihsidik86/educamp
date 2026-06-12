@@ -149,6 +149,8 @@ model Mahasiswa {
   beasiswa            PendaftaranBeasiswa[]
   submitTugas         SubmitTugas[]
   surat               Surat[]
+  forumThread         ForumThread[]
+  forumReply          ForumReply[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -188,6 +190,8 @@ model Dosen {
   mbkmBimbingan      Mbkm[]              @relation("DplMbkm")
   pembimbing1Skripsi Skripsi[]           @relation("Pembimbing1Skripsi")
   pembimbing2Skripsi Skripsi[]           @relation("Pembimbing2Skripsi")
+  forumThread        ForumThread[]
+  forumReply         ForumReply[]
 
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -379,6 +383,7 @@ model Kelas {
   edomResponse EdomResponse[]
   bahanAjar    BahanAjar[]
   tugas        Tugas[]
+  forumThread  ForumThread[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
@@ -490,6 +495,52 @@ model SubmitTugas {
   @@unique([tugasId, mahasiswaId])
   @@index([tugasId])
   @@index([mahasiswaId])
+}
+
+// ============================================================
+// FORUM DISKUSI per Kelas
+// ============================================================
+
+model ForumThread {
+  id              String        @id @default(uuid())
+  kelasId         String
+  kelas           Kelas         @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+
+  authorMahasiswaId String?
+  authorMahasiswa   Mahasiswa?  @relation(fields: [authorMahasiswaId], references: [id])
+  authorDosenId     String?
+  authorDosen       Dosen?      @relation(fields: [authorDosenId], references: [id])
+
+  judul         String
+  isi           String        @db.Text
+  isPinned      Boolean       @default(false)
+  isLocked      Boolean       @default(false)
+
+  replies       ForumReply[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([kelasId])
+  @@index([isPinned])
+}
+
+model ForumReply {
+  id            String        @id @default(uuid())
+  threadId      String
+  thread        ForumThread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  authorMahasiswaId String?
+  authorMahasiswa   Mahasiswa? @relation(fields: [authorMahasiswaId], references: [id])
+  authorDosenId     String?
+  authorDosen       Dosen?     @relation(fields: [authorDosenId], references: [id])
+
+  isi           String        @db.Text
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([threadId])
 }
 
 enum StatusAbsensi {

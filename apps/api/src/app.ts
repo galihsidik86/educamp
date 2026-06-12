@@ -17,6 +17,7 @@ import { mahasiswaRouter } from './modules/mahasiswa/index.js';
 import { dosenRouter } from './modules/dosen/index.js';
 import { akademikRouter } from './modules/akademik/index.js';
 import { notifikasiRouter } from './modules/notifikasi/index.js';
+import { forumRouter } from './modules/forum/index.js';
 
 export function createApp(): Express {
   const app = express();
@@ -43,6 +44,7 @@ export function createApp(): Express {
 
   app.use('/auth', authRouter);
   app.use('/notifikasi', notifikasiRouter);
+  app.use('/forum', forumRouter);
   app.use('/mahasiswa', mahasiswaRouter);
   app.use('/dosen', dosenRouter);
   app.use('/akademik', akademikRouter);

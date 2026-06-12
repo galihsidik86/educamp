@@ -32,6 +32,9 @@ import { MahasiswaTugas } from './routes/mahasiswa/Tugas';
 import { MahasiswaTugasDetail } from './routes/mahasiswa/TugasDetail';
 import { MahasiswaSurat } from './routes/mahasiswa/Surat';
 import { MahasiswaSuratCetak } from './routes/mahasiswa/SuratCetak';
+import { ForumKelasList } from './routes/shared/ForumKelas';
+import { ForumKelasDetail } from './routes/shared/ForumThreadList';
+import { ForumThreadDetail } from './routes/shared/ForumThread';
 import { MahasiswaProfil } from './routes/mahasiswa/Profil';
 import { DosenDashboard } from './routes/dosen/Dashboard';
 import { DosenJadwal } from './routes/dosen/Jadwal';
@@ -128,6 +131,9 @@ export function App() {
         <Route path="tugas/:id"          element={<MahasiswaTugasDetail />} />
         <Route path="surat"              element={<MahasiswaSurat />} />
         <Route path="surat/:id/cetak"    element={<MahasiswaSuratCetak />} />
+        <Route path="forum"                            element={<ForumKelasList />} />
+        <Route path="forum/:kelasId"                   element={<ForumKelasDetail />} />
+        <Route path="forum/:kelasId/:threadId"         element={<ForumThreadDetail />} />
         <Route path="notifikasi" element={<NotifikasiPage />} />
         <Route path="profil"             element={<MahasiswaProfil />} />
         <Route path="profil/kartu"       element={<MahasiswaKartu />} />
@@ -152,6 +158,9 @@ export function App() {
         <Route path="tugas"                                element={<DosenTugasList />} />
         <Route path="tugas/:kelasId"                       element={<DosenTugasKelas />} />
         <Route path="tugas/:kelasId/:tugasId"              element={<DosenTugasSubmission />} />
+        <Route path="forum"                                element={<ForumKelasList />} />
+        <Route path="forum/:kelasId"                       element={<ForumKelasDetail />} />
+        <Route path="forum/:kelasId/:threadId"             element={<ForumThreadDetail />} />
         <Route path="bimbingan"          element={<DosenBimbingan />} />
         <Route path="bimbingan/:mahasiswaId" element={<DosenBimbinganDetail />} />
         <Route path="penelitian"         element={<DosenPenelitian />} />
