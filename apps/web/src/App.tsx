@@ -25,6 +25,8 @@ import { MahasiswaEdomDetail } from './routes/mahasiswa/EdomDetail';
 import { MahasiswaSkripsi } from './routes/mahasiswa/Skripsi';
 import { MahasiswaYudisium } from './routes/mahasiswa/Yudisium';
 import { MahasiswaYudisiumCetakSkl } from './routes/mahasiswa/YudisiumCetakSkl';
+import { MahasiswaMateri } from './routes/mahasiswa/Materi';
+import { MahasiswaMateriKelas } from './routes/mahasiswa/MateriKelas';
 import { MahasiswaProfil } from './routes/mahasiswa/Profil';
 import { DosenDashboard } from './routes/dosen/Dashboard';
 import { DosenJadwal } from './routes/dosen/Jadwal';
@@ -33,6 +35,8 @@ import { DosenInputNilaiList } from './routes/dosen/InputNilai';
 import { DosenInputNilaiDetail } from './routes/dosen/InputNilaiDetail';
 import { DosenPengumuman } from './routes/dosen/Pengumuman';
 import { DosenSkripsi } from './routes/dosen/Skripsi';
+import { DosenMateriList } from './routes/dosen/Materi';
+import { DosenMateriKelas } from './routes/dosen/MateriKelas';
 import { DosenAbsensiList } from './routes/dosen/Absensi';
 import { DosenAbsensiKelas } from './routes/dosen/AbsensiKelas';
 import { DosenAbsensiPertemuan } from './routes/dosen/AbsensiPertemuan';
@@ -106,6 +110,8 @@ export function App() {
         <Route path="skripsi"          element={<MahasiswaSkripsi />} />
         <Route path="yudisium"           element={<MahasiswaYudisium />} />
         <Route path="yudisium/:id/skl"   element={<MahasiswaYudisiumCetakSkl />} />
+        <Route path="materi"             element={<MahasiswaMateri />} />
+        <Route path="materi/:kelasId"    element={<MahasiswaMateriKelas />} />
         <Route path="notifikasi" element={<NotifikasiPage />} />
         <Route path="profil"             element={<MahasiswaProfil />} />
         <Route path="profil/kartu"       element={<MahasiswaKartu />} />
@@ -125,6 +131,8 @@ export function App() {
         <Route path="absensi/:kelasId/:pertemuanId"        element={<DosenAbsensiPertemuan />} />
         <Route path="pengumuman"                           element={<DosenPengumuman />} />
         <Route path="skripsi"                              element={<DosenSkripsi />} />
+        <Route path="materi"                               element={<DosenMateriList />} />
+        <Route path="materi/:kelasId"                      element={<DosenMateriKelas />} />
         <Route path="bimbingan"          element={<DosenBimbingan />} />
         <Route path="bimbingan/:mahasiswaId" element={<DosenBimbinganDetail />} />
         <Route path="penelitian"         element={<DosenPenelitian />} />

@@ -374,6 +374,7 @@ model Kelas {
   krs          Krs[]
   pertemuan    Pertemuan[]
   edomResponse EdomResponse[]
+  bahanAjar    BahanAjar[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
@@ -392,6 +393,7 @@ model Pertemuan {
   catatan     String?   @db.Text
 
   absensi     Absensi[]
+  bahanAjar   BahanAjar[]
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -399,6 +401,34 @@ model Pertemuan {
   @@unique([kelasId, pertemuanKe])
   @@index([kelasId])
   @@index([tanggal])
+}
+
+enum JenisBahanAjar {
+  link
+  file
+  text
+  video
+}
+
+model BahanAjar {
+  id          String          @id @default(uuid())
+  kelasId     String
+  kelas       Kelas           @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+  pertemuanId String?
+  pertemuan   Pertemuan?      @relation(fields: [pertemuanId], references: [id], onDelete: SetNull)
+
+  jenis       JenisBahanAjar
+  judul       String
+  deskripsi   String?         @db.Text
+  url         String?         @db.Text
+  konten      String?         @db.Text
+  urutan      Int             @default(0)
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([kelasId])
+  @@index([pertemuanId])
 }
 
 enum StatusAbsensi {

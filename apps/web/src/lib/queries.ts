@@ -211,6 +211,32 @@ export function useMbkmActions() {
   };
 }
 
+export type MateriKelasItem = {
+  kelasId: string;
+  kodeMK: string; namaMK: string; sks: number; kodeKelas: string; dosen: string;
+  totalBahanAjar: number;
+};
+export const useMahasiswaMateri = () =>
+  useApi<{ items: MateriKelasItem[] }>(['mahasiswa-materi'], '/mahasiswa/materi');
+
+export type MahasiswaBahanAjarItem = {
+  id: string;
+  jenis: 'link' | 'file' | 'text' | 'video';
+  judul: string;
+  deskripsi: string | null;
+  url: string | null;
+  konten: string | null;
+  pertemuanKe: number | null;
+  tanggal: string | null;
+  createdAt: string;
+};
+export type MahasiswaMateriDetail = {
+  kelas: { id: string; kodeMK: string; namaMK: string; sks: number; kodeKelas: string; dosen: string };
+  items: MahasiswaBahanAjarItem[];
+};
+export const useMahasiswaMateriDetail = (kelasId: string | undefined) =>
+  useApi<MahasiswaMateriDetail>(['mahasiswa-materi', kelasId], `/mahasiswa/materi/${kelasId}`, { enabled: !!kelasId });
+
 export type StatusYudisium = 'pendaftaran' | 'verifikasi' | 'layak' | 'tidak_layak' | 'wisuda' | 'batal';
 export type PredikatYudisium = 'cumlaude' | 'sangat_memuaskan' | 'memuaskan' | 'tidak_lulus';
 

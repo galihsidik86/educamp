@@ -91,6 +91,63 @@ export function useUpdateNilai(kelasId: string | undefined) {
 }
 
 // ============================================================
+// Bahan Ajar (dosen CRUD per kelas)
+// ============================================================
+
+export type JenisBahanAjar = 'link' | 'file' | 'text' | 'video';
+
+export type BahanAjarItem = {
+  id: string;
+  jenis: JenisBahanAjar;
+  judul: string;
+  deskripsi: string | null;
+  url: string | null;
+  konten: string | null;
+  urutan: number;
+  pertemuanKe: number | null;
+  pertemuanId: string | null;
+  createdAt: string;
+};
+
+export type BahanAjarList = {
+  kelas: { id: string; kodeMK: string; namaMK: string; kodeKelas: string };
+  items: BahanAjarItem[];
+};
+
+export const useDosenBahanAjar = (kelasId: string | undefined) =>
+  useApi<BahanAjarList>(['dosen-bahan-ajar', kelasId], `/dosen/kelas/${kelasId}/bahan-ajar`, { enabled: !!kelasId });
+
+export type BahanAjarInput = {
+  jenis: JenisBahanAjar;
+  judul: string;
+  deskripsi?: string | null;
+  url?: string | null;
+  konten?: string | null;
+  pertemuanId?: string | null;
+  urutan?: number;
+};
+
+export function useBahanAjarActions(kelasId: string | undefined) {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['dosen-bahan-ajar', kelasId] });
+  return {
+    create: useMutation({
+      mutationFn: (body: BahanAjarInput) => apiPost(`/dosen/kelas/${kelasId}/bahan-ajar`, body),
+      onSuccess: inv,
+    }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<BahanAjarInput> }) =>
+        api(`/dosen/bahan-ajar/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => api(`/dosen/bahan-ajar/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// ============================================================
 // Skripsi bimbingan dosen
 // ============================================================
 
