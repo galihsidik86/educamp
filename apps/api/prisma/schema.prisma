@@ -146,6 +146,7 @@ model Mahasiswa {
   edomResponse        EdomResponse[]
   skripsi             Skripsi[]
   yudisium            Yudisium[]
+  beasiswa            PendaftaranBeasiswa[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -867,6 +868,62 @@ model Yudisium {
 
   @@unique([mahasiswaId, periodeWisudaId])
   @@index([periodeWisudaId])
+  @@index([status])
+}
+
+// ============================================================
+// BEASISWA — master beasiswa + pendaftaran per mahasiswa
+// ============================================================
+
+model Beasiswa {
+  id              String                  @id @default(uuid())
+  kode            String                  @unique // "BIDIKMISI-2026-1"
+  nama            String
+  penyelenggara   String                                                     // "Kemendikbud", "Tazkia Foundation"
+  deskripsi       String?                 @db.Text
+  kuota           Int?                                                       // kuota penerima, null = tak terbatas
+  nominal         Decimal                 @db.Decimal(15, 2)                  // per penerima per periode
+  syaratIpk       Float?                                                     // IPK minimal
+  syaratAngkatanMin Int?
+  syaratAngkatanMax Int?
+  pendaftaranBuka Boolean                 @default(true)
+  tanggalBuka     DateTime?
+  tanggalTutup    DateTime?
+
+  pendaftaran     PendaftaranBeasiswa[]
+
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+}
+
+enum StatusPendaftaranBeasiswa {
+  diajukan
+  dalam_seleksi
+  diterima
+  ditolak
+  batal
+}
+
+model PendaftaranBeasiswa {
+  id              String                    @id @default(uuid())
+  beasiswaId      String
+  beasiswa        Beasiswa                  @relation(fields: [beasiswaId], references: [id], onDelete: Cascade)
+  mahasiswaId     String
+  mahasiswa       Mahasiswa                 @relation(fields: [mahasiswaId], references: [id])
+
+  status          StatusPendaftaranBeasiswa @default(diajukan)
+  catatan         String?                   @db.Text
+  motivasi        String                    @db.Text
+  linkDokumen     String?                   @db.Text
+  ipkSaatDaftar   Float
+  semesterSaatDaftar String                                                  // "20251"
+
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+
+  @@unique([beasiswaId, mahasiswaId])
+  @@index([beasiswaId])
+  @@index([mahasiswaId])
   @@index([status])
 }
 

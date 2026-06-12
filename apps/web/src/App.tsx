@@ -27,6 +27,7 @@ import { MahasiswaYudisium } from './routes/mahasiswa/Yudisium';
 import { MahasiswaYudisiumCetakSkl } from './routes/mahasiswa/YudisiumCetakSkl';
 import { MahasiswaMateri } from './routes/mahasiswa/Materi';
 import { MahasiswaMateriKelas } from './routes/mahasiswa/MateriKelas';
+import { MahasiswaBeasiswa } from './routes/mahasiswa/Beasiswa';
 import { MahasiswaProfil } from './routes/mahasiswa/Profil';
 import { DosenDashboard } from './routes/dosen/Dashboard';
 import { DosenJadwal } from './routes/dosen/Jadwal';
@@ -56,6 +57,8 @@ import { AkademikEdomRekap } from './routes/akademik/EdomRekap';
 import { AdminSkripsiPage } from './routes/akademik/Skripsi';
 import { AdminPeriodeWisuda } from './routes/akademik/PeriodeWisuda';
 import { AdminYudisiumPage } from './routes/akademik/Yudisium';
+import { AdminBeasiswaPage } from './routes/akademik/Beasiswa';
+import { AdminBeasiswaPendaftar } from './routes/akademik/BeasiswaPendaftar';
 import { AdminMahasiswaPage } from './routes/akademik/Mahasiswa';
 import { AdminDosenPage } from './routes/akademik/Dosen';
 import { AdminProdi } from './routes/akademik/Prodi';
@@ -112,6 +115,7 @@ export function App() {
         <Route path="yudisium/:id/skl"   element={<MahasiswaYudisiumCetakSkl />} />
         <Route path="materi"             element={<MahasiswaMateri />} />
         <Route path="materi/:kelasId"    element={<MahasiswaMateriKelas />} />
+        <Route path="beasiswa"           element={<MahasiswaBeasiswa />} />
         <Route path="notifikasi" element={<NotifikasiPage />} />
         <Route path="profil"             element={<MahasiswaProfil />} />
         <Route path="profil/kartu"       element={<MahasiswaKartu />} />
@@ -166,6 +170,8 @@ export function App() {
         <Route path="skripsi"             element={<AdminSkripsiPage />} />
         <Route path="periode-wisuda"      element={<AdminPeriodeWisuda />} />
         <Route path="yudisium"            element={<AdminYudisiumPage />} />
+        <Route path="beasiswa"            element={<AdminBeasiswaPage />} />
+        <Route path="beasiswa/:id/pendaftar" element={<AdminBeasiswaPendaftar />} />
         <Route path="audit"         element={<AdminAuditLog />} />
         <Route path="notifikasi"    element={<NotifikasiPage />} />
         <Route path="profil"        element={<AkademikProfil />} />

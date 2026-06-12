@@ -211,6 +211,46 @@ export function useMbkmActions() {
   };
 }
 
+export type StatusPendaftaranBeasiswa = 'diajukan' | 'dalam_seleksi' | 'diterima' | 'ditolak' | 'batal';
+
+export type BeasiswaTersediaItem = {
+  id: string; kode: string; nama: string; penyelenggara: string; deskripsi: string | null;
+  nominal: number; kuota: number | null; kuotaTerisi: number;
+  syaratIpk: number | null; syaratAngkatanMin: number | null; syaratAngkatanMax: number | null;
+  tanggalBuka: string | null; tanggalTutup: string | null;
+  memenuhiSyarat: boolean;
+  statusPendaftaran: StatusPendaftaranBeasiswa | null;
+};
+export const useBeasiswaTersedia = () =>
+  useApi<{ ipk: number; items: BeasiswaTersediaItem[] }>(['beasiswa-tersedia'], '/mahasiswa/beasiswa/tersedia');
+
+export type PendaftaranBeasiswaItem = {
+  id: string;
+  status: StatusPendaftaranBeasiswa;
+  catatan: string | null;
+  motivasi: string;
+  linkDokumen: string | null;
+  ipkSaatDaftar: number;
+  semesterSaatDaftar: string;
+  createdAt: string;
+  beasiswa: { id: string; kode: string; nama: string; penyelenggara: string; nominal: number };
+};
+export const useBeasiswaRiwayat = () =>
+  useApi<{ items: PendaftaranBeasiswaItem[] }>(['beasiswa-riwayat'], '/mahasiswa/beasiswa');
+
+export type BeasiswaDaftarInput = { beasiswaId: string; motivasi: string; linkDokumen?: string };
+export function useBeasiswaActions() {
+  const qc = useQueryClient();
+  const inv = () => Promise.all([
+    qc.invalidateQueries({ queryKey: ['beasiswa-tersedia'] }),
+    qc.invalidateQueries({ queryKey: ['beasiswa-riwayat'] }),
+  ]);
+  return {
+    daftar: useMutation({ mutationFn: (input: BeasiswaDaftarInput) => apiPost('/mahasiswa/beasiswa/daftar', input), onSuccess: inv }),
+    batal: useMutation({ mutationFn: (id: string) => api(`/mahasiswa/beasiswa/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+  };
+}
+
 export type MateriKelasItem = {
   kelasId: string;
   kodeMK: string; namaMK: string; sks: number; kodeKelas: string; dosen: string;

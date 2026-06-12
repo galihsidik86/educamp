@@ -247,6 +247,83 @@ export function useKelasActions() {
 }
 
 // ============================================================
+// Beasiswa akademik
+// ============================================================
+
+export type BeasiswaMasterItem = {
+  id: string;
+  kode: string;
+  nama: string;
+  penyelenggara: string;
+  deskripsi: string | null;
+  kuota: number | null;
+  nominal: number;
+  syaratIpk: number | null;
+  syaratAngkatanMin: number | null;
+  syaratAngkatanMax: number | null;
+  pendaftaranBuka: boolean;
+  tanggalBuka: string | null;
+  tanggalTutup: string | null;
+  jumlahPendaftar: number;
+};
+export type BeasiswaMasterInput = {
+  kode: string; nama: string; penyelenggara: string;
+  deskripsi?: string | null;
+  kuota?: number | null;
+  nominal: number;
+  syaratIpk?: number | null;
+  syaratAngkatanMin?: number | null;
+  syaratAngkatanMax?: number | null;
+  pendaftaranBuka?: boolean;
+  tanggalBuka?: string | null;
+  tanggalTutup?: string | null;
+};
+export const useAdminBeasiswa = () =>
+  useApi<{ items: BeasiswaMasterItem[] }>(['admin-beasiswa'], '/akademik/beasiswa');
+
+export function useAdminBeasiswaActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['admin-beasiswa'] });
+  return {
+    create: useMutation({ mutationFn: (body: BeasiswaMasterInput) => apiPost('/akademik/beasiswa', body), onSuccess: inv }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<BeasiswaMasterInput> }) =>
+        api(`/akademik/beasiswa/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({ mutationFn: (id: string) => api(`/akademik/beasiswa/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+  };
+}
+
+export type AdminPendaftarBeasiswaItem = {
+  id: string;
+  status: 'diajukan' | 'dalam_seleksi' | 'diterima' | 'ditolak' | 'batal';
+  catatan: string | null;
+  motivasi: string;
+  linkDokumen: string | null;
+  ipkSaatDaftar: number;
+  semesterSaatDaftar: string;
+  createdAt: string;
+  mahasiswa: { id: string; nim: string; nama: string; angkatan: number; prodi: { kode: string; nama: string } };
+};
+export const useAdminPendaftarBeasiswa = (beasiswaId: string | undefined, status?: string) => {
+  const qs = status ? `?status=${status}` : '';
+  return useApi<{ items: AdminPendaftarBeasiswaItem[] }>(['admin-pendaftar-beasiswa', beasiswaId, status], `/akademik/beasiswa/${beasiswaId}/pendaftar${qs}`, { enabled: !!beasiswaId });
+};
+
+export function useAdminPendaftarBeasiswaActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['admin-pendaftar-beasiswa'] });
+  return {
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: { status?: AdminPendaftarBeasiswaItem['status']; catatan?: string | null } }) =>
+        api(`/akademik/beasiswa/pendaftaran/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// ============================================================
 // Periode Wisuda + Yudisium akademik
 // ============================================================
 
