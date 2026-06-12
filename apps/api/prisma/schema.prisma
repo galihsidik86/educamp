@@ -143,6 +143,7 @@ model Mahasiswa {
   pengabdianMahasiswa PengabdianMahasiswa[]
   kkn                 Kkn[]
   mbkm                Mbkm[]
+  edomResponse        EdomResponse[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -241,6 +242,7 @@ model Semester {
   kelas         Kelas[]
   krs           Krs[]
   tagihan       Tagihan[]
+  edomKuesioner EdomKuesioner[]
 
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -367,6 +369,7 @@ model Kelas {
 
   krs          Krs[]
   pertemuan    Pertemuan[]
+  edomResponse EdomResponse[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
@@ -721,6 +724,72 @@ model MbkmKonversi {
 
   @@unique([mbkmId, mataKuliahId])
   @@index([mataKuliahId])
+}
+
+// ============================================================
+// EDOM — Evaluasi Dosen oleh Mahasiswa
+// Kuesioner aktif per semester, mahasiswa isi per kelas (kombo dosen+MK)
+// Akademik lihat rekap rata-rata per aspek per dosen
+// ============================================================
+
+model EdomKuesioner {
+  id         String    @id @default(uuid())
+  judul      String
+  semesterId String
+  semester   Semester  @relation(fields: [semesterId], references: [id])
+  isAktif    Boolean   @default(false)
+
+  aspek      EdomAspek[]
+  response   EdomResponse[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([semesterId])
+  @@index([isAktif])
+}
+
+model EdomAspek {
+  id          String        @id @default(uuid())
+  kuesionerId String
+  kuesioner   EdomKuesioner @relation(fields: [kuesionerId], references: [id], onDelete: Cascade)
+  urutan      Int
+  pertanyaan  String        @db.Text
+
+  jawaban     EdomJawaban[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([kuesionerId, urutan])
+}
+
+model EdomResponse {
+  id           String        @id @default(uuid())
+  kuesionerId  String
+  kuesioner    EdomKuesioner @relation(fields: [kuesionerId], references: [id], onDelete: Cascade)
+  mahasiswaId  String
+  mahasiswa    Mahasiswa     @relation(fields: [mahasiswaId], references: [id])
+  kelasId      String
+  kelas        Kelas         @relation(fields: [kelasId], references: [id])
+
+  submittedAt  DateTime      @default(now())
+
+  jawaban      EdomJawaban[]
+
+  @@unique([kuesionerId, mahasiswaId, kelasId])
+  @@index([kelasId])
+}
+
+model EdomJawaban {
+  id         String       @id @default(uuid())
+  responseId String
+  response   EdomResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  aspekId    String
+  aspek      EdomAspek    @relation(fields: [aspekId], references: [id])
+  nilai      Int          // 1-5 likert
+
+  @@unique([responseId, aspekId])
 }
 
 // ============================================================

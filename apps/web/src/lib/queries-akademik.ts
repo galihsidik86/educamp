@@ -247,6 +247,77 @@ export function useKelasActions() {
 }
 
 // ============================================================
+// EDOM akademik
+// ============================================================
+
+export type EdomKuesionerItem = {
+  id: string; judul: string; isAktif: boolean; semesterId: string;
+  semester: { kode: string; jenis: string };
+  _count: { aspek: number; response: number };
+};
+export const useEdomKuesionerList = () =>
+  useApi<{ items: EdomKuesionerItem[] }>(['edom-kuesioner'], '/akademik/edom/kuesioner');
+
+export type EdomAspek = { id: string; urutan: number; pertanyaan: string; createdAt?: string };
+
+export type EdomKuesionerDetail = {
+  id: string; judul: string; isAktif: boolean; semesterId: string;
+  semester: { kode: string; jenis: string };
+  aspek: EdomAspek[];
+};
+export const useEdomKuesionerDetail = (id: string | undefined) =>
+  useApi<EdomKuesionerDetail>(['edom-kuesioner', id], `/akademik/edom/kuesioner/${id}`, { enabled: !!id });
+
+export type EdomRekap = {
+  kuesioner: { id: string; judul: string };
+  aspek: Array<{ id: string; urutan: number; pertanyaan: string }>;
+  items: Array<{
+    kelasId: string;
+    kodeMK: string; namaMK: string; kodeKelas: string;
+    dosen: { id: string; nidn: string; nama: string };
+    totalResponse: number;
+    peserta: number;
+    responseRate: number;
+    rataAspek: Record<string, number>;
+    rataAgregat: number;
+  }>;
+};
+export const useEdomRekap = (kuesionerId: string | undefined) =>
+  useApi<EdomRekap>(['edom-rekap', kuesionerId], `/akademik/edom/kuesioner/${kuesionerId}/rekap`, { enabled: !!kuesionerId });
+
+export function useEdomAkademikActions() {
+  const qc = useQueryClient();
+  const inv = () => Promise.all([
+    qc.invalidateQueries({ queryKey: ['edom-kuesioner'] }),
+    qc.invalidateQueries({ queryKey: ['edom-rekap'] }),
+  ]);
+  return {
+    createKuesioner: useMutation({
+      mutationFn: (body: { judul: string; semesterId: string }) => apiPost('/akademik/edom/kuesioner', body),
+      onSuccess: inv,
+    }),
+    updateKuesioner: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: { judul?: string; isAktif?: boolean } }) =>
+        api(`/akademik/edom/kuesioner/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    deleteKuesioner: useMutation({
+      mutationFn: (id: string) => api(`/akademik/edom/kuesioner/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+    addAspek: useMutation({
+      mutationFn: ({ kuesionerId, pertanyaan }: { kuesionerId: string; pertanyaan: string }) =>
+        apiPost(`/akademik/edom/kuesioner/${kuesionerId}/aspek`, { pertanyaan }),
+      onSuccess: inv,
+    }),
+    deleteAspek: useMutation({
+      mutationFn: (aspekId: string) => api(`/akademik/edom/aspek/${aspekId}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// ============================================================
 // MBKM akademik (list + edit + konversi)
 // ============================================================
 

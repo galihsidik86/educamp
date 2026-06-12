@@ -20,6 +20,8 @@ import { MahasiswaPenelitian } from './routes/mahasiswa/Penelitian';
 import { MahasiswaPengabdian } from './routes/mahasiswa/Pengabdian';
 import { MahasiswaKkn } from './routes/mahasiswa/Kkn';
 import { MahasiswaMbkm } from './routes/mahasiswa/Mbkm';
+import { MahasiswaEdom } from './routes/mahasiswa/Edom';
+import { MahasiswaEdomDetail } from './routes/mahasiswa/EdomDetail';
 import { MahasiswaProfil } from './routes/mahasiswa/Profil';
 import { DosenDashboard } from './routes/dosen/Dashboard';
 import { DosenJadwal } from './routes/dosen/Jadwal';
@@ -41,6 +43,8 @@ import { AkademikLaporanKehadiran } from './routes/akademik/LaporanKehadiran';
 import { AkademikPengumuman } from './routes/akademik/Pengumuman';
 import { AdminKknPage } from './routes/akademik/Kkn';
 import { AdminMbkmPage } from './routes/akademik/Mbkm';
+import { AkademikEdom } from './routes/akademik/Edom';
+import { AkademikEdomRekap } from './routes/akademik/EdomRekap';
 import { AdminMahasiswaPage } from './routes/akademik/Mahasiswa';
 import { AdminDosenPage } from './routes/akademik/Dosen';
 import { AdminProdi } from './routes/akademik/Prodi';
@@ -90,6 +94,8 @@ export function App() {
         <Route path="pengabdian" element={<MahasiswaPengabdian />} />
         <Route path="kkn"        element={<MahasiswaKkn />} />
         <Route path="mbkm"       element={<MahasiswaMbkm />} />
+        <Route path="edom"             element={<MahasiswaEdom />} />
+        <Route path="edom/:kelasId"    element={<MahasiswaEdomDetail />} />
         <Route path="notifikasi" element={<NotifikasiPage />} />
         <Route path="profil"             element={<MahasiswaProfil />} />
         <Route path="profil/kartu"       element={<MahasiswaKartu />} />
@@ -136,6 +142,8 @@ export function App() {
         <Route path="pengumuman"          element={<AkademikPengumuman />} />
         <Route path="kkn"                 element={<AdminKknPage />} />
         <Route path="mbkm"                element={<AdminMbkmPage />} />
+        <Route path="edom"                element={<AkademikEdom />} />
+        <Route path="edom/:id/rekap"      element={<AkademikEdomRekap />} />
         <Route path="audit"         element={<AdminAuditLog />} />
         <Route path="notifikasi"    element={<NotifikasiPage />} />
         <Route path="profil"        element={<AkademikProfil />} />

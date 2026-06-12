@@ -211,6 +211,39 @@ export function useMbkmActions() {
   };
 }
 
+export type EdomKelasItem = {
+  kelasId: string;
+  kodeMK: string; namaMK: string; sks: number; kodeKelas: string; dosen: string;
+  sudahDiisi: boolean;
+};
+export type EdomList = {
+  kuesioner: { id: string; judul: string; jumlahAspek: number } | null;
+  items: EdomKelasItem[];
+};
+export const useEdomList = () => useApi<EdomList>(['edom'], '/mahasiswa/edom');
+
+export type EdomAspek = { id: string; urutan: number; pertanyaan: string; nilai: number | null };
+export type EdomDetail = {
+  kuesioner: { id: string; judul: string };
+  kelas: { kodeMK: string; namaMK: string; kodeKelas: string; dosen: string };
+  sudahDiisi: boolean;
+  aspek: EdomAspek[];
+};
+export const useEdomDetail = (kelasId: string | undefined) =>
+  useApi<EdomDetail>(['edom', kelasId], `/mahasiswa/edom/${kelasId}`, { enabled: !!kelasId });
+
+export function useEdomSubmit(kelasId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (jawaban: Array<{ aspekId: string; nilai: number }>) =>
+      apiPost(`/mahasiswa/edom/${kelasId}`, { jawaban }),
+    onSuccess: () => Promise.all([
+      qc.invalidateQueries({ queryKey: ['edom'] }),
+      qc.invalidateQueries({ queryKey: ['edom', kelasId] }),
+    ]),
+  });
+}
+
 export type PengumumanItem = {
   id: string;
   judul: string;
