@@ -147,6 +147,7 @@ model Mahasiswa {
   skripsi             Skripsi[]
   yudisium            Yudisium[]
   beasiswa            PendaftaranBeasiswa[]
+  submitTugas         SubmitTugas[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -376,6 +377,7 @@ model Kelas {
   pertemuan    Pertemuan[]
   edomResponse EdomResponse[]
   bahanAjar    BahanAjar[]
+  tugas        Tugas[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
@@ -395,6 +397,7 @@ model Pertemuan {
 
   absensi     Absensi[]
   bahanAjar   BahanAjar[]
+  tugas       Tugas[]
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -430,6 +433,62 @@ model BahanAjar {
 
   @@index([kelasId])
   @@index([pertemuanId])
+}
+
+// ============================================================
+// TUGAS — assignment + submission mahasiswa
+// ============================================================
+
+enum StatusSubmitTugas {
+  terkumpul
+  terlambat
+  dinilai
+}
+
+model Tugas {
+  id            String         @id @default(uuid())
+  kelasId       String
+  kelas         Kelas          @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+  pertemuanId   String?
+  pertemuan     Pertemuan?     @relation(fields: [pertemuanId], references: [id], onDelete: SetNull)
+
+  judul         String
+  deskripsi     String?        @db.Text
+  deadline      DateTime
+  maxNilai      Int            @default(100)
+  linkLampiran  String?        @db.Text
+
+  submission    SubmitTugas[]
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([kelasId])
+  @@index([deadline])
+}
+
+model SubmitTugas {
+  id            String            @id @default(uuid())
+  tugasId       String
+  tugas         Tugas             @relation(fields: [tugasId], references: [id], onDelete: Cascade)
+  mahasiswaId   String
+  mahasiswa     Mahasiswa         @relation(fields: [mahasiswaId], references: [id])
+
+  linkJawaban   String?           @db.Text
+  isiJawaban    String?           @db.Text
+  waktuSubmit   DateTime          @default(now())
+  terlambat     Boolean           @default(false)
+
+  nilai         Float?
+  catatan       String?           @db.Text
+  status        StatusSubmitTugas @default(terkumpul)
+
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@unique([tugasId, mahasiswaId])
+  @@index([tugasId])
+  @@index([mahasiswaId])
 }
 
 enum StatusAbsensi {

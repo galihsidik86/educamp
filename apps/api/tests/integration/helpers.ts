@@ -39,6 +39,8 @@ export async function resetDb() {
     prisma.pengabdianMahasiswa.deleteMany({}),
     prisma.penelitian.deleteMany({}),
     prisma.pengabdian.deleteMany({}),
+    prisma.submitTugas.deleteMany({}),
+    prisma.tugas.deleteMany({}),
     prisma.bahanAjar.deleteMany({}),
     prisma.kelas.deleteMany({}),
     prisma.mataKuliahKurikulum.deleteMany({}),

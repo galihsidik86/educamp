@@ -211,6 +211,53 @@ export function useMbkmActions() {
   };
 }
 
+export type StatusSubmitTugas = 'terkumpul' | 'terlambat' | 'dinilai';
+
+export type TugasListItem = {
+  id: string;
+  kelasId: string;
+  kodeMK: string; namaMK: string;
+  judul: string;
+  deadline: string;
+  maxNilai: number;
+  submission: {
+    id: string; waktuSubmit: string; terlambat: boolean;
+    nilai: number | null; status: StatusSubmitTugas;
+  } | null;
+};
+export const useMahasiswaTugas = () =>
+  useApi<{ items: TugasListItem[] }>(['mahasiswa-tugas'], '/mahasiswa/tugas');
+
+export type TugasDetail = {
+  id: string;
+  judul: string;
+  deskripsi: string | null;
+  deadline: string;
+  maxNilai: number;
+  linkLampiran: string | null;
+  pertemuanKe: number | null;
+  kelas: { id: string; kodeMK: string; namaMK: string; kodeKelas: string; dosen: string };
+  submission: {
+    id: string; linkJawaban: string | null; isiJawaban: string | null;
+    waktuSubmit: string; terlambat: boolean;
+    nilai: number | null; catatan: string | null; status: StatusSubmitTugas;
+  } | null;
+};
+export const useTugasDetail = (id: string | undefined) =>
+  useApi<TugasDetail>(['mahasiswa-tugas', id], `/mahasiswa/tugas/${id}`, { enabled: !!id });
+
+export function useTugasSubmit(id: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { linkJawaban?: string; isiJawaban?: string }) =>
+      apiPost(`/mahasiswa/tugas/${id}/submit`, body),
+    onSuccess: () => Promise.all([
+      qc.invalidateQueries({ queryKey: ['mahasiswa-tugas'] }),
+      qc.invalidateQueries({ queryKey: ['mahasiswa-tugas', id] }),
+    ]),
+  });
+}
+
 export type StatusPendaftaranBeasiswa = 'diajukan' | 'dalam_seleksi' | 'diterima' | 'ditolak' | 'batal';
 
 export type BeasiswaTersediaItem = {

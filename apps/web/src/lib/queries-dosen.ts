@@ -91,6 +91,88 @@ export function useUpdateNilai(kelasId: string | undefined) {
 }
 
 // ============================================================
+// Tugas dosen
+// ============================================================
+
+export type DosenTugasItem = {
+  id: string;
+  judul: string;
+  deskripsi: string | null;
+  deadline: string;
+  maxNilai: number;
+  linkLampiran: string | null;
+  pertemuanKe: number | null;
+  totalSubmit: number;
+  totalDinilai: number;
+};
+export type DosenTugasList = {
+  kelas: { id: string; kodeMK: string; namaMK: string; kodeKelas: string };
+  items: DosenTugasItem[];
+};
+export const useDosenTugas = (kelasId: string | undefined) =>
+  useApi<DosenTugasList>(['dosen-tugas', kelasId], `/dosen/kelas/${kelasId}/tugas`, { enabled: !!kelasId });
+
+export type DosenTugasInput = {
+  judul: string;
+  deskripsi?: string | null;
+  deadline: string;
+  maxNilai?: number;
+  linkLampiran?: string | null;
+  pertemuanId?: string | null;
+};
+
+export type DosenSubmissionItem = {
+  mahasiswaId: string;
+  nim: string;
+  nama: string;
+  submission: {
+    id: string;
+    linkJawaban: string | null;
+    isiJawaban: string | null;
+    waktuSubmit: string;
+    terlambat: boolean;
+    nilai: number | null;
+    catatan: string | null;
+    status: 'terkumpul' | 'terlambat' | 'dinilai';
+  } | null;
+};
+export type DosenTugasSubmissionList = {
+  tugas: { id: string; judul: string; deadline: string; maxNilai: number };
+  kelas: { kodeMK: string; namaMK: string; kodeKelas: string };
+  peserta: DosenSubmissionItem[];
+};
+export const useDosenTugasSubmission = (tugasId: string | undefined) =>
+  useApi<DosenTugasSubmissionList>(['dosen-tugas-submission', tugasId], `/dosen/tugas/${tugasId}/submission`, { enabled: !!tugasId });
+
+export function useDosenTugasActions(kelasId?: string, tugasId?: string) {
+  const qc = useQueryClient();
+  const inv = () => Promise.all([
+    qc.invalidateQueries({ queryKey: ['dosen-tugas', kelasId] }),
+    qc.invalidateQueries({ queryKey: ['dosen-tugas-submission', tugasId] }),
+  ]);
+  return {
+    create: useMutation({
+      mutationFn: (body: DosenTugasInput) => apiPost(`/dosen/kelas/${kelasId}/tugas`, body),
+      onSuccess: inv,
+    }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<DosenTugasInput> }) =>
+        api(`/dosen/tugas/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => api(`/dosen/tugas/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+    grade: useMutation({
+      mutationFn: ({ submissionId, nilai, catatan }: { submissionId: string; nilai: number; catatan?: string | null }) =>
+        api(`/dosen/submission/${submissionId}`, { method: 'PATCH', body: JSON.stringify({ nilai, catatan }) }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// ============================================================
 // Bahan Ajar (dosen CRUD per kelas)
 // ============================================================
 
