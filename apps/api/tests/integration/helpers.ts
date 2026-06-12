@@ -26,6 +26,8 @@ export async function resetDb() {
     prisma.pembayaran.deleteMany({}),
     prisma.tagihan.deleteMany({}),
     prisma.kkn.deleteMany({}),
+    prisma.mbkmKonversi.deleteMany({}),
+    prisma.mbkm.deleteMany({}),
     prisma.penelitianMahasiswa.deleteMany({}),
     prisma.pengabdianMahasiswa.deleteMany({}),
     prisma.penelitian.deleteMany({}),
