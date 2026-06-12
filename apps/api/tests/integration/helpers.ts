@@ -33,6 +33,7 @@ export async function resetDb() {
     prisma.periodeWisuda.deleteMany({}),
     prisma.pendaftaranBeasiswa.deleteMany({}),
     prisma.beasiswa.deleteMany({}),
+    prisma.surat.deleteMany({}),
     // EDOM: kuesioner cascade ke aspek+response+jawaban
     prisma.edomKuesioner.deleteMany({}),
     prisma.penelitianMahasiswa.deleteMany({}),

@@ -148,6 +148,7 @@ model Mahasiswa {
   yudisium            Yudisium[]
   beasiswa            PendaftaranBeasiswa[]
   submitTugas         SubmitTugas[]
+  surat               Surat[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -984,6 +985,52 @@ model PendaftaranBeasiswa {
   @@index([beasiswaId])
   @@index([mahasiswaId])
   @@index([status])
+}
+
+// ============================================================
+// SURAT KETERANGAN — permohonan mahasiswa dengan validasi akademik
+// Contoh: surat aktif kuliah, pengantar beasiswa, izin penelitian, KTM
+// ============================================================
+
+enum JenisSurat {
+  aktif_kuliah
+  keterangan_mahasiswa
+  pengantar_beasiswa
+  pengantar_penelitian
+  pengantar_magang
+  pengganti_ktm
+  lainnya
+}
+
+enum StatusSurat {
+  diajukan
+  disetujui
+  ditolak
+  selesai
+  batal
+}
+
+model Surat {
+  id              String      @id @default(uuid())
+  mahasiswaId     String
+  mahasiswa       Mahasiswa   @relation(fields: [mahasiswaId], references: [id])
+
+  jenis           JenisSurat
+  judul           String                                                     // header surat custom (mis. "Surat Pengantar Magang")
+  keperluan       String      @db.Text                                       // tujuan/keperluan dari mahasiswa
+  status          StatusSurat @default(diajukan)
+  catatan         String?     @db.Text                                       // dari akademik
+  nomorSurat      String?                                                    // diisi akademik saat menerbitkan
+  tanggalDiajukan DateTime    @default(now())
+  tanggalDisetujui DateTime?
+  tanggalSelesai  DateTime?
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([mahasiswaId])
+  @@index([status])
+  @@index([jenis])
 }
 
 // ============================================================

@@ -15,6 +15,7 @@ import { yudisiumRouter } from './yudisium.js';
 import { bahanAjarRouter } from './bahan-ajar.js';
 import { beasiswaRouter } from './beasiswa.js';
 import { tugasRouter } from './tugas.js';
+import { suratRouter } from './surat.js';
 import { keuanganRouter } from './keuangan.js';
 import { triDharmaRouter } from './tri-dharma.js';
 
@@ -39,5 +40,6 @@ mahasiswaRouter.use(yudisiumRouter);
 mahasiswaRouter.use(bahanAjarRouter);
 mahasiswaRouter.use(beasiswaRouter);
 mahasiswaRouter.use(tugasRouter);
+mahasiswaRouter.use(suratRouter);
 mahasiswaRouter.use(keuanganRouter);
 mahasiswaRouter.use(triDharmaRouter);

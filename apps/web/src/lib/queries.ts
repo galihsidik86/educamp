@@ -211,6 +211,35 @@ export function useMbkmActions() {
   };
 }
 
+export type JenisSurat = 'aktif_kuliah' | 'keterangan_mahasiswa' | 'pengantar_beasiswa' | 'pengantar_penelitian' | 'pengantar_magang' | 'pengganti_ktm' | 'lainnya';
+export type StatusSurat = 'diajukan' | 'disetujui' | 'ditolak' | 'selesai' | 'batal';
+
+export type SuratItem = {
+  id: string;
+  jenis: JenisSurat;
+  judul: string;
+  keperluan: string;
+  status: StatusSurat;
+  catatan: string | null;
+  nomorSurat: string | null;
+  tanggalDiajukan: string;
+  tanggalDisetujui: string | null;
+  tanggalSelesai: string | null;
+};
+export const useSurat = () => useApi<{ items: SuratItem[] }>(['surat'], '/mahasiswa/surat');
+export const useSuratDetail = (id: string | undefined) =>
+  useApi<SuratItem>(['surat', id], `/mahasiswa/surat/${id}`, { enabled: !!id });
+
+export type SuratAjukanInput = { jenis: JenisSurat; judul: string; keperluan: string };
+export function useSuratActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['surat'] });
+  return {
+    ajukan: useMutation({ mutationFn: (input: SuratAjukanInput) => apiPost('/mahasiswa/surat', input), onSuccess: inv }),
+    batal: useMutation({ mutationFn: (id: string) => api(`/mahasiswa/surat/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+  };
+}
+
 export type StatusSubmitTugas = 'terkumpul' | 'terlambat' | 'dinilai';
 
 export type TugasListItem = {

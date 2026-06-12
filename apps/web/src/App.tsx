@@ -30,6 +30,8 @@ import { MahasiswaMateriKelas } from './routes/mahasiswa/MateriKelas';
 import { MahasiswaBeasiswa } from './routes/mahasiswa/Beasiswa';
 import { MahasiswaTugas } from './routes/mahasiswa/Tugas';
 import { MahasiswaTugasDetail } from './routes/mahasiswa/TugasDetail';
+import { MahasiswaSurat } from './routes/mahasiswa/Surat';
+import { MahasiswaSuratCetak } from './routes/mahasiswa/SuratCetak';
 import { MahasiswaProfil } from './routes/mahasiswa/Profil';
 import { DosenDashboard } from './routes/dosen/Dashboard';
 import { DosenJadwal } from './routes/dosen/Jadwal';
@@ -64,6 +66,7 @@ import { AdminPeriodeWisuda } from './routes/akademik/PeriodeWisuda';
 import { AdminYudisiumPage } from './routes/akademik/Yudisium';
 import { AdminBeasiswaPage } from './routes/akademik/Beasiswa';
 import { AdminBeasiswaPendaftar } from './routes/akademik/BeasiswaPendaftar';
+import { AdminSuratPage } from './routes/akademik/Surat';
 import { AdminMahasiswaPage } from './routes/akademik/Mahasiswa';
 import { AdminDosenPage } from './routes/akademik/Dosen';
 import { AdminProdi } from './routes/akademik/Prodi';
@@ -123,6 +126,8 @@ export function App() {
         <Route path="beasiswa"           element={<MahasiswaBeasiswa />} />
         <Route path="tugas"              element={<MahasiswaTugas />} />
         <Route path="tugas/:id"          element={<MahasiswaTugasDetail />} />
+        <Route path="surat"              element={<MahasiswaSurat />} />
+        <Route path="surat/:id/cetak"    element={<MahasiswaSuratCetak />} />
         <Route path="notifikasi" element={<NotifikasiPage />} />
         <Route path="profil"             element={<MahasiswaProfil />} />
         <Route path="profil/kartu"       element={<MahasiswaKartu />} />
@@ -182,6 +187,7 @@ export function App() {
         <Route path="yudisium"            element={<AdminYudisiumPage />} />
         <Route path="beasiswa"            element={<AdminBeasiswaPage />} />
         <Route path="beasiswa/:id/pendaftar" element={<AdminBeasiswaPendaftar />} />
+        <Route path="surat"               element={<AdminSuratPage />} />
         <Route path="audit"         element={<AdminAuditLog />} />
         <Route path="notifikasi"    element={<NotifikasiPage />} />
         <Route path="profil"        element={<AkademikProfil />} />

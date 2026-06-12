@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import {
   LayoutDashboard, ClipboardList, CalendarDays, GraduationCap, Wallet,
   UserRound, BookOpen, Users, FileText, Briefcase, HeartHandshake, Building2, MapPin,
-  ShieldCheck, Layers, Bell, History, CalendarCheck, Megaphone, ClipboardCheck, ScrollText, Award, Gift,
+  ShieldCheck, Layers, Bell, History, CalendarCheck, Megaphone, ClipboardCheck, ScrollText, Award, Gift, Mail,
 } from 'lucide-react';
 import type { Role } from '@/lib/auth';
 
@@ -29,6 +29,7 @@ const itemsByRole: Record<Role, { group: string; items: NavItem[] }[]> = {
       items: [
         { to: '/mahasiswa/keuangan',   label: 'Keuangan',          icon: <Wallet size={18} /> },
         { to: '/mahasiswa/beasiswa',   label: 'Beasiswa',          icon: <Gift size={18} /> },
+        { to: '/mahasiswa/surat',      label: 'Surat Keterangan',  icon: <Mail size={18} /> },
         { to: '/mahasiswa/penelitian', label: 'Penelitian',        icon: <FileText size={18} /> },
         { to: '/mahasiswa/pengabdian', label: 'Pengabdian',        icon: <HeartHandshake size={18} /> },
         { to: '/mahasiswa/kkn',        label: 'KKN',               icon: <MapPin size={18} /> },
@@ -91,6 +92,7 @@ const itemsByRole: Record<Role, { group: string; items: NavItem[] }[]> = {
         { to: '/akademik/periode-wisuda', label: 'Periode Wisuda',icon: <CalendarDays size={18} /> },
         { to: '/akademik/yudisium',       label: 'Kelola Yudisium', icon: <Award size={18} /> },
         { to: '/akademik/beasiswa',       label: 'Kelola Beasiswa', icon: <Gift size={18} /> },
+        { to: '/akademik/surat',          label: 'Surat Keterangan',icon: <Mail size={18} /> },
         { to: '/akademik/keuangan',       label: 'Keuangan',      icon: <Wallet size={18} /> },
         { to: '/akademik/laporan',           label: 'Laporan',           icon: <Briefcase size={18} />, end: true },
         { to: '/akademik/laporan/kehadiran', label: 'Laporan Kehadiran', icon: <CalendarCheck size={18} /> },

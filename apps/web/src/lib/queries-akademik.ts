@@ -247,6 +247,44 @@ export function useKelasActions() {
 }
 
 // ============================================================
+// Surat akademik
+// ============================================================
+
+export type AdminSuratItem = {
+  id: string;
+  jenis: string;
+  judul: string;
+  keperluan: string;
+  status: 'diajukan' | 'disetujui' | 'ditolak' | 'selesai' | 'batal';
+  catatan: string | null;
+  nomorSurat: string | null;
+  tanggalDiajukan: string;
+  tanggalDisetujui: string | null;
+  tanggalSelesai: string | null;
+  mahasiswa: { id: string; nim: string; nama: string; angkatan: number; prodi: { kode: string; nama: string } };
+};
+
+export const useAdminSurat = (filters: { status?: string; jenis?: string; q?: string } = {}) => {
+  const qs = new URLSearchParams();
+  if (filters.status) qs.set('status', filters.status);
+  if (filters.jenis) qs.set('jenis', filters.jenis);
+  if (filters.q) qs.set('q', filters.q);
+  return useApi<{ items: AdminSuratItem[] }>(['admin-surat', qs.toString()], `/akademik/surat?${qs}`);
+};
+
+export function useAdminSuratActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['admin-surat'] });
+  return {
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: { status?: AdminSuratItem['status']; catatan?: string | null; nomorSurat?: string | null } }) =>
+        api(`/akademik/surat/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// ============================================================
 // Beasiswa akademik
 // ============================================================
 
