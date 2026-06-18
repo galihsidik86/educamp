@@ -17,16 +17,13 @@ import { env } from './env.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Path ke web dist. Layout setelah build:
-//   apps/api/dist/server.prod.js
-//   apps/web/dist/index.html
-// Atau saat deploy bersamaan (web-dist di-copy ke ../public):
-//   apps/api/dist/server.prod.js
-//   apps/api/public/index.html
+// Path ke web dist. __dirname = apps/api/dist
+// Kandidat (urutan: yang paling umum dipakai di production lebih dulu):
+//   apps/api/public/         (recommended: web-dist di-copy kesini)
+//   apps/web/dist/           (monorepo build in-place)
 const webDistCandidates = [
-  path.resolve(__dirname, '../../public'),
-  path.resolve(__dirname, '../../../web/dist'),
-  path.resolve(__dirname, '../../../apps/web/dist'),
+  path.resolve(__dirname, '../public'),         // apps/api/dist/../public = apps/api/public
+  path.resolve(__dirname, '../../web/dist'),    // apps/api/dist/../../web/dist = apps/web/dist
 ];
 const webDist = webDistCandidates.find((p) => fs.existsSync(path.join(p, 'index.html')));
 
