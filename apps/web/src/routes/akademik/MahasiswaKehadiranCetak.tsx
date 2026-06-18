@@ -4,7 +4,7 @@ import { ArrowLeft, Printer } from 'lucide-react';
 import { Button, Alert, Select } from '@/ds';
 import { NamaInstitusiText } from '@/components/KopInstitusi';
 import { useAdminAbsensi, usePeriode } from '@/lib/queries-akademik';
-import { useInstitusiPublic } from '@/lib/queries-institusi';
+import { useInstitusi } from '@/lib/queries-institusi';
 import { capitalize, formatTanggal } from '@/lib/format';
 
 const STATUS_LABEL: Record<string, string> = { hadir: 'Hadir', izin: 'Izin', sakit: 'Sakit', alpa: 'Alpa' };
@@ -15,7 +15,7 @@ export function AdminMahasiswaKehadiranCetak() {
   const periode = usePeriode();
   const [semesterId, setSemesterId] = useState<string>('');
   const absensi = useAdminAbsensi(id, semesterId || undefined);
-  const inst = useInstitusiPublic();
+  const inst = useInstitusi();
 
   useEffect(() => {
     document.body.classList.add('print-mode');

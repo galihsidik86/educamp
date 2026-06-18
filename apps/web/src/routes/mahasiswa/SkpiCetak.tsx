@@ -153,7 +153,7 @@ export function MahasiswaSkpiCetak() {
               return (
                 <div key={aspek} style={{ marginBottom: 'var(--space-3)' }}>
                   <div className="muted" style={{ fontSize: 'var(--text-sm)', fontWeight: 600, marginBottom: 4 }}>
-                    {ASPEK_LABEL[aspek].id} · <em>{ASPEK_LABEL[aspek].en}</em>
+                    {ASPEK_LABEL[aspek]?.id ?? aspek} · <em>{ASPEK_LABEL[aspek]?.en ?? aspek}</em>
                   </div>
                   <ol style={{ marginTop: 0, paddingLeft: 'var(--space-4)' }}>
                     {items.map((c, i) => (

@@ -34,4 +34,4 @@ export const verifyRefreshToken = (token: string) =>
 export const hashToken = (token: string) =>
   crypto.createHash('sha256').update(token).digest('hex');
 
-export const refreshExpiresAt = () => new Date(Date.now() + ms(env.JWT_REFRESH_TTL as ms.StringValue));
+export const refreshExpiresAt = () => new Date(Date.now() + (ms as unknown as (s: string) => number)(env.JWT_REFRESH_TTL));

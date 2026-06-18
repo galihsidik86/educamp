@@ -377,13 +377,13 @@ mahasiswaRouter.get('/mahasiswa/:id/absensi', async (req, res) => {
   });
 
   const items = krs.map((k) => {
-    const c: Record<string, number> = { hadir: 0, izin: 0, sakit: 0, alpa: 0 };
+    const c = { hadir: 0, izin: 0, sakit: 0, alpa: 0 };
     let totalDinilai = 0;
     const detail: Array<{ pertemuanKe: number; tanggal: string; topik: string | null; status: string | null; catatan: string | null }> = [];
     for (const p of k.kelas.pertemuan) {
       const a = p.absensi[0];
       const status = a?.status ?? null;
-      if (status) { c[status]!++; totalDinilai++; }
+      if (status && status in c) { ((c as Record<string, number>)[status] = ((c as Record<string, number>)[status] ?? 0) + 1); totalDinilai++; }
       detail.push({ pertemuanKe: p.pertemuanKe, tanggal: p.tanggal.toISOString(), topik: p.topik, status, catatan: a?.catatan ?? null });
     }
     const persentaseHadir = totalDinilai > 0 ? Math.round((c.hadir / totalDinilai) * 100) : null;

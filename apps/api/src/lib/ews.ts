@@ -118,7 +118,7 @@ export async function hitungEwsMahasiswa(mahasiswaId: string): Promise<EwsMahasi
     // hitung absensi: total pertemuan dihadiri / total pertemuan yang sudah lewat
     const kelasIds = krsAktif.map((k) => k.kelas.id);
     const pertemuanLewat = await prisma.pertemuan.count({
-      where: { kelasId: { in: kelasIds }, tanggal: { lt: new Date() }, status: { in: ['terlaksana', 'selesai'] } },
+      where: { kelasId: { in: kelasIds }, tanggal: { lt: new Date() } },
     });
     if (pertemuanLewat > 0) {
       const hadir = await prisma.absensi.count({
@@ -138,12 +138,15 @@ export async function hitungEwsMahasiswa(mahasiswaId: string): Promise<EwsMahasi
   // 5. Tunggakan tagihan jatuh tempo
   const tagihan = await prisma.tagihan.findMany({
     where: { mahasiswaId: m.id, status: { in: ['belum_bayar', 'cicil', 'jatuh_tempo'] } },
-    select: { id: true, jumlah: true, jatuhTempo: true, dibayar: true },
+    select: { id: true, jumlah: true, jatuhTempo: true, pembayaran: { select: { jumlah: true } } },
   });
   const sekarang = new Date();
   const menunggak = tagihan.filter((t) => t.jatuhTempo && t.jatuhTempo < sekarang);
   if (menunggak.length > 0) {
-    const totalNunggak = menunggak.reduce((s, t) => s + (Number(t.jumlah) - Number(t.dibayar)), 0);
+    const totalNunggak = menunggak.reduce((s, t) => {
+      const dibayar = t.pembayaran.reduce((p, x) => p + Number(x.jumlah), 0);
+      return s + (Number(t.jumlah) - dibayar);
+    }, 0);
     indikator.push({
       jenis: 'tunggakan', severity: 'sedang',
       judul: 'Tunggakan keuangan',

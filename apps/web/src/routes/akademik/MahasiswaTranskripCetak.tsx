@@ -4,7 +4,7 @@ import { ArrowLeft, Printer } from 'lucide-react';
 import { Button, Alert } from '@/ds';
 import { NamaInstitusiText } from '@/components/KopInstitusi';
 import { useAdminTranskrip } from '@/lib/queries-akademik';
-import { useInstitusiPublic } from '@/lib/queries-institusi';
+import { useInstitusi } from '@/lib/queries-institusi';
 import { formatIp } from '@/lib/format';
 
 const capFirst = (s: string) => s ? s[0]!.toUpperCase() + s.slice(1) : s;
@@ -13,7 +13,7 @@ export function AdminMahasiswaTranskripCetak() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const transkrip = useAdminTranskrip(id);
-  const inst = useInstitusiPublic();
+  const inst = useInstitusi();
 
   useEffect(() => {
     document.body.classList.add('print-mode');

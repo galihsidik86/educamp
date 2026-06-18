@@ -22,11 +22,11 @@ export function MahasiswaJadwal() {
   const { data, isLoading, error } = useJadwal();
 
   const blocksByDay = useMemo(() => {
-    const map: Record<string, typeof data extends { jadwal: infer J } ? J : never> = {} as any;
+    const map: Record<string, any[]> = {};
     if (data) {
       for (const j of data.jadwal) {
-        const list = (map[j.hari] ??= [] as any);
-        (list as any).push(j);
+        const list = (map[j.hari] ??= []);
+        list.push(j);
       }
     }
     return map;
