@@ -33,7 +33,21 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // Sourcemap dimatikan: produksi target shared hosting (low memory).
+    // Aktifkan via `VITE_SOURCEMAP=1` saat butuh debug bundle.
+    sourcemap: process.env.VITE_SOURCEMAP === '1',
+    // Code-split vendor chunks utk memori build lebih kecil + chunk SPA <500KB
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          query: ['@tanstack/react-query'],
+          lucide: ['lucide-react'],
+          xlsx: ['xlsx'],
+          qrcode: ['qrcode.react'],
+        },
+      },
+    },
   },
   // @ts-expect-error: vitest extends vite config
   test: {
