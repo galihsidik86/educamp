@@ -13,6 +13,7 @@ import {
   MetodeBayar, StatusKegiatan, StatusKkn,
 } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { seedFeatures } from './seed-features.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 loadDotenv({ path: path.resolve(__dirname, '../../../.env') });
@@ -195,7 +196,7 @@ async function main() {
 
   for (const k of kelasData) {
     const mk = createdMks.find((m) => m.kode === k.mkKode)!;
-    await prisma.kelas.upsert({
+    const kelasRow = await prisma.kelas.upsert({
       where: {
         mataKuliahId_semesterId_kodeKelas: {
           mataKuliahId: mk.id,
@@ -215,6 +216,11 @@ async function main() {
         jamMulai: k.mulai,
         jamSelesai: k.selesai,
       },
+    });
+    await prisma.kelasDosen.upsert({
+      where: { kelasId_dosenId: { kelasId: kelasRow.id, dosenId: k.dosen.id } },
+      update: { peran: 'lead' },
+      create: { kelasId: kelasRow.id, dosenId: k.dosen.id, peran: 'lead' },
     });
   }
 
@@ -285,7 +291,7 @@ async function main() {
         jenis: JenisMK.wajib_prodi, prodiId: prodiTI.id,
       },
     });
-    await prisma.kelas.upsert({
+    const kelasRow = await prisma.kelas.upsert({
       where: {
         mataKuliahId_semesterId_kodeKelas: {
           mataKuliahId: m.id, semesterId: semGenapPrev.id, kodeKelas: 'A',
@@ -297,6 +303,11 @@ async function main() {
         ruanganId: r101.id, kodeKelas: 'A', kapasitas: 40,
         hari: mk.hari, jamMulai: mk.jam[0], jamSelesai: mk.jam[1],
       },
+    });
+    await prisma.kelasDosen.upsert({
+      where: { kelasId_dosenId: { kelasId: kelasRow.id, dosenId: mk.dosen.id } },
+      update: { peran: 'lead' },
+      create: { kelasId: kelasRow.id, dosenId: mk.dosen.id, peran: 'lead' },
     });
   }
 
@@ -517,6 +528,9 @@ async function main() {
       isPenting: true,
     },
   }).catch(() => { /* idempoten — abaikan duplikasi */ });
+
+  // Fitur lanjutan + SPMI lengkap
+  await seedFeatures(prisma);
 
   console.log('✓ Seed selesai.');
 }

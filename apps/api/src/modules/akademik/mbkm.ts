@@ -5,6 +5,7 @@ import { BadRequest, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
 import { createNotifikasi, userIdFromMahasiswa } from '../../lib/notifikasi.js';
 import { hurufToBobot } from '../../lib/grade.js';
+import { issueSertifikat } from '../../lib/sertifikat.js';
 
 export const mbkmRouter = Router();
 
@@ -135,6 +136,21 @@ mbkmRouter.patch('/mbkm/:id', async (req, res) => {
         entity: 'mbkm',
         entityId: updated.id,
       });
+    })();
+  }
+
+  // Auto-issue sertifikat saat status berubah ke 'selesai'
+  if (body.status === 'selesai' && existing.status !== 'selesai') {
+    void (async () => {
+      await issueSertifikat({
+        mahasiswaId: updated.mahasiswaId,
+        jenis: 'mbkm',
+        judul: `Sertifikat MBKM ${updated.namaProgram}`,
+        deskripsi: `Telah menyelesaikan program ${updated.jenis} di mitra ${updated.mitra}.`,
+        periode: updated.periode,
+        sumberEntity: 'mbkm',
+        sumberId: updated.id,
+      }).catch((e) => console.error('[sertifikat] gagal auto-issue MBKM:', e));
     })();
   }
 

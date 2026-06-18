@@ -28,6 +28,30 @@ export async function getMahasiswaForUser(userId: string) {
   return m;
 }
 
+/**
+ * Cek otorisasi dosen atas kelas via team teaching.
+ * Return peran ('lead' | 'anggota' | 'asisten') jika dosen anggota team,
+ * atau `null` jika bukan. Mendukung legacy `Kelas.dosenId` (dianggap 'lead').
+ */
+export async function getKelasOwnership(dosenId: string, kelasId: string) {
+  const kelas = await prisma.kelas.findUnique({
+    where: { id: kelasId },
+    select: { dosenId: true, team: { where: { dosenId }, select: { peran: true } } },
+  });
+  if (!kelas) return null;
+  if (kelas.team.length > 0) return kelas.team[0]!.peran;
+  // Legacy fallback: kelas tanpa KelasDosen entry (data lama)
+  if (kelas.dosenId === dosenId) return 'lead' as const;
+  return null;
+}
+
+/** Throw Forbidden bila dosen tidak punya akses; return peran bila punya. */
+export async function requireKelasOwnership(dosenId: string, kelasId: string) {
+  const peran = await getKelasOwnership(dosenId, kelasId);
+  if (!peran) throw Forbidden('Kelas ini bukan milik Anda');
+  return peran;
+}
+
 /** Semester aktif untuk periode KRS / nilai. Jika tidak ada, error. */
 export async function getActiveSemester() {
   const s = await prisma.semester.findFirst({

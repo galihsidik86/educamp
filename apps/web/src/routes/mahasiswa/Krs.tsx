@@ -15,6 +15,7 @@ export function MahasiswaKrs() {
   const krs = useKrs();
   const { addItem, removeItem, submit, withdraw, dropItem } = useKrsActions();
   const [actionError, setActionError] = useState<string | null>(null);
+  const [sembunyikanLulusBagus, setSembunyikanLulusBagus] = useState(false);
   const navigate = useNavigate();
 
   const sudahDipilih = useMemo(() => {
@@ -73,12 +74,22 @@ export function MahasiswaKrs() {
   }, [krs.data]);
   const kelasSorted = useMemo(() => {
     if (!penawaran.data) return [];
-    return [...penawaran.data.kelas].sort((a, b) => {
+    let list = [...penawaran.data.kelas];
+    if (sembunyikanLulusBagus) {
+      // Sembunyikan MK yang sudah lulus dengan nilai ≥ B (bobot ≥ 3.0)
+      list = list.filter((k) => !(k.riwayat?.lulus && (k.riwayat?.bobot ?? 0) >= 3.0));
+    }
+    return list.sort((a, b) => {
       const ah = a.hari ? HARI_ORDER.indexOf(a.hari) : 99;
       const bh = b.hari ? HARI_ORDER.indexOf(b.hari) : 99;
       if (ah !== bh) return ah - bh;
       return (a.jamMulai ?? '').localeCompare(b.jamMulai ?? '');
     });
+  }, [penawaran.data, sembunyikanLulusBagus]);
+
+  // Hitung berapa MK yang sudah lulus bagus (≥B) — untuk label checkbox
+  const jumlahLulusBagus = useMemo(() => {
+    return (penawaran.data?.kelas ?? []).filter((k) => k.riwayat?.lulus && (k.riwayat?.bobot ?? 0) >= 3.0).length;
   }, [penawaran.data]);
 
   return (
@@ -116,7 +127,19 @@ export function MahasiswaKrs() {
 
       <div className="krs-layout">
         <div className="stack">
-          <h3 style={{ margin: 0, color: 'var(--text-strong)' }}>Penawaran kelas</h3>
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+            <h3 style={{ margin: 0, color: 'var(--text-strong)' }}>Penawaran kelas</h3>
+            {jumlahLulusBagus > 0 && (
+              <label className="row" style={{ gap: 6, alignItems: 'center', fontSize: 'var(--text-sm)', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={sembunyikanLulusBagus}
+                  onChange={(e) => setSembunyikanLulusBagus(e.target.checked)}
+                />
+                Sembunyikan MK yang sudah lulus (≥ B) — {jumlahLulusBagus} MK
+              </label>
+            )}
+          </div>
           <div className="tz-table-wrap">
             <table className="tz-table">
               <thead>
@@ -128,17 +151,24 @@ export function MahasiswaKrs() {
                   <th>Jadwal</th>
                   <th>Dosen</th>
                   <th className="center">Sisa</th>
+                  <th>Riwayat</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                {penawaran.isLoading && <tr><td colSpan={8} className="muted center">Memuat…</td></tr>}
+                {penawaran.isLoading && <tr><td colSpan={9} className="muted center">Memuat…</td></tr>}
                 {kelasSorted.map((k) => {
                   const dipilih = sudahDipilih.has(k.id);
                   const penuh = k.terisi >= k.kapasitas;
+                  const riw = k.riwayat;
                   return (
                     <tr key={k.id}>
-                      <td className="mono">{k.kodeMK}</td>
+                      <td className="mono">
+                        {k.kodeMK}
+                        {k.jenisMK === 'wajib_universitas' && (
+                          <div style={{ fontSize: 10, color: 'var(--accent)', marginTop: 2 }}>Univ.</div>
+                        )}
+                      </td>
                       <td>{k.namaMK}</td>
                       <td className="num">{k.sks}</td>
                       <td>{k.kodeKelas}</td>
@@ -148,6 +178,17 @@ export function MahasiswaKrs() {
                       </td>
                       <td>{k.dosen}</td>
                       <td className="num">{k.kapasitas - k.terisi}/{k.kapasitas}</td>
+                      <td style={{ fontSize: 'var(--text-xs)' }}>
+                        {riw == null ? (
+                          <span className="muted">—</span>
+                        ) : riw.lulus ? (
+                          <span className="pill pill--success" title={`Sudah lulus dengan nilai ${riw.nilaiHuruf ?? '—'}`}>
+                            Lulus {riw.nilaiHuruf ?? ''}
+                          </span>
+                        ) : (
+                          <span className="pill pill--warning" title="Mengulang — sebelumnya tidak lulus">Mengulang</span>
+                        )}
+                      </td>
                       <td>
                         <Button
                           size="sm"
@@ -162,7 +203,7 @@ export function MahasiswaKrs() {
                   );
                 })}
                 {penawaran.data && kelasSorted.length === 0 && (
-                  <tr><td colSpan={8} className="muted center">Belum ada penawaran.</td></tr>
+                  <tr><td colSpan={9} className="muted center">Belum ada penawaran.</td></tr>
                 )}
               </tbody>
             </table>

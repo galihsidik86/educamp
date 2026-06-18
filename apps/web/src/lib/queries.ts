@@ -29,9 +29,11 @@ export const useDashboard = () => useApi<DashboardData>(['dashboard'], '/mahasis
 
 export type KrsKelas = {
   id: string; kodeMK: string; namaMK: string; sks: number; kodeKelas: string;
+  jenisMK?: 'wajib_universitas' | 'wajib_prodi' | 'pilihan';
   dosen: string; ruangan: string | null;
   hari: string | null; jamMulai: string | null; jamSelesai: string | null;
   kapasitas: number; terisi: number;
+  riwayat?: { lulus: boolean; nilaiHuruf: string | null; bobot: number } | null;
 };
 export type Penawaran = {
   semester: { kode: string; jenis: string; krsSelesai: string | null };
@@ -130,17 +132,51 @@ export type Khs = {
 };
 export const useKhs = () => useApi<Khs>(['khs'], '/mahasiswa/nilai/khs');
 
+export type StatusPembayaran = 'menunggu' | 'disetujui' | 'ditolak';
+export type PembayaranItem = {
+  id: string; tanggalBayar: string; jumlah: number; metode: string;
+  buktiUrl: string | null; catatan: string | null;
+  status: StatusPembayaran;
+  bankPengirim: string | null; bankPenerima: string | null; noReferensi: string | null;
+  catatanValidasi: string | null; validasiPada: string | null;
+};
 export type Tagihan = {
   id: string; jenis: string; deskripsi: string;
-  jumlah: number; dibayar: number; sisa: number;
+  jumlah: number; dibayar: number; menunggu: number; sisa: number;
   jatuhTempo: string; status: string; semester: string;
-  pembayaran: Array<{ id: string; tanggalBayar: string; jumlah: number; metode: string; buktiUrl: string | null; catatan: string | null }>;
+  pembayaran: PembayaranItem[];
 };
 export type Keuangan = {
   ringkasan: { totalTagihan: number; totalDibayar: number; totalSisa: number; jumlahTagihan: number };
   items: Tagihan[];
 };
 export const useKeuangan = () => useApi<Keuangan>(['keuangan'], '/mahasiswa/keuangan');
+
+export type UploadBuktiBody = {
+  tagihanId: string;
+  jumlah: number;
+  tanggalBayar: string;
+  metode: 'transfer_bank' | 'va' | 'tunai' | 'qris' | 'ewallet';
+  buktiUrl: string;
+  bankPengirim?: string;
+  bankPenerima?: string;
+  noReferensi?: string;
+  catatan?: string;
+};
+export function useKeuanganActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['keuangan'] });
+  return {
+    uploadBukti: useMutation({
+      mutationFn: (body: UploadBuktiBody) => apiPost('/mahasiswa/keuangan/upload-bukti', body),
+      onSuccess: inv,
+    }),
+    batalBukti: useMutation({
+      mutationFn: (id: string) => api(`/mahasiswa/keuangan/pembayaran/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+  };
+}
 
 export type Penelitian = {
   id: string; judul: string; tahun: number; status: string; peran: string;
@@ -381,6 +417,7 @@ export type YudisiumItem = {
   noIjazah: string | null;
   noSkl: string | null;
   tanggalLulus: string | null;
+  verifikasiToken: string | null;
   periode: { id: string; kode: string; nama: string; tanggal: string };
 };
 export const useYudisium = () => useApi<{ items: YudisiumItem[] }>(['yudisium'], '/mahasiswa/yudisium');
@@ -487,10 +524,26 @@ export type AbsensiKelas = {
   detail: Array<{
     pertemuanKe: number; tanggal: string; topik: string | null;
     status: AbsensiStatus | null; catatan: string | null;
+    tanggalAsli: string | null;
+    alasanReschedule: string | null;
   }>;
 };
 export const useMahasiswaAbsensi = () =>
   useApi<{ items: AbsensiKelas[] }>(['mahasiswa-absensi'], '/mahasiswa/absensi');
+
+export type SubmitPinResult = {
+  ok: boolean;
+  pertemuan: { pertemuanKe: number; tanggal: string; topik: string | null };
+  kelas: { kodeMK: string; namaMK: string; kodeKelas: string };
+  inputPada: string;
+};
+export function useMahasiswaSubmitPin() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (pin: string) => apiPost<SubmitPinResult>('/mahasiswa/absensi/pin', { pin }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['mahasiswa-absensi'] }); },
+  });
+}
 
 export type Profil = {
   id: string; nim: string; nama: string; jenisKelamin: 'L' | 'P';
@@ -498,7 +551,64 @@ export type Profil = {
   telepon: string | null; angkatan: number;
   status: string;
   user: { email: string };
-  prodi: { kode: string; nama: string; fakultas: { nama: string } };
+  prodi: { id: string; kode: string; nama: string; fakultas: { nama: string } };
   dpa: { nama: string; nidn: string; gelarDepan: string | null; gelarBelakang: string | null } | null;
 };
 export const useProfil = () => useApi<Profil>(['profil'], '/mahasiswa/profil');
+
+export type ProfilUpdate = {
+  tempatLahir?: string | null;
+  tanggalLahir?: string | null;
+  alamat?: string | null;
+  telepon?: string | null;
+};
+export function useUpdateProfil() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: ProfilUpdate) => api('/mahasiswa/profil', { method: 'PATCH', body: JSON.stringify(patch) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['profil'] }),
+  });
+}
+
+// ============================================================
+// Heregistrasi semester (aktif / cuti)
+// ============================================================
+export type Heregistrasi = {
+  id: string; mahasiswaId: string; semesterId: string;
+  jenis: 'aktif' | 'cuti';
+  alasan: string | null;
+  dokumenUrl: string | null;
+  status: 'diajukan' | 'disetujui' | 'ditolak';
+  catatanAkademik: string | null;
+  diverifikasiPada: string | null;
+  createdAt: string;
+  semester: { kode: string; jenis: string; tahunAjaran: { kode: string } };
+};
+export type HeregistrasiAktif = {
+  semester: { id: string; kode: string };
+  heregistrasi: Heregistrasi | null;
+};
+
+export const useHeregistrasi = () =>
+  useApi<{ items: Heregistrasi[] }>(['heregistrasi'], '/mahasiswa/heregistrasi');
+export const useHeregistrasiAktif = () =>
+  useApi<HeregistrasiAktif>(['heregistrasi-aktif'], '/mahasiswa/heregistrasi/aktif');
+
+export type HeregistrasiInput = { jenis: 'aktif' | 'cuti'; alasan?: string; dokumenUrl?: string };
+export function useHeregistrasiActions() {
+  const qc = useQueryClient();
+  const inv = () => {
+    qc.invalidateQueries({ queryKey: ['heregistrasi'] });
+    qc.invalidateQueries({ queryKey: ['heregistrasi-aktif'] });
+  };
+  return {
+    ajukan: useMutation({
+      mutationFn: (body: HeregistrasiInput) => apiPost<Heregistrasi>('/mahasiswa/heregistrasi', body),
+      onSuccess: inv,
+    }),
+    batal: useMutation({
+      mutationFn: (id: string) => api(`/mahasiswa/heregistrasi/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+  };
+}

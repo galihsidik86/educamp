@@ -27,8 +27,16 @@ async function getKelasAccess(userId: string, kelasId: string) {
   });
   if (!kelas) throw NotFound('Kelas tidak ditemukan');
 
-  if (u.dosen && kelas.dosenId === u.dosen.id) {
-    return { kelas, role: 'dosen' as const, dosenId: u.dosen.id, mahasiswaId: null };
+  if (u.dosen) {
+    const isOwner = kelas.dosenId === u.dosen.id;
+    const inTeam = !isOwner
+      ? await prisma.kelasDosen.findUnique({
+          where: { kelasId_dosenId: { kelasId: kelas.id, dosenId: u.dosen.id } },
+        })
+      : null;
+    if (isOwner || inTeam) {
+      return { kelas, role: 'dosen' as const, dosenId: u.dosen.id, mahasiswaId: null };
+    }
   }
   if (u.mahasiswa) {
     const peserta = await prisma.krs.findFirst({
@@ -70,7 +78,9 @@ forumRouter.get('/kelas', async (req, res) => {
 
   if (u.dosen) {
     const kelas = await prisma.kelas.findMany({
-      where: { dosenId: u.dosen.id },
+      where: {
+        OR: [{ dosenId: u.dosen.id }, { team: { some: { dosenId: u.dosen.id } } }],
+      },
       include: {
         mataKuliah: true,
         semester: true,

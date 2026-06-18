@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Alert, Button, Card, Input } from '@/ds';
-import { ChevronLeft, Plus, Trash2, ChevronRight, Printer } from 'lucide-react';
-import { useDosenPertemuan, useDosenAbsensiActions, useDosenKehadiranRekap } from '@/lib/queries-dosen';
+import { Alert, Button, Card, Input, Select } from '@/ds';
+import { ChevronLeft, Plus, Trash2, ChevronRight, Printer, CalendarClock } from 'lucide-react';
+import { useDosenPertemuan, useDosenAbsensiActions, useDosenKehadiranRekap, useDosenRuangan, type PertemuanItem } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
-import { formatTanggalWaktu } from '@/lib/format';
+import { Modal } from '@/components/Modal';
+import { formatTanggalWaktu, formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
 type Tab = 'pertemuan' | 'rekap';
@@ -14,12 +15,13 @@ export function DosenAbsensiKelas() {
   const navigate = useNavigate();
   const { data, isLoading } = useDosenPertemuan(kelasId);
   const rekap = useDosenKehadiranRekap(kelasId);
-  const { createPertemuan, deletePertemuan } = useDosenAbsensiActions(kelasId);
+  const { createPertemuan, deletePertemuan, reschedulePertemuan } = useDosenAbsensiActions(kelasId);
 
   const [tab, setTab] = useState<Tab>('pertemuan');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ tanggal: '', topik: '', catatan: '' });
   const [actErr, setActErr] = useState<string | null>(null);
+  const [reschedule, setReschedule] = useState<PertemuanItem | null>(null);
 
   const submitNew = async () => {
     setActErr(null);
@@ -129,8 +131,26 @@ export function DosenAbsensiKelas() {
             {data.items.map((p) => (
               <tr key={p.id}>
                 <td className="num mono">{p.pertemuanKe}</td>
-                <td className="mono">{formatTanggalWaktu(p.tanggal)}</td>
-                <td>{p.topik ?? <span className="muted">—</span>}</td>
+                <td className="mono">
+                  {formatTanggalWaktu(p.tanggal)}
+                  {p.tanggalAsli && (
+                    <div className="muted" style={{ fontSize: 'var(--text-xs)', marginTop: 2 }}>
+                      <CalendarClock size={11} style={{ verticalAlign: 'middle', marginRight: 2 }} />
+                      Dipindah dari {formatTanggal(p.tanggalAsli)}
+                    </div>
+                  )}
+                  {p.ruangan && (
+                    <div className="muted" style={{ fontSize: 'var(--text-xs)' }}>Ruang: {p.ruangan.kode}</div>
+                  )}
+                </td>
+                <td>
+                  {p.topik ?? <span className="muted">—</span>}
+                  {p.alasanReschedule && (
+                    <div className="muted" style={{ fontSize: 'var(--text-xs)', marginTop: 2 }}>
+                      Alasan pindah: {p.alasanReschedule}
+                    </div>
+                  )}
+                </td>
                 <td className="num">{p.ringkasan.hadir}</td>
                 <td className="num">{p.ringkasan.izin}</td>
                 <td className="num">{p.ringkasan.sakit}</td>
@@ -145,6 +165,9 @@ export function DosenAbsensiKelas() {
                       rightIcon={<ChevronRight size={14} />}
                     >
                       Absensi
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setReschedule(p)} leftIcon={<CalendarClock size={14} />}>
+                      Reschedule
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => onDelete(p.id, p.pertemuanKe)} leftIcon={<Trash2 size={14} />}>
                       Hapus
@@ -211,6 +234,81 @@ export function DosenAbsensiKelas() {
           )}
         </>
       )}
+
+      {reschedule && (
+        <RescheduleModal
+          item={reschedule}
+          onClose={() => setReschedule(null)}
+          onSubmit={async (body) => {
+            try {
+              await reschedulePertemuan.mutateAsync({ id: reschedule.id, body });
+              setReschedule(null);
+            } catch (e) { throw e; }
+          }}
+          pending={reschedulePertemuan.isPending}
+        />
+      )}
     </div>
   );
+}
+
+function RescheduleModal({ item, onClose, onSubmit, pending }: {
+  item: PertemuanItem;
+  onClose: () => void;
+  onSubmit: (body: { tanggal: string; ruanganId?: string | null; alasan: string }) => Promise<void>;
+  pending: boolean;
+}) {
+  const ruangan = useDosenRuangan();
+  const [tanggal, setTanggal] = useState(toDateTimeLocal(item.tanggal));
+  const [ruanganId, setRuanganId] = useState<string>('');
+  const [alasan, setAlasan] = useState('');
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async () => {
+    setErr(null);
+    if (!tanggal) { setErr('Tanggal wajib diisi'); return; }
+    if (alasan.trim().length < 10) { setErr('Alasan minimal 10 karakter'); return; }
+    try {
+      await onSubmit({ tanggal: new Date(tanggal).toISOString(), ruanganId: ruanganId || null, alasan });
+    } catch (e) { setErr(e instanceof ApiError ? e.message : 'Gagal'); }
+  };
+
+  return (
+    <Modal open onClose={onClose} title={`Reschedule pertemuan ke-${item.pertemuanKe}`} width={620}>
+      <div className="stack" style={{ padding: 'var(--space-4)' }}>
+        {err && <Alert variant="danger" title="Gagal">{err}</Alert>}
+        <div className="muted" style={{ fontSize: 'var(--text-sm)' }}>
+          Mahasiswa akan menerima notifikasi otomatis setelah Anda submit.
+        </div>
+        <Input label="Tanggal & jam baru" type="datetime-local" value={tanggal} onChange={(e) => setTanggal((e.target as HTMLInputElement).value)} />
+        <Select label="Ruangan (opsional — kosongkan untuk pakai ruangan default kelas)" value={ruanganId} onChange={(e) => setRuanganId((e.target as HTMLSelectElement).value)}>
+          <option value="">— pakai ruangan default —</option>
+          {ruangan.data?.items.map((r) => (
+            <option key={r.id} value={r.id}>{r.kode} — {r.nama} ({r.kapasitas} kursi)</option>
+          ))}
+        </Select>
+        <div>
+          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Alasan reschedule</label>
+          <textarea
+            value={alasan}
+            onChange={(e) => setAlasan(e.target.value)}
+            rows={3}
+            className="tz-input"
+            style={{ width: '100%', padding: 'var(--space-3)', fontFamily: 'inherit', fontSize: 'var(--text-sm)' }}
+            placeholder="mis. Dosen ada dinas luar kota, dipindah ke Rabu sore."
+          />
+        </div>
+        <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}>
+          <Button variant="ghost" size="sm" onClick={onClose}>Batal</Button>
+          <Button variant="primary" size="sm" disabled={pending} onClick={submit}>{pending ? 'Memindah…' : 'Reschedule'}</Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function toDateTimeLocal(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }

@@ -9,7 +9,10 @@ jadwalRouter.get('/jadwal', async (req, res) => {
   const semester = await getActiveSemester();
 
   const kelas = await prisma.kelas.findMany({
-    where: { dosenId: d.id, semesterId: semester.id },
+    where: {
+      semesterId: semester.id,
+      OR: [{ dosenId: d.id }, { team: { some: { dosenId: d.id } } }],
+    },
     include: { mataKuliah: true, ruangan: true, _count: { select: { krs: true } } },
   });
 

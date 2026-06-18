@@ -56,6 +56,8 @@ export type AdminMahasiswa = {
   user: { email: string; isActive: boolean };
   prodi: { kode: string; nama: string };
   dpa: { id: string; nama: string } | null;
+  kategoriUkt: { id: string; kode: string; nama: string; nominalSemester: number } | null;
+  defaultCicilanUkt: number;
 };
 export const useAdminMahasiswa = (filters: { q?: string; prodiId?: string; angkatan?: number; status?: string } = {}) => {
   const qs = new URLSearchParams();
@@ -71,6 +73,8 @@ export type CreateMahasiswaInput = {
   jenisKelamin: 'L' | 'P';
   tempatLahir?: string; tanggalLahir?: string; alamat?: string; telepon?: string;
   angkatan: number; prodiId: string; dpaId?: string;
+  kategoriUktId?: string | null;
+  defaultCicilanUkt?: number;
   status?: string;
 };
 
@@ -147,22 +151,107 @@ export function useDosenActions() {
       mutationFn: ({ id, password }: { id: string; password?: string }) =>
         apiPost(`/akademik/dosen/${id}/reset-password`, password ? { password } : {}),
     }),
+    importCsv: useMutation({
+      mutationFn: (rows: Array<Record<string, string>>) =>
+        apiPost<ImportResultKey>('/akademik/dosen/import', { rows }),
+      onSuccess: inv,
+    }),
   };
 }
+export type ImportResultKey = {
+  totalRows: number;
+  created: number;
+  failed: number;
+  results: Array<{ row: number; key: string | null; status: 'created' | 'failed'; message?: string }>;
+};
 
 // ============================================================
 // Master kurikulum (Prodi, MK, Kelas, Ruangan)
 // ============================================================
 
-export type Fakultas = { id: string; kode: string; nama: string };
+export type Fakultas = { id: string; kode: string; nama: string; _count?: { prodi: number } };
 export const useFakultas = () => useApi<{ items: Fakultas[] }>(['fakultas'], '/akademik/fakultas');
+
+export type FakultasInput = { kode: string; nama: string };
+export function useFakultasActions() {
+  const qc = useQueryClient();
+  const inv = () => {
+    qc.invalidateQueries({ queryKey: ['fakultas'] });
+    qc.invalidateQueries({ queryKey: ['prodi'] });
+  };
+  return {
+    create: useMutation({ mutationFn: (body: FakultasInput) => apiPost<Fakultas>('/akademik/fakultas', body), onSuccess: inv }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<FakultasInput> }) =>
+        api(`/akademik/fakultas/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => api(`/akademik/fakultas/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+  };
+}
 
 export type Prodi = {
   id: string; kode: string; nama: string; jenjang: string;
+  tarifSppDefault: number | null;
+  tarifUangPangkal: number | null;
   fakultas: { kode: string; nama: string };
   _count: { mahasiswa: number; dosen: number; mataKuliah: number };
 };
 export const useProdi = () => useApi<{ items: Prodi[] }>(['prodi'], '/akademik/prodi');
+
+export type ProdiInput = {
+  kode: string; nama: string; jenjang: 'd3' | 'd4' | 's1' | 's2' | 's3' | 'profesi';
+  fakultasId: string;
+  tarifSppDefault?: number | null;
+  tarifUangPangkal?: number | null;
+};
+export function useProdiActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['prodi'] });
+  return {
+    create: useMutation({ mutationFn: (body: ProdiInput) => apiPost<Prodi>('/akademik/prodi', body), onSuccess: inv }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<ProdiInput> }) =>
+        api(`/akademik/prodi/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => api(`/akademik/prodi/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+export type KategoriUkt = {
+  id: string; prodiId: string; kode: string; nama: string;
+  nominalSemester: number; deskripsi: string | null; isAktif: boolean;
+  prodi: { kode: string; nama: string };
+  _count: { mahasiswa: number };
+};
+export type KategoriUktInput = {
+  prodiId: string; kode: string; nama: string;
+  nominalSemester: number; deskripsi?: string; isAktif?: boolean;
+};
+export const useKategoriUkt = (prodiId?: string) => {
+  const qs = prodiId ? `?prodiId=${prodiId}` : '';
+  return useApi<{ items: KategoriUkt[] }>(['kategori-ukt', prodiId ?? ''], `/akademik/kategori-ukt${qs}`);
+};
+export function useKategoriUktActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['kategori-ukt'] });
+  return {
+    create: useMutation({ mutationFn: (input: KategoriUktInput) => apiPost('/akademik/kategori-ukt', input), onSuccess: inv }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<KategoriUktInput> }) =>
+        api(`/akademik/kategori-ukt/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({ mutationFn: (id: string) => api(`/akademik/kategori-ukt/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+  };
+}
 
 export type Mk = {
   id: string; kode: string; nama: string; namaInggris: string | null;
@@ -193,11 +282,37 @@ export function useMkActions() {
       onSuccess: inv,
     }),
     remove: useMutation({ mutationFn: (id: string) => api(`/akademik/mata-kuliah/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+    importCsv: useMutation({
+      mutationFn: (rows: Array<Record<string, string>>) =>
+        apiPost<MkImportResult>('/akademik/mata-kuliah/import', { rows }),
+      onSuccess: inv,
+    }),
   };
 }
+export type MkImportResult = {
+  totalRows: number;
+  created: number;
+  failed: number;
+  results: Array<{ row: number; kode: string | null; status: 'created' | 'failed'; message?: string }>;
+};
 
 export type Ruangan = { id: string; kode: string; nama: string; gedung: string | null; lantai: number | null; kapasitas: number };
 export const useRuangan = () => useApi<{ items: Ruangan[] }>(['ruangan'], '/akademik/ruangan');
+
+export type RuanganInput = { kode: string; nama: string; gedung?: string; lantai?: number; kapasitas?: number };
+export function useRuanganActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['ruangan'] });
+  return {
+    create: useMutation({ mutationFn: (input: RuanganInput) => apiPost('/akademik/ruangan', input), onSuccess: inv }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<RuanganInput> }) =>
+        api(`/akademik/ruangan/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({ mutationFn: (id: string) => api(`/akademik/ruangan/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+  };
+}
 
 export type Kelas = {
   id: string;
@@ -243,6 +358,53 @@ export function useKelasActions() {
       onSuccess: inv,
     }),
     remove: useMutation({ mutationFn: (id: string) => api(`/akademik/kelas/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+    importCsv: useMutation({
+      mutationFn: (rows: Array<Record<string, string>>) =>
+        apiPost<ImportResultKey>('/akademik/kelas/import', { rows }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// ============================================================
+// Team teaching — anggota dosen per kelas
+// ============================================================
+
+export type KelasTeamItem = {
+  id: string;
+  dosenId: string;
+  nidn: string;
+  nama: string;
+  gelarDepan: string | null;
+  gelarBelakang: string | null;
+  peran: 'lead' | 'anggota' | 'asisten';
+};
+
+export const useKelasTeam = (kelasId: string | null) =>
+  useApi<{ items: KelasTeamItem[] }>(['admin-kelas-team', kelasId ?? ''], `/akademik/kelas/${kelasId}/dosen`, { enabled: !!kelasId });
+
+export function useKelasTeamActions(kelasId: string | null) {
+  const qc = useQueryClient();
+  const inv = () => {
+    qc.invalidateQueries({ queryKey: ['admin-kelas-team', kelasId ?? ''] });
+    qc.invalidateQueries({ queryKey: ['admin-kelas'] });
+  };
+  return {
+    add: useMutation({
+      mutationFn: (input: { dosenId: string; peran: KelasTeamItem['peran'] }) =>
+        apiPost(`/akademik/kelas/${kelasId}/dosen`, input),
+      onSuccess: inv,
+    }),
+    update: useMutation({
+      mutationFn: ({ dosenId, peran }: { dosenId: string; peran: KelasTeamItem['peran'] }) =>
+        api(`/akademik/kelas/${kelasId}/dosen/${dosenId}`, { method: 'PATCH', body: JSON.stringify({ peran }) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({
+      mutationFn: (dosenId: string) =>
+        api(`/akademik/kelas/${kelasId}/dosen/${dosenId}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
   };
 }
 
@@ -410,6 +572,7 @@ export type AdminYudisiumItem = {
   noIjazah: string | null;
   noSkl: string | null;
   tanggalLulus: string | null;
+  verifikasiToken: string | null;
   mahasiswa: { id: string; nim: string; nama: string; angkatan: number; prodi: { kode: string; nama: string } };
   periodeWisuda: { id: string; kode: string; nama: string; tanggal: string };
 };
@@ -431,6 +594,11 @@ export function useAdminYudisiumActions() {
         predikat: AdminYudisiumItem['predikat'] | null;
         catatan: string | null; noIjazah: string | null; noSkl: string | null; tanggalLulus: string | null;
       }> }) => api(`/akademik/yudisium/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    regenToken: useMutation({
+      mutationFn: (id: string) =>
+        apiPost<{ verifikasiToken: string }>(`/akademik/yudisium/${id}/regen-token`, {}),
       onSuccess: inv,
     }),
   };
@@ -753,6 +921,45 @@ export const useLaporanKehadiran = (filters: { prodiId?: string; semesterId?: st
   return useApi<LaporanKehadiran>(['laporan-kehadiran', qs.toString()], `/akademik/laporan/kehadiran?${qs}`);
 };
 
+export type LaporanHonorDosen = {
+  periode: { tanggalMulai: string; tanggalSelesai: string };
+  ringkasan: {
+    totalDosen: number;
+    totalKelas: number;
+    totalPertemuan: number;
+    totalSksPertemuan: number;
+  };
+  items: Array<{
+    dosen: { id: string; nidn: string; nama: string; gelarLengkap: string; jabatan: string | null };
+    totalKelas: number;
+    totalPertemuan: number;
+    totalSksPertemuan: number;
+    kelas: Array<{
+      kelasId: string;
+      kodeMK: string; namaMK: string; kodeKelas: string;
+      sks: number;
+      semesterKode: string;
+      prodi: { kode: string; nama: string };
+      pertemuan: Array<{
+        id: string; pertemuanKe: number; tanggal: string; topik: string | null; jumlahPeserta: number;
+      }>;
+    }>;
+  }>;
+};
+
+export const useLaporanHonorDosen = (filters: { tanggalMulai?: string; tanggalSelesai?: string; dosenId?: string; prodiId?: string }) => {
+  const qs = new URLSearchParams();
+  if (filters.tanggalMulai) qs.set('tanggalMulai', filters.tanggalMulai);
+  if (filters.tanggalSelesai) qs.set('tanggalSelesai', filters.tanggalSelesai);
+  if (filters.dosenId) qs.set('dosenId', filters.dosenId);
+  if (filters.prodiId) qs.set('prodiId', filters.prodiId);
+  return useApi<LaporanHonorDosen>(
+    ['laporan-honor-dosen', qs.toString()],
+    `/akademik/laporan/honor-dosen?${qs}`,
+    { enabled: !!filters.tanggalMulai && !!filters.tanggalSelesai },
+  );
+};
+
 // ============================================================
 // Periode (TA + Semester)
 // ============================================================
@@ -770,20 +977,111 @@ export type Periode = {
 };
 export const usePeriode = () => useApi<Periode>(['periode'], '/akademik/periode');
 
+// ============================================================
+// Akreditasi dashboard
+// ============================================================
+
+export type AkreditasiData = {
+  ringkasan: {
+    totalMahasiswa: number;
+    totalDosen: number;
+    totalProdi: number;
+    rasioDosenMahasiswa: number | null;
+    ipkRataRata: number | null;
+    masaStudiRataRataBulan: number | null;
+    edomRataRata: number | null;
+    tingkatKelulusanPersen: number;
+  };
+  statusBreakdown: Record<string, number>;
+  perProdi: Array<{
+    prodi: { id: string; kode: string; nama: string; fakultas: { kode: string; nama: string } };
+    totalMhs: number;
+    totalDosen: number;
+    rasioDosenMhs: number | null;
+    ipkRataRata: number | null;
+    masaStudiRataRataBulan: number | null;
+    edomRataRata: number | null;
+    statusBreakdown: Record<string, number>;
+  }>;
+};
+
+export const useAkreditasi = (prodiId?: string) => {
+  const qs = prodiId ? `?prodiId=${prodiId}` : '';
+  return useApi<AkreditasiData>(['akreditasi', prodiId ?? ''], `/akademik/akreditasi${qs}`);
+};
+
 export function usePeriodeActions() {
   const qc = useQueryClient();
-  const inv = () => qc.invalidateQueries({ queryKey: ['periode'] });
+  const inv = () => {
+    qc.invalidateQueries({ queryKey: ['periode'] });
+    qc.invalidateQueries({ queryKey: ['akademik-dashboard'] });
+  };
   return {
+    // Tahun Ajaran
+    createTa: useMutation({
+      mutationFn: (body: { kode: string; nama: string; tahunMulai: number; tahunSelesai: number }) =>
+        apiPost('/akademik/periode/tahun-ajaran', body),
+      onSuccess: inv,
+    }),
+    updateTa: useMutation({
+      mutationFn: ({ id, body }: { id: string; body: Partial<{ kode: string; nama: string; tahunMulai: number; tahunSelesai: number }> }) =>
+        api(`/akademik/periode/tahun-ajaran/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+      onSuccess: inv,
+    }),
+    aktifkanTa: useMutation({
+      mutationFn: (id: string) => apiPost(`/akademik/periode/tahun-ajaran/${id}/aktifkan`, {}),
+      onSuccess: inv,
+    }),
+    removeTa: useMutation({
+      mutationFn: (id: string) => api(`/akademik/periode/tahun-ajaran/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+    // Semester
+    createSemester: useMutation({
+      mutationFn: (body: {
+        kode: string; jenis: 'ganjil' | 'genap' | 'pendek'; tahunAjaranId: string;
+        krsMulai?: string | null; krsSelesai?: string | null;
+        prsMulai?: string | null; prsSelesai?: string | null;
+        nilaiMulai?: string | null; nilaiSelesai?: string | null;
+      }) => apiPost('/akademik/periode/semester', body),
+      onSuccess: inv,
+    }),
     aktifkan: useMutation({
       mutationFn: (semesterId: string) => apiPost(`/akademik/periode/semester/${semesterId}/aktifkan`, {}),
-      onSuccess: () => {
-        qc.invalidateQueries({ queryKey: ['periode'] });
-        qc.invalidateQueries({ queryKey: ['akademik-dashboard'] });
-      },
+      onSuccess: inv,
     }),
     updateSemester: useMutation({
       mutationFn: ({ id, patch }: { id: string; patch: Partial<{ krsMulai: string; krsSelesai: string; prsMulai: string; prsSelesai: string; nilaiMulai: string; nilaiSelesai: string }> }) =>
         api(`/akademik/periode/semester/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    removeSemester: useMutation({
+      mutationFn: (id: string) => api(`/akademik/periode/semester/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// Akademik KRS item actions — add/remove/update item KRS mahasiswa manual
+export function useAkademikKrsItemActions() {
+  const qc = useQueryClient();
+  const inv = () => {
+    qc.invalidateQueries({ queryKey: ['akademik-krs-detail'] });
+    qc.invalidateQueries({ queryKey: ['akademik-krs-list'] });
+  };
+  return {
+    addItem: useMutation({
+      mutationFn: ({ mahasiswaId, body }: { mahasiswaId: string; body: { kelasId: string; status?: 'draft' | 'diajukan' | 'disetujui'; catatan?: string | null } }) =>
+        apiPost(`/akademik/krs/${mahasiswaId}/items`, body),
+      onSuccess: inv,
+    }),
+    removeItem: useMutation({
+      mutationFn: (krsId: string) => api(`/akademik/krs/items/${krsId}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+    updateItem: useMutation({
+      mutationFn: ({ krsId, body }: { krsId: string; body: { status: 'draft' | 'diajukan' | 'disetujui' | 'ditolak'; catatan?: string | null } }) =>
+        api(`/akademik/krs/items/${krsId}`, { method: 'PATCH', body: JSON.stringify(body) }),
       onSuccess: inv,
     }),
   };
@@ -814,6 +1112,7 @@ export const useAkademikKrs = (filters: { status?: string; prodiId?: string } = 
 export type AkademikKrsItem = {
   id: string; status: string; catatan: string | null;
   tipe: 'krs' | 'prs-tambah' | 'prs-drop';
+  kelasId: string;
   kelas: {
     kodeMK: string; namaMK: string; sks: number; kodeKelas: string;
     hari: string | null; jamMulai: string | null; jamSelesai: string | null;
@@ -821,7 +1120,7 @@ export type AkademikKrsItem = {
   };
 };
 export type AkademikKrsDetail = {
-  mahasiswa: { id: string; nim: string; nama: string; angkatan: number; prodi: { kode: string; nama: string }; dpa: { nama: string; nidn: string } | null };
+  mahasiswa: { id: string; nim: string; nama: string; angkatan: number; prodi: { kode: string; nama: string }; dpa: { nama: string; nidn: string } | null; defaultCicilanUkt: number };
   semester: { kode: string; prsMulai: string | null; prsSelesai: string | null } | null;
   inPrsPeriode: boolean;
   items: AkademikKrsItem[];
@@ -831,11 +1130,23 @@ export type AkademikKrsDetail = {
 export const useAkademikKrsDetail = (mahasiswaId: string | undefined) =>
   useApi<AkademikKrsDetail>(['akademik-krs', mahasiswaId], `/akademik/krs/${mahasiswaId}`, { enabled: !!mahasiswaId });
 
+export type ValidasiKrsResult = {
+  ok: boolean;
+  updated: number;
+  tagihanInfo?: {
+    dibuat: boolean;
+    nominal?: number;
+    potonganBeasiswa?: number;
+    cicilan?: number;
+    fullBeasiswa?: boolean;
+    sudahAda?: boolean;
+  };
+};
 export function useAkademikValidasiKrs(mahasiswaId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ action, catatan }: { action: 'setujui' | 'tolak'; catatan?: string }) =>
-      apiPost(`/akademik/krs/${mahasiswaId}/validasi`, { action, catatan }),
+    mutationFn: ({ action, catatan, cicilanUkt }: { action: 'setujui' | 'tolak'; catatan?: string; cicilanUkt?: number }) =>
+      apiPost<ValidasiKrsResult>(`/akademik/krs/${mahasiswaId}/validasi`, { action, catatan, cicilanUkt }),
     onSuccess: () => Promise.all([
       qc.invalidateQueries({ queryKey: ['akademik-krs'] }),
       qc.invalidateQueries({ queryKey: ['akademik-dashboard'] }),
@@ -885,6 +1196,7 @@ export function useKeuanganActions() {
   const qc = useQueryClient();
   const inv = () => Promise.all([
     qc.invalidateQueries({ queryKey: ['akademik-tagihan'] }),
+    qc.invalidateQueries({ queryKey: ['akademik-pembayaran'] }),
     qc.invalidateQueries({ queryKey: ['akademik-dashboard'] }),
   ]);
   return {
@@ -892,8 +1204,75 @@ export function useKeuanganActions() {
     createBulk: useMutation({ mutationFn: (input: BulkTagihanInput) => apiPost('/akademik/keuangan/tagihan/bulk', input), onSuccess: inv }),
     deleteTagihan: useMutation({ mutationFn: (id: string) => api(`/akademik/keuangan/tagihan/${id}`, { method: 'DELETE' }), onSuccess: inv }),
     createPembayaran: useMutation({ mutationFn: (input: PembayaranInput) => apiPost('/akademik/keuangan/pembayaran', input), onSuccess: inv }),
+    verifikasiPembayaran: useMutation({
+      mutationFn: ({ id, action, catatan }: { id: string; action: 'setujui' | 'tolak'; catatan?: string }) =>
+        apiPost(`/akademik/keuangan/pembayaran/${id}/verifikasi`, { action, catatan }),
+      onSuccess: inv,
+    }),
   };
 }
+
+// Pembayaran admin (verifikasi list)
+export type PembayaranAdmin = {
+  id: string;
+  tanggalBayar: string;
+  mahasiswa: { nim: string; nama: string };
+  tagihan: { jenis: string; deskripsi: string };
+  jumlah: number;
+  metode: string;
+  buktiUrl: string | null;
+  catatan: string | null;
+  status: 'menunggu' | 'disetujui' | 'ditolak';
+  bankPengirim: string | null;
+  bankPenerima: string | null;
+  noReferensi: string | null;
+  divalidasiOleh: string | null;
+  validasiPada: string | null;
+  catatanValidasi: string | null;
+};
+
+export const useAdminPembayaran = (filters: { status?: string; q?: string } = {}) => {
+  const qs = new URLSearchParams();
+  if (filters.status) qs.set('status', filters.status);
+  if (filters.q) qs.set('q', filters.q);
+  return useApi<{ items: PembayaranAdmin[] }>(['akademik-pembayaran', qs.toString()], `/akademik/keuangan/pembayaran?${qs}`);
+};
+
+export type Rekonsiliasi = {
+  periode: { dari: string; sampai: string };
+  ringkasan: {
+    total: number;
+    jumlahTransaksi: number;
+    perMetode: Array<{ metode: string; count: number; total: number }>;
+  };
+  items: Array<{
+    id: string;
+    tanggalBayar: string;
+    mahasiswa: { nim: string; nama: string; prodi: { kode: string; nama: string } };
+    tagihan: { jenis: string; deskripsi: string; semester: { kode: string } | null };
+    jumlah: number;
+    metode: string;
+    bankPengirim: string | null;
+    bankPenerima: string | null;
+    noReferensi: string | null;
+    buktiUrl: string | null;
+    divalidasiOleh: string | null;
+    validasiPada: string | null;
+  }>;
+};
+
+export const useRekonsiliasi = (filters: { dari: string; sampai: string; bankPenerima?: string; metode?: string }) => {
+  const qs = new URLSearchParams();
+  qs.set('dari', filters.dari);
+  qs.set('sampai', filters.sampai);
+  if (filters.bankPenerima) qs.set('bankPenerima', filters.bankPenerima);
+  if (filters.metode) qs.set('metode', filters.metode);
+  return useApi<Rekonsiliasi>(
+    ['akademik-rekonsiliasi', qs.toString()],
+    `/akademik/keuangan/rekonsiliasi?${qs}`,
+    { enabled: !!filters.dari && !!filters.sampai },
+  );
+};
 
 // ============================================================
 // Audit Log
@@ -937,5 +1316,127 @@ export const useAuditLog = (filters: AuditFilters = {}) => {
   return useApi<{ items: AuditEntry[]; total: number; take: number; skip: number }>(
     ['audit', qs.toString()],
     `/akademik/audit?${qs}`,
+  );
+};
+
+
+// ============================================================
+// Akademik — Verifikasi Heregistrasi
+// ============================================================
+export type HeregistrasiAdmin = {
+  id: string; jenis: 'aktif' | 'cuti';
+  status: 'diajukan' | 'disetujui' | 'ditolak';
+  alasan: string | null;
+  dokumenUrl: string | null;
+  catatanAkademik: string | null;
+  diverifikasiPada: string | null;
+  createdAt: string;
+  mahasiswa: { id: string; nim: string; nama: string; prodi: { kode: string; nama: string } };
+  semester: { kode: string; jenis: string; tahunAjaran: { kode: string } };
+};
+export const useAdminHeregistrasi = (filters: { status?: string; semesterId?: string; q?: string } = {}) => {
+  const qs = new URLSearchParams();
+  if (filters.status) qs.set('status', filters.status);
+  if (filters.semesterId) qs.set('semesterId', filters.semesterId);
+  if (filters.q) qs.set('q', filters.q);
+  return useApi<{ items: HeregistrasiAdmin[] }>(['admin-heregistrasi', qs.toString()], `/akademik/heregistrasi?${qs}`);
+};
+export function useAdminHeregistrasiActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['admin-heregistrasi'] });
+  return {
+    verifikasi: useMutation({
+      mutationFn: ({ id, status, catatan }: { id: string; status: 'disetujui' | 'ditolak'; catatan?: string }) =>
+        api(`/akademik/heregistrasi/${id}/verifikasi`, { method: 'PATCH', body: JSON.stringify({ status, catatanAkademik: catatan ?? null }) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => api(`/akademik/heregistrasi/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// ============================================================
+// EWS — Early Warning System (peringatan dini DO)
+// ============================================================
+export type EwsIndikator = {
+  jenis: 'ipk' | 'sks_progres' | 'absensi' | 'tunggakan' | 'heregistrasi' | 'nilai_buruk';
+  severity: 'tinggi' | 'sedang' | 'rendah';
+  judul: string;
+  detail: string;
+  nilai: number | string;
+  threshold: number | string;
+  poin: number;
+};
+export type EwsMahasiswa = {
+  mahasiswaId: string;
+  nim: string;
+  nama: string;
+  angkatan: number;
+  status: string;
+  prodi: { kode: string; nama: string };
+  dpa: { id: string; nama: string } | null;
+  semesterBerjalan: number;
+  ipk: number;
+  totalSks: number;
+  skorRisiko: number;
+  tingkat: 'tinggi' | 'sedang' | 'rendah' | 'aman';
+  indikator: EwsIndikator[];
+};
+export type EwsList = {
+  ringkasan: { total: number; tinggi: number; sedang: number; rendah: number };
+  items: EwsMahasiswa[];
+};
+export const useEws = (filters: { prodiId?: string; angkatan?: number; tingkat?: string } = {}) => {
+  const qs = new URLSearchParams();
+  if (filters.prodiId) qs.set('prodiId', filters.prodiId);
+  if (filters.angkatan) qs.set('angkatan', filters.angkatan.toString());
+  if (filters.tingkat) qs.set('tingkat', filters.tingkat);
+  return useApi<EwsList>(['ews', qs.toString()], `/akademik/ews?${qs}`);
+};
+export const useEwsMahasiswa = (mahasiswaId: string | undefined) =>
+  useApi<EwsMahasiswa>(['ews-mhs', mahasiswaId], `/akademik/ews/${mahasiswaId}`, { enabled: !!mahasiswaId });
+
+// ============================================================
+// Akademik — Transkrip & Kehadiran mahasiswa (cetak)
+// ============================================================
+export type AdminTranskripItem = {
+  semesterKode: string; semesterNama: string;
+  kodeMK: string; namaMK: string; sks: number;
+  nilaiHuruf: string | null; nilaiAngka: number | null; bobot: number | null;
+};
+export type AdminTranskrip = {
+  mahasiswa: {
+    nim: string; nama: string; angkatan: number;
+    prodi: { kode: string; nama: string; jenjang: string };
+    fakultas: { kode: string; nama: string };
+  };
+  ipk: number; totalSksLulus: number;
+  items: AdminTranskripItem[];
+};
+export const useAdminTranskrip = (mahasiswaId: string | undefined) =>
+  useApi<AdminTranskrip>(['admin-transkrip', mahasiswaId], `/akademik/mahasiswa/${mahasiswaId}/transkrip`, { enabled: !!mahasiswaId });
+
+export type AdminAbsensiItem = {
+  kelasId: string;
+  kodeMK: string; namaMK: string; sks: number; kodeKelas: string;
+  dosen: string;
+  totalPertemuan: number; totalDinilai: number;
+  ringkasan: { hadir: number; izin: number; sakit: number; alpa: number };
+  persentaseHadir: number | null;
+  detail: Array<{ pertemuanKe: number; tanggal: string; topik: string | null; status: string | null; catatan: string | null }>;
+};
+export type AdminAbsensi = {
+  mahasiswa: { nim: string; nama: string; angkatan: number; prodi: { kode: string; nama: string }; fakultas: { nama: string } };
+  semester: { id: string; kode: string; jenis: string; tahunAjaran: { kode: string } };
+  items: AdminAbsensiItem[];
+};
+export const useAdminAbsensi = (mahasiswaId: string | undefined, semesterId?: string) => {
+  const qs = semesterId ? `?semesterId=${semesterId}` : '';
+  return useApi<AdminAbsensi>(
+    ['admin-absensi', mahasiswaId, semesterId ?? ''],
+    `/akademik/mahasiswa/${mahasiswaId}/absensi${qs}`,
+    { enabled: !!mahasiswaId },
   );
 };

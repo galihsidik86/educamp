@@ -60,7 +60,15 @@ async function doRefresh(): Promise<void> {
 export async function api<T = unknown>(path: string, init: RequestInit = {}): Promise<T> {
   let res = await rawFetch(path, init);
 
-  if (res.status === 401 && tokenStore.getRefresh() && !path.startsWith('/auth/')) {
+  // Auto-refresh on 401 — kecualikan endpoint refresh sendiri untuk hindari loop,
+  // dan endpoint login (refresh token tidak relevan saat login).
+  // Endpoint lain (termasuk /auth/me yang dipakai bootstrap session di tab baru) harus boleh di-refresh.
+  if (
+    res.status === 401 &&
+    tokenStore.getRefresh() &&
+    path !== '/auth/refresh' &&
+    path !== '/auth/login'
+  ) {
     refreshPromise ??= doRefresh().finally(() => { refreshPromise = null; });
     try {
       await refreshPromise;

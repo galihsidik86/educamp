@@ -1,13 +1,14 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../../db.js';
-import { getDosenForUser } from '../../lib/context.js';
-import { BadRequest, Forbidden, NotFound } from '../../lib/errors.js';
+import { getDosenForUser, requireKelasOwnership } from '../../lib/context.js';
+import { BadRequest, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
+import { createNotifikasiForMany } from '../../lib/notifikasi.js';
 
 export const absensiRouter = Router();
 
-/** Pastikan kelas milik dosen yang sedang login. */
+/** Pastikan kelas dapat diakses dosen (lead atau anggota team). */
 async function getKelasOwned(userId: string, kelasId: string) {
   const d = await getDosenForUser(userId);
   const k = await prisma.kelas.findUnique({
@@ -15,7 +16,7 @@ async function getKelasOwned(userId: string, kelasId: string) {
     include: { mataKuliah: true, semester: true },
   });
   if (!k) throw NotFound('Kelas tidak ditemukan');
-  if (k.dosenId !== d.id) throw Forbidden('Kelas ini bukan kelas Anda');
+  await requireKelasOwnership(d.id, k.id);
   return k;
 }
 
@@ -26,7 +27,7 @@ async function getPertemuanOwned(userId: string, pertemuanId: string) {
   });
   if (!p) throw NotFound('Pertemuan tidak ditemukan');
   const d = await getDosenForUser(userId);
-  if (p.kelas.dosenId !== d.id) throw Forbidden('Pertemuan ini bukan dari kelas Anda');
+  await requireKelasOwnership(d.id, p.kelasId);
   return p;
 }
 
@@ -98,6 +99,7 @@ absensiRouter.get('/kelas/:kelasId/pertemuan', async (req, res) => {
     where: { kelasId: k.id },
     orderBy: { pertemuanKe: 'asc' },
     include: {
+      ruangan: { select: { kode: true, nama: true } },
       _count: { select: { absensi: true } },
       absensi: { select: { status: true } },
     },
@@ -115,6 +117,9 @@ absensiRouter.get('/kelas/:kelasId/pertemuan', async (req, res) => {
         catatan: p.catatan,
         totalAbsensi: p._count.absensi,
         ringkasan: c,
+        tanggalAsli: p.tanggalAsli,
+        alasanReschedule: p.alasanReschedule,
+        ruangan: p.ruangan ? { kode: p.ruangan.kode, nama: p.ruangan.nama } : null,
       };
     }),
   });
@@ -186,6 +191,130 @@ absensiRouter.patch('/pertemuan/:id', async (req, res) => {
   }
 
   const updated = await prisma.pertemuan.update({ where: { id: p.id }, data });
+  res.json(updated);
+});
+
+/** List ruangan (read-only) untuk pilihan reschedule. */
+absensiRouter.get('/ruangan', async (_req, res) => {
+  const items = await prisma.ruangan.findMany({
+    select: { id: true, kode: true, nama: true, gedung: true, kapasitas: true },
+    orderBy: { kode: 'asc' },
+  });
+  res.json({ items });
+});
+
+const rescheduleSchema = z.object({
+  tanggal: z.string().min(1),                    // tanggal+jam baru (ISO)
+  ruanganId: z.string().uuid().optional().nullable(),
+  alasan: z.string().min(10).max(500),
+  durasiMenit: z.number().int().min(15).max(480).optional(),
+});
+
+/**
+ * Reschedule satu pertemuan: pindah tanggal/ruangan dengan alasan.
+ * - Snapshot tanggalAsli pada reschedule pertama (tidak ditimpa pada reschedule berikutnya)
+ * - Cek bentrok ruangan (kalau diisi) dalam ±durasi yang sama
+ * - Cek bentrok jadwal dosen pengampu kelas (Kelas lain yang berlangsung di slot sama)
+ * - Notifikasi semua peserta KRS disetujui
+ */
+absensiRouter.post('/pertemuan/:id/reschedule', async (req, res) => {
+  const p = await getPertemuanOwned(req.user!.sub, req.params.id);
+  const body = rescheduleSchema.parse(req.body);
+
+  const tanggalBaru = new Date(body.tanggal);
+  if (Number.isNaN(tanggalBaru.getTime())) throw BadRequest('Tanggal tidak valid');
+  const durasi = body.durasiMenit ?? 100; // default ~ 1 sesi kuliah
+  const akhir = new Date(tanggalBaru.getTime() + durasi * 60_000);
+
+  if (tanggalBaru.getTime() === p.tanggal.getTime()) {
+    throw BadRequest('Tanggal baru sama dengan tanggal saat ini');
+  }
+
+  // Validasi ruangan + bentrok ruangan (kalau diisi)
+  if (body.ruanganId) {
+    const r = await prisma.ruangan.findUnique({ where: { id: body.ruanganId } });
+    if (!r) throw BadRequest('Ruangan tidak ditemukan');
+
+    // Bentrok dengan pertemuan lain di ruangan yang sama (dalam window ±durasi)
+    const bentrokPertemuan = await prisma.pertemuan.findFirst({
+      where: {
+        ruanganId: body.ruanganId,
+        id: { not: p.id },
+        tanggal: { gte: new Date(tanggalBaru.getTime() - durasi * 60_000), lte: akhir },
+      },
+      include: { kelas: { include: { mataKuliah: true } } },
+    });
+    if (bentrokPertemuan) {
+      throw BadRequest(`Ruangan dipakai pertemuan ${bentrokPertemuan.kelas.mataKuliah.kode} ke-${bentrokPertemuan.pertemuanKe} pada slot yang tumpang tindih`);
+    }
+  }
+
+  // Bentrok dengan pertemuan lain dosen ini (di kelas berbeda) — soft check via tanggal saja.
+  const d = await getDosenForUser(req.user!.sub);
+  const allKelas = await prisma.kelas.findMany({
+    where: { OR: [{ dosenId: d.id }, { team: { some: { dosenId: d.id } } }] },
+    select: { id: true },
+  });
+  const kelasIds = allKelas.map((k) => k.id);
+  const bentrokDosen = await prisma.pertemuan.findFirst({
+    where: {
+      kelasId: { in: kelasIds.filter((id) => id !== p.kelasId) },
+      tanggal: { gte: new Date(tanggalBaru.getTime() - durasi * 60_000), lte: akhir },
+    },
+    include: { kelas: { include: { mataKuliah: true } } },
+  });
+  if (bentrokDosen) {
+    throw BadRequest(`Bentrok dengan pertemuan ${bentrokDosen.kelas.mataKuliah.kode} ke-${bentrokDosen.pertemuanKe} di slot yang sama`);
+  }
+
+  const tanggalLama = p.tanggal;
+  // Snapshot tanggalAsli hanya saat reschedule pertama
+  const tanggalAsli = p.tanggalAsli ?? tanggalLama;
+
+  const updated = await prisma.pertemuan.update({
+    where: { id: p.id },
+    data: {
+      tanggal: tanggalBaru,
+      ...(body.ruanganId !== undefined && { ruanganId: body.ruanganId }),
+      tanggalAsli,
+      alasanReschedule: body.alasan,
+      direschedulePada: new Date(),
+    },
+    include: { kelas: { include: { mataKuliah: true } } },
+  });
+
+  void writeAudit(req, {
+    action: 'pertemuan.reschedule',
+    entity: 'pertemuan',
+    entityId: updated.id,
+    metadata: {
+      kelasId: p.kelasId,
+      pertemuanKe: p.pertemuanKe,
+      from: tanggalLama.toISOString(),
+      to: tanggalBaru.toISOString(),
+      alasan: body.alasan,
+    },
+  });
+
+  // Broadcast notifikasi ke semua peserta KRS disetujui
+  void (async () => {
+    const peserta = await prisma.krs.findMany({
+      where: { kelasId: p.kelasId, status: 'disetujui' },
+      include: { mahasiswa: { select: { userId: true } } },
+    });
+    const userIds = peserta.map((k) => k.mahasiswa.userId).filter(Boolean);
+    if (userIds.length === 0) return;
+    const fmt = (d: Date) => d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    await createNotifikasiForMany(userIds, {
+      title: `${updated.kelas.mataKuliah.kode} pertemuan ke-${updated.pertemuanKe} dipindah`,
+      body: `Dari ${fmt(tanggalLama)} ke ${fmt(tanggalBaru)}. Alasan: ${body.alasan}`,
+      type: 'jadwal',
+      link: '/mahasiswa/absensi',
+      entity: 'pertemuan',
+      entityId: updated.id,
+    });
+  })();
+
   res.json(updated);
 });
 
@@ -289,4 +418,74 @@ absensiRouter.post('/pertemuan/:id/absensi', async (req, res) => {
     metadata: { kelasId: p.kelasId, pertemuanKe: p.pertemuanKe, count: items.length },
   });
   res.json({ ok: true, updated: items.length });
+});
+
+// ============================================================
+// Self check-in via PIN / QR — dosen generate, mahasiswa input.
+// PIN 6 digit numeric, default expiry 15 menit. Hanya valid 1
+// pertemuan dalam satu waktu (di-clear / replace bila generate baru).
+// ============================================================
+
+const generatePinSchema = z.object({
+  durasiMenit: z.number().int().min(1).max(180).optional(),
+});
+
+absensiRouter.post('/pertemuan/:id/generate-pin', async (req, res) => {
+  const p = await getPertemuanOwned(req.user!.sub, req.params.id);
+  const body = generatePinSchema.parse(req.body);
+  const durasi = body.durasiMenit ?? 15;
+
+  // Generate PIN 6 digit (random, leading zero ok)
+  const pin = String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0');
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + durasi * 60_000);
+
+  const updated = await prisma.pertemuan.update({
+    where: { id: p.id },
+    data: {
+      pinKehadiran: pin,
+      pinExpiresAt: expiresAt,
+      pinDibuatPada: now,
+    },
+  });
+  void writeAudit(req, {
+    action: 'absensi.pin.generate',
+    entity: 'pertemuan',
+    entityId: p.id,
+    metadata: { durasiMenit: durasi },
+  });
+  res.json({
+    pin: updated.pinKehadiran,
+    expiresAt: updated.pinExpiresAt,
+    dibuatPada: updated.pinDibuatPada,
+  });
+});
+
+absensiRouter.delete('/pertemuan/:id/pin', async (req, res) => {
+  const p = await getPertemuanOwned(req.user!.sub, req.params.id);
+  await prisma.pertemuan.update({
+    where: { id: p.id },
+    data: { pinKehadiran: null, pinExpiresAt: null, pinDibuatPada: null },
+  });
+  res.status(204).end();
+});
+
+/** Status PIN (untuk polling oleh UI dosen). */
+absensiRouter.get('/pertemuan/:id/pin-status', async (req, res) => {
+  const p = await getPertemuanOwned(req.user!.sub, req.params.id);
+  // Hitung siapa saja yang sudah check-in via PIN
+  const hadirViaPin = await prisma.absensi.count({
+    where: { pertemuanId: p.id, status: 'hadir', inputViaPin: true },
+  });
+  const totalHadir = await prisma.absensi.count({
+    where: { pertemuanId: p.id, status: 'hadir' },
+  });
+  res.json({
+    pin: p.pinKehadiran,
+    expiresAt: p.pinExpiresAt,
+    dibuatPada: p.pinDibuatPada,
+    isActive: !!(p.pinKehadiran && p.pinExpiresAt && p.pinExpiresAt > new Date()),
+    hadirViaPin,
+    totalHadir,
+  });
 });

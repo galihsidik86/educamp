@@ -1,12 +1,15 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Alert, Button, Input, Select } from '@/ds';
-import { Plus, Pencil, Trash2, KeyRound, Upload } from 'lucide-react';
-import { useAdminMahasiswa, useMahasiswaActions, useProdi, useAdminDosen, type AdminMahasiswa, type CreateMahasiswaInput, type ImportResult } from '@/lib/queries-akademik';
+import { Plus, Pencil, Trash2, KeyRound, Upload, FileText, Calendar } from 'lucide-react';
+import { useAdminMahasiswa, useMahasiswaActions, useProdi, useAdminDosen, useKategoriUkt, type AdminMahasiswa, type CreateMahasiswaInput, type ImportResult } from '@/lib/queries-akademik';
+import { formatRupiah } from '@/lib/format';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
 import { ApiError } from '@/lib/api';
-import { parseCsv } from '@/lib/csv';
+import { parseXlsxFile, downloadXlsxTemplate } from '@/lib/xlsx';
+import { Download } from 'lucide-react';
 
 const STATUS = ['aktif', 'cuti', 'lulus', 'drop_out', 'mengundurkan_diri'];
 
@@ -44,7 +47,7 @@ export function AdminMahasiswaPage() {
         subtitle="Kelola data mahasiswa & akun login."
         right={
           <div className="row" style={{ gap: 'var(--space-2)' }}>
-            <Button variant="ghost" leftIcon={<Upload size={16} />} onClick={() => setImportOpen(true)}>Import CSV</Button>
+            <Button variant="ghost" leftIcon={<Upload size={16} />} onClick={() => setImportOpen(true)}>Import Excel</Button>
             <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setModal({ mode: 'create' })}>Tambah Mahasiswa</Button>
           </div>
         }
@@ -78,12 +81,12 @@ export function AdminMahasiswaPage() {
           <thead>
             <tr>
               <th>NIM</th><th>Nama</th><th>Email</th><th>Prodi</th>
-              <th className="center">Angkatan</th><th>Status</th><th>DPA</th><th></th>
+              <th className="center">Angkatan</th><th>Status</th><th>DPA</th><th>Kategori UKT</th><th></th>
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={8} className="muted center">Memuat…</td></tr>}
-            {data?.items.length === 0 && <tr><td colSpan={8} className="muted center">Tidak ada data.</td></tr>}
+            {isLoading && <tr><td colSpan={9} className="muted center">Memuat…</td></tr>}
+            {data?.items.length === 0 && <tr><td colSpan={9} className="muted center">Tidak ada data.</td></tr>}
             {data?.items.map((m) => (
               <tr key={m.id}>
                 <td className="mono">{m.nim}</td>
@@ -93,8 +96,20 @@ export function AdminMahasiswaPage() {
                 <td className="center mono">{m.angkatan}</td>
                 <td><StatusPill status={m.status} /></td>
                 <td>{m.dpa?.nama ?? <span className="muted">—</span>}</td>
+                <td>{m.kategoriUkt ? (
+                  <>
+                    <span className="mono">{m.kategoriUkt.kode}</span>
+                    <div className="muted" style={{ fontSize: 'var(--text-2xs)' }}>{formatRupiah(m.kategoriUkt.nominalSemester)}</div>
+                  </>
+                ) : <span className="muted">—</span>}</td>
                 <td>
-                  <div className="row" style={{ gap: 6, justifyContent: 'flex-end' }}>
+                  <div className="row" style={{ gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                    <Link to={`/akademik/mahasiswa/${m.id}/transkrip`} title="Cetak Transkrip">
+                      <Button size="sm" variant="ghost" leftIcon={<FileText size={12} />}>Transkrip</Button>
+                    </Link>
+                    <Link to={`/akademik/mahasiswa/${m.id}/kehadiran`} title="Cetak Kehadiran">
+                      <Button size="sm" variant="ghost" leftIcon={<Calendar size={12} />}>Kehadiran</Button>
+                    </Link>
                     <Button size="sm" variant="ghost" leftIcon={<Pencil size={12} />} onClick={() => setModal({ mode: 'edit', mhs: m })}>Edit</Button>
                     <Button size="sm" variant="ghost" leftIcon={<KeyRound size={12} />} onClick={() => onResetPw(m)}>Reset PW</Button>
                     <Button size="sm" variant="ghost" leftIcon={<Trash2 size={12} />} onClick={() => onDelete(m)}>Hapus</Button>
@@ -149,18 +164,17 @@ function ImportModal({ open, onClose, importMutation }: {
   const onFile = async (file: File | null) => {
     setParseError(null); setResult(null);
     if (!file) return;
-    const text = await file.text();
     try {
-      const parsed = parseCsv(text);
+      const parsed = await parseXlsxFile(file);
       const missing = EXPECTED_HEADERS.filter((h) => !parsed.headers.includes(h));
       if (missing.length > 0) {
-        setParseError(`Header CSV kurang: ${missing.join(', ')}. Wajib: ${EXPECTED_HEADERS.join(', ')}.`);
+        setParseError(`Header Excel kurang: ${missing.join(', ')}. Wajib: ${EXPECTED_HEADERS.join(', ')}.`);
         return;
       }
       setHeaders(parsed.headers);
       setRows(parsed.rows);
     } catch (e: any) {
-      setParseError(`Gagal parse CSV: ${e?.message ?? 'unknown'}`);
+      setParseError(`Gagal parse Excel: ${e?.message ?? 'unknown'}`);
     }
   };
 
@@ -175,19 +189,38 @@ function ImportModal({ open, onClose, importMutation }: {
   };
 
   return (
-    <Modal open onClose={handleClose} title="Import mahasiswa via CSV" width={760}>
+    <Modal open onClose={handleClose} title="Import mahasiswa via Excel" width={760}>
       <div className="stack" style={{ padding: 'var(--space-4)', gap: 'var(--space-3)' }}>
-        <Alert variant="info" title="Format CSV">
+        <Alert variant="info" title="Format Excel (.xlsx)">
           Header wajib: <code>{EXPECTED_HEADERS.join(', ')}</code>.<br />
           Header opsional: <code>{OPTIONAL_HEADERS.join(', ')}</code>.<br />
           Password awal di-set sama dengan NIM. Prodi diidentifikasi via kode, DPA via NIDN.
         </Alert>
 
+        <div>
+          <Button
+            variant="ghost"
+            size="sm"
+            leftIcon={<Download size={14} />}
+            type="button"
+            onClick={() => downloadXlsxTemplate(
+              'template-mahasiswa.xlsx',
+              [...EXPECTED_HEADERS, ...OPTIONAL_HEADERS],
+              [
+                { nim: '2026110001', nama: 'Ahmad Fauzi', email: 'ahmad.fauzi@example.com', jenisKelamin: 'L', angkatan: 2026, prodiKode: '55201', dpaNidn: '', tempatLahir: 'Bogor', tanggalLahir: '2008-05-12', alamat: 'Jl. Contoh No. 1', telepon: '081234567890' },
+                { nim: '2026110002', nama: 'Siti Aminah', email: 'siti.aminah@example.com', jenisKelamin: 'P', angkatan: 2026, prodiKode: '55201' },
+              ],
+            )}
+          >
+            Unduh template Excel
+          </Button>
+        </div>
+
         {!result && (
           <div>
             <input
               type="file"
-              accept=".csv,text/csv"
+              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
               onChange={(e) => onFile(e.target.files?.[0] ?? null)}
               style={{ fontSize: 'var(--text-sm)' }}
             />
@@ -278,8 +311,11 @@ function MahasiswaModal({ mode, initial, onClose, onSubmit }: {
     angkatan: initial?.angkatan ?? new Date().getFullYear(),
     prodiId: prodi.data?.items.find((p) => p.nama === initial?.prodi.nama)?.id ?? '',
     dpaId: initial?.dpa?.id,
+    kategoriUktId: initial?.kategoriUkt?.id,
+    defaultCicilanUkt: initial?.defaultCicilanUkt ?? 1,
     status: initial?.status ?? 'aktif',
   });
+  const kategoriUkt = useKategoriUkt(form.prodiId || undefined);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -322,7 +358,7 @@ function MahasiswaModal({ mode, initial, onClose, onSubmit }: {
             <Input label="Angkatan" type="number" min={1990} max={2100} required value={String(form.angkatan ?? '')} onChange={(e) => setForm({ ...form, angkatan: Number((e.target as HTMLInputElement).value) })} />
           </div>
           <div style={{ flex: 2 }}>
-            <Select label="Program Studi" required value={form.prodiId ?? ''} onChange={(e) => setForm({ ...form, prodiId: (e.target as HTMLSelectElement).value })}>
+            <Select label="Program Studi" required value={form.prodiId ?? ''} onChange={(e) => setForm({ ...form, prodiId: (e.target as HTMLSelectElement).value, kategoriUktId: undefined })}>
               <option value="">— pilih prodi —</option>
               {prodi.data?.items.map((p) => <option key={p.id} value={p.id}>{p.nama}</option>)}
             </Select>
@@ -344,6 +380,41 @@ function MahasiswaModal({ mode, initial, onClose, onSubmit }: {
             </Select>
           </div>
         </div>
+
+        <div className="row" style={{ gap: 'var(--space-3)' }}>
+          <div style={{ flex: 2 }}>
+            <Select
+              label="Kategori UKT (opsional)"
+              value={form.kategoriUktId ?? ''}
+              onChange={(e) => setForm({ ...form, kategoriUktId: (e.target as HTMLSelectElement).value || null })}
+              disabled={!form.prodiId}
+            >
+              <option value="">{form.prodiId ? '— pakai tarif default prodi —' : '— pilih prodi dulu —'}</option>
+              {kategoriUkt.data?.items.filter((k) => k.isAktif).map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.kode} · {k.nama} — {formatRupiah(k.nominalSemester)}/sem
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div style={{ flex: 1 }}>
+            <Select
+              label="Default Skema UKT"
+              value={String(form.defaultCicilanUkt ?? 1)}
+              onChange={(e) => setForm({ ...form, defaultCicilanUkt: Number((e.target as HTMLSelectElement).value) })}
+            >
+              <option value="1">Sekaligus</option>
+              <option value="2">Cicilan 2×</option>
+              <option value="3">Cicilan 3×</option>
+              <option value="4">Cicilan 4×</option>
+              <option value="6">Cicilan 6×</option>
+              <option value="12">Cicilan 12×</option>
+            </Select>
+          </div>
+        </div>
+        <p className="muted" style={{ fontSize: 'var(--text-xs)', margin: 0 }}>
+          Kategori menentukan nominal UKT. Default Skema = preferensi cicilan yang dipakai saat validasi KRS (admin masih bisa override per semester).
+        </p>
 
         {mode === 'create' && (
           <p className="muted" style={{ fontSize: 'var(--text-xs)', margin: 0 }}>

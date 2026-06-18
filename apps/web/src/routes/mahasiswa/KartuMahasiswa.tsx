@@ -3,12 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Printer, User as UserIcon } from 'lucide-react';
 import { Button } from '@/ds';
 import { useProfil } from '@/lib/queries';
+import { NamaInstitusiText } from '@/components/KopInstitusi';
+import { useInstitusiPublic } from '@/lib/queries-institusi';
 
 const MASA_BERLAKU_TAHUN = 4;
 
 export function MahasiswaKartu() {
   const navigate = useNavigate();
   const profil = useProfil();
+  const inst = useInstitusiPublic();
+  const logoUrl = inst.data?.logoInverseUrl || inst.data?.logoUrl || '/@ds/assets/logo-tazkia-inverse.svg';
 
   useEffect(() => {
     document.body.classList.add('print-mode', 'kartu-print-mode');
@@ -34,9 +38,9 @@ export function MahasiswaKartu() {
 
       <div className="kartu">
         <header className="kartu__head">
-          <img src="/@ds/assets/logo-tazkia-inverse.svg" alt="" className="kartu__logo" width={36} height={36} />
+          <img src={logoUrl} alt="" className="kartu__logo" width={36} height={36} />
           <div>
-            <strong>INSTITUT AGAMA ISLAM TAZKIA</strong>
+            <strong><NamaInstitusiText /></strong>
             <div className="kartu__head-sub">{m.prodi.fakultas.nama}</div>
           </div>
         </header>

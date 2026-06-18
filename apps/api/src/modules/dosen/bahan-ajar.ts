@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../../db.js';
-import { getDosenForUser } from '../../lib/context.js';
-import { BadRequest, Forbidden, NotFound } from '../../lib/errors.js';
+import { getDosenForUser, requireKelasOwnership } from '../../lib/context.js';
+import { BadRequest, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
 
 export const bahanAjarRouter = Router();
@@ -23,7 +23,7 @@ async function getKelasOwned(userId: string, kelasId: string) {
   const d = await getDosenForUser(userId);
   const k = await prisma.kelas.findUnique({ where: { id: kelasId }, include: { mataKuliah: true } });
   if (!k) throw NotFound('Kelas tidak ditemukan');
-  if (k.dosenId !== d.id) throw Forbidden('Kelas ini bukan kelas Anda');
+  await requireKelasOwnership(d.id, k.id);
   return k;
 }
 
@@ -86,7 +86,7 @@ bahanAjarRouter.patch('/bahan-ajar/:id', async (req, res) => {
   const existing = await prisma.bahanAjar.findUnique({ where: { id: req.params.id }, include: { kelas: true } });
   if (!existing) throw NotFound('Bahan ajar tidak ditemukan');
   const d = await getDosenForUser(req.user!.sub);
-  if (existing.kelas.dosenId !== d.id) throw Forbidden('Bahan ajar ini bukan milik kelas Anda');
+  await requireKelasOwnership(d.id, existing.kelasId);
   const updated = await prisma.bahanAjar.update({ where: { id: existing.id }, data: body });
   res.json(updated);
 });
@@ -95,7 +95,7 @@ bahanAjarRouter.delete('/bahan-ajar/:id', async (req, res) => {
   const existing = await prisma.bahanAjar.findUnique({ where: { id: req.params.id }, include: { kelas: true } });
   if (!existing) throw NotFound('Bahan ajar tidak ditemukan');
   const d = await getDosenForUser(req.user!.sub);
-  if (existing.kelas.dosenId !== d.id) throw Forbidden('Bahan ajar ini bukan milik kelas Anda');
+  await requireKelasOwnership(d.id, existing.kelasId);
   await prisma.bahanAjar.delete({ where: { id: existing.id } });
   res.status(204).end();
 });

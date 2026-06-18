@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../../db.js';
-import { getDosenForUser } from '../../lib/context.js';
-import { BadRequest, Forbidden, NotFound } from '../../lib/errors.js';
+import { getDosenForUser, requireKelasOwnership } from '../../lib/context.js';
+import { BadRequest, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
 
 export const tugasRouter = Router();
@@ -20,7 +20,7 @@ async function getKelasOwned(userId: string, kelasId: string) {
   const d = await getDosenForUser(userId);
   const k = await prisma.kelas.findUnique({ where: { id: kelasId }, include: { mataKuliah: true } });
   if (!k) throw NotFound('Kelas tidak ditemukan');
-  if (k.dosenId !== d.id) throw Forbidden('Kelas ini bukan kelas Anda');
+  await requireKelasOwnership(d.id, k.id);
   return k;
 }
 
@@ -28,7 +28,7 @@ async function getTugasOwned(userId: string, tugasId: string) {
   const t = await prisma.tugas.findUnique({ where: { id: tugasId }, include: { kelas: { include: { mataKuliah: true } } } });
   if (!t) throw NotFound('Tugas tidak ditemukan');
   const d = await getDosenForUser(userId);
-  if (t.kelas.dosenId !== d.id) throw Forbidden('Tugas ini bukan dari kelas Anda');
+  await requireKelasOwnership(d.id, t.kelasId);
   return t;
 }
 
@@ -155,7 +155,7 @@ tugasRouter.patch('/submission/:id', async (req, res) => {
   const s = await prisma.submitTugas.findUnique({ where: { id: req.params.id }, include: { tugas: { include: { kelas: true } } } });
   if (!s) throw NotFound('Submission tidak ditemukan');
   const d = await getDosenForUser(req.user!.sub);
-  if (s.tugas.kelas.dosenId !== d.id) throw Forbidden('Tugas ini bukan dari kelas Anda');
+  await requireKelasOwnership(d.id, s.tugas.kelasId);
   const body = nilaiSchema.parse(req.body);
   if (body.nilai > s.tugas.maxNilai) throw BadRequest(`Nilai tidak boleh melebihi max ${s.tugas.maxNilai}`);
   const updated = await prisma.submitTugas.update({

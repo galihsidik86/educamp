@@ -3,6 +3,7 @@
 // ============================================================
 
 import { prisma } from '../db.js';
+import { sendMail, mailTemplate } from './mailer.js';
 
 export type NotifInput = {
   userId: string;
@@ -12,12 +13,37 @@ export type NotifInput = {
   link?: string;
   entity?: string;
   entityId?: string;
+  /** Kalau true, juga kirim email ke user. Default false (notif penting saja). */
+  sendEmail?: boolean;
 };
+
+const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
 
 /** Tulis 1 notifikasi. Tidak melempar — gagal di-log saja. */
 export async function createNotifikasi(input: NotifInput) {
   try {
-    await prisma.notifikasi.create({ data: input });
+    await prisma.notifikasi.create({
+      data: {
+        userId: input.userId,
+        title: input.title,
+        body: input.body,
+        type: input.type,
+        link: input.link,
+        entity: input.entity,
+        entityId: input.entityId,
+      },
+    });
+    if (input.sendEmail) {
+      const user = await prisma.user.findUnique({ where: { id: input.userId }, select: { email: true } });
+      if (user?.email) {
+        const ctaUrl = input.link ? `${FRONTEND_URL}${input.link}` : undefined;
+        void sendMail({
+          to: user.email,
+          subject: input.title,
+          html: mailTemplate(input.title, `<p>${input.body ?? ''}</p>`, ctaUrl, ctaUrl ? 'Buka SIAKAD' : undefined),
+        });
+      }
+    }
   } catch (e) {
     console.error('[notifikasi] gagal:', e);
   }

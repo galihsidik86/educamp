@@ -92,6 +92,7 @@ yudisiumRouter.get('/yudisium', async (req, res) => {
       noIjazah: y.noIjazah,
       noSkl: y.noSkl,
       tanggalLulus: y.tanggalLulus,
+      verifikasiToken: y.verifikasiToken,
       periode: {
         id: y.periodeWisuda.id,
         kode: y.periodeWisuda.kode,

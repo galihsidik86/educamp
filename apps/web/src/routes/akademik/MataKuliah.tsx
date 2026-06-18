@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Alert, Button, Input, Select } from '@/ds';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
-import { useMataKuliah, useMkActions, useProdi, type Mk, type MkInput } from '@/lib/queries-akademik';
+import { Plus, Pencil, Trash2, Upload, Download } from 'lucide-react';
+import { useMataKuliah, useMkActions, useProdi, type Mk, type MkInput, type MkImportResult } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { ApiError } from '@/lib/api';
 import { formatStatus } from '@/lib/format';
+import { parseXlsxFile, downloadXlsxTemplate } from '@/lib/xlsx';
 
 const JENIS = ['wajib_universitas', 'wajib_prodi', 'pilihan'] as const;
+const MK_EXPECTED_HEADERS = ['kode', 'nama', 'sks', 'prodiKode'] as const;
+const MK_OPTIONAL_HEADERS = ['namaInggris', 'sksTeori', 'sksPraktik', 'jenis'] as const;
 
 export function AdminMataKuliah() {
   const [filters, setFilters] = useState({ q: '', prodiId: '' });
@@ -15,6 +18,7 @@ export function AdminMataKuliah() {
   const prodi = useProdi();
   const actions = useMkActions();
   const [modal, setModal] = useState<{ mode: 'create' } | { mode: 'edit'; mk: Mk } | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const onDelete = async (m: Mk) => {
     if (!confirm(`Hapus MK ${m.kode} — ${m.nama}?`)) return;
@@ -28,7 +32,12 @@ export function AdminMataKuliah() {
         eyebrow="KURIKULUM"
         title="Mata Kuliah"
         subtitle="Daftar MK & jenisnya per prodi."
-        right={<Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setModal({ mode: 'create' })}>Tambah MK</Button>}
+        right={
+          <div className="row" style={{ gap: 'var(--space-2)' }}>
+            <Button variant="ghost" leftIcon={<Upload size={16} />} onClick={() => setImportOpen(true)}>Import Excel</Button>
+            <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setModal({ mode: 'create' })}>Tambah MK</Button>
+          </div>
+        }
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
@@ -89,7 +98,152 @@ export function AdminMataKuliah() {
           }}
         />
       )}
+
+      <MkImportModal open={importOpen} onClose={() => setImportOpen(false)} importMutation={actions.importCsv} />
     </div>
+  );
+}
+
+function MkImportModal({ open, onClose, importMutation }: {
+  open: boolean;
+  onClose: () => void;
+  importMutation: ReturnType<typeof useMkActions>['importCsv'];
+}) {
+  const [rows, setRows] = useState<Array<Record<string, string>>>([]);
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [result, setResult] = useState<MkImportResult | null>(null);
+
+  if (!open) return null;
+
+  const reset = () => { setRows([]); setHeaders([]); setParseError(null); setResult(null); };
+  const handleClose = () => { reset(); onClose(); };
+
+  const onFile = async (file: File | null) => {
+    setParseError(null); setResult(null);
+    if (!file) return;
+    try {
+      const parsed = await parseXlsxFile(file);
+      const missing = MK_EXPECTED_HEADERS.filter((h) => !parsed.headers.includes(h));
+      if (missing.length > 0) {
+        setParseError(`Header Excel kurang: ${missing.join(', ')}. Wajib: ${MK_EXPECTED_HEADERS.join(', ')}.`);
+        return;
+      }
+      setHeaders(parsed.headers);
+      setRows(parsed.rows);
+    } catch (e: any) {
+      setParseError(`Gagal parse Excel: ${e?.message ?? 'unknown'}`);
+    }
+  };
+
+  const submit = async () => {
+    setResult(null);
+    try {
+      const r = await importMutation.mutateAsync(rows);
+      setResult(r);
+    } catch (e) {
+      setParseError(e instanceof ApiError ? e.message : 'Gagal mengimpor');
+    }
+  };
+
+  return (
+    <Modal open onClose={handleClose} title="Import Mata Kuliah via Excel" width={760}>
+      <div className="stack" style={{ padding: 'var(--space-4)', gap: 'var(--space-3)' }}>
+        <Alert variant="info" title="Format Excel (.xlsx)">
+          Header wajib: <code>{MK_EXPECTED_HEADERS.join(', ')}</code>.<br />
+          Header opsional: <code>{MK_OPTIONAL_HEADERS.join(', ')}</code>.<br />
+          Prodi diidentifikasi via <code>prodiKode</code>. Jenis: <code>wajib_universitas</code> / <code>wajib_prodi</code> / <code>pilihan</code> (default <code>wajib_prodi</code>).
+        </Alert>
+
+        <div>
+          <Button
+            variant="ghost"
+            size="sm"
+            leftIcon={<Download size={14} />}
+            type="button"
+            onClick={() => downloadXlsxTemplate(
+              'template-mata-kuliah.xlsx',
+              [...MK_EXPECTED_HEADERS, ...MK_OPTIONAL_HEADERS],
+              [
+                { kode: 'IF-3201', nama: 'Algoritma Lanjut', sks: 3, prodiKode: '55201', namaInggris: 'Advanced Algorithms', sksTeori: 2, sksPraktik: 1, jenis: 'wajib_prodi' },
+                { kode: 'IF-3202', nama: 'Big Data', sks: 3, prodiKode: '55201', sksTeori: 3, sksPraktik: 0, jenis: 'pilihan' },
+              ],
+            )}
+          >
+            Unduh template Excel
+          </Button>
+        </div>
+
+        {!result && (
+          <input
+            type="file"
+            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+            onChange={(e) => onFile(e.target.files?.[0] ?? null)}
+            style={{ fontSize: 'var(--text-sm)' }}
+          />
+        )}
+
+        {parseError && <Alert variant="danger" title="Gagal">{parseError}</Alert>}
+
+        {!result && rows.length > 0 && (
+          <>
+            <div className="muted" style={{ fontSize: 'var(--text-sm)' }}>
+              Pratinjau <strong>{rows.length}</strong> baris (5 pertama):
+            </div>
+            <div className="tz-table-wrap" style={{ maxHeight: 280, overflow: 'auto' }}>
+              <table className="tz-table">
+                <thead><tr>{headers.map((h) => <th key={h}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {rows.slice(0, 5).map((r, i) => (
+                    <tr key={i}>{headers.map((h) => <td key={h}>{r[h] || <span className="muted">—</span>}</td>)}</tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {result && (
+          <>
+            <Alert variant={result.failed === 0 ? 'success' : 'warning'} title="Hasil impor">
+              {result.created} berhasil dibuat, {result.failed} gagal dari {result.totalRows} baris.
+            </Alert>
+            <div className="tz-table-wrap" style={{ maxHeight: 300, overflow: 'auto' }}>
+              <table className="tz-table">
+                <thead><tr><th>Baris</th><th>Kode</th><th>Status</th><th>Catatan</th></tr></thead>
+                <tbody>
+                  {result.results.map((r) => (
+                    <tr key={r.row}>
+                      <td className="num mono">{r.row}</td>
+                      <td className="mono">{r.kode ?? '—'}</td>
+                      <td>
+                        {r.status === 'created'
+                          ? <span className="pill pill--success">created</span>
+                          : <span className="pill pill--danger">failed</span>}
+                      </td>
+                      <td className="muted" style={{ fontSize: 'var(--text-xs)' }}>{r.message ?? '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}>
+          {result
+            ? <Button variant="primary" size="sm" onClick={handleClose}>Tutup</Button>
+            : (
+              <>
+                <Button variant="ghost" size="sm" onClick={handleClose}>Batal</Button>
+                <Button variant="primary" size="sm" disabled={rows.length === 0 || importMutation.isPending} onClick={submit}>
+                  {importMutation.isPending ? 'Mengimpor…' : `Import ${rows.length} baris`}
+                </Button>
+              </>
+            )}
+        </div>
+      </div>
+    </Modal>
   );
 }
 

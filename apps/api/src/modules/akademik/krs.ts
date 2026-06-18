@@ -5,6 +5,8 @@ import { getActiveSemester } from '../../lib/context.js';
 import { BadRequest, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
 import { createNotifikasi, userIdFromMahasiswa } from '../../lib/notifikasi.js';
+import { enqueueFeederChange, buildFeederPayload } from '../../lib/feeder/queue.js';
+import { createTagihanUkt } from '../../lib/tagihan-ukt.js';
 
 export const krsRouter = Router();
 
@@ -103,12 +105,13 @@ krsRouter.get('/krs/:mahasiswaId', async (req, res) => {
   }
 
   res.json({
-    mahasiswa: { id: m.id, nim: m.nim, nama: m.nama, angkatan: m.angkatan, prodi: m.prodi, dpa: m.dpa },
+    mahasiswa: { id: m.id, nim: m.nim, nama: m.nama, angkatan: m.angkatan, prodi: m.prodi, dpa: m.dpa, defaultCicilanUkt: m.defaultCicilanUkt },
     semester: semester ? { kode: semester.kode, prsMulai: semester.prsMulai, prsSelesai: semester.prsSelesai } : null,
     inPrsPeriode,
     items: krs.map((it) => ({
       id: it.id, status: it.status, catatan: it.catatan,
       tipe: tipe(it),
+      kelasId: it.kelasId,
       kelas: {
         kodeMK: it.kelas.mataKuliah.kode, namaMK: it.kelas.mataKuliah.nama, sks: it.kelas.mataKuliah.sks,
         kodeKelas: it.kelas.kodeKelas,
@@ -125,10 +128,92 @@ krsRouter.get('/krs/:mahasiswaId', async (req, res) => {
 const validasiSchema = z.object({
   action: z.enum(['setujui', 'tolak']),
   catatan: z.string().max(500).optional(),
+  /** Mode tagihan UKT: 1 = sekaligus, 2-12 = cicilan bulanan. Default 1. */
+  cicilanUkt: z.number().int().min(1).max(12).optional(),
+});
+
+/**
+ * Akademik tambah item KRS manual (override) — bypass periode/kapasitas/bentrok validation,
+ * langsung set status default 'disetujui'. Untuk koreksi/late registration.
+ */
+const addItemSchema = z.object({
+  kelasId: z.string().uuid(),
+  status: z.enum(['draft', 'diajukan', 'disetujui']).optional(),
+  catatan: z.string().max(500).optional().nullable(),
+});
+
+krsRouter.post('/krs/:mahasiswaId/items', async (req, res) => {
+  const body = addItemSchema.parse(req.body);
+  const m = await prisma.mahasiswa.findUnique({ where: { id: req.params.mahasiswaId } });
+  if (!m) throw NotFound('Mahasiswa tidak ditemukan');
+  const kelas = await prisma.kelas.findUnique({ where: { id: body.kelasId }, include: { mataKuliah: true } });
+  if (!kelas) throw BadRequest('Kelas tidak ditemukan');
+  // Cek duplikat (di semester yang sama, status bukan ditolak)
+  const dup = await prisma.krs.findFirst({
+    where: { mahasiswaId: m.id, kelasId: body.kelasId, status: { not: 'ditolak' } },
+  });
+  if (dup) throw BadRequest('Kelas sudah ada di KRS mahasiswa ini');
+  const created = await prisma.krs.create({
+    data: {
+      mahasiswaId: m.id,
+      kelasId: body.kelasId,
+      semesterId: kelas.semesterId,
+      status: body.status ?? 'disetujui',
+      catatan: body.catatan ?? 'Ditambahkan manual oleh Akademik',
+    },
+    include: { kelas: { include: { mataKuliah: true } } },
+  });
+  void writeAudit(req, {
+    action: 'krs.item.add.akademik',
+    entity: 'mahasiswa',
+    entityId: m.id,
+    metadata: { kelasId: body.kelasId, kodeMK: kelas.mataKuliah.kode, kodeKelas: kelas.kodeKelas, status: created.status },
+  });
+  res.status(201).json(created);
+});
+
+/** Hapus item KRS — akademik manual delete. */
+krsRouter.delete('/krs/items/:krsId', async (req, res) => {
+  const item = await prisma.krs.findUnique({
+    where: { id: req.params.krsId },
+    include: { kelas: { include: { mataKuliah: true } } },
+  });
+  if (!item) throw NotFound('Item KRS tidak ditemukan');
+  await prisma.krs.delete({ where: { id: item.id } });
+  void writeAudit(req, {
+    action: 'krs.item.delete.akademik',
+    entity: 'mahasiswa',
+    entityId: item.mahasiswaId,
+    metadata: { kelasId: item.kelasId, kodeMK: item.kelas.mataKuliah.kode, kodeKelas: item.kelas.kodeKelas, status: item.status },
+  });
+  res.status(204).end();
+});
+
+/** Update status item KRS (override single item, mis. drop satu MK). */
+const updateItemSchema = z.object({
+  status: z.enum(['draft', 'diajukan', 'disetujui', 'ditolak']),
+  catatan: z.string().max(500).optional().nullable(),
+});
+
+krsRouter.patch('/krs/items/:krsId', async (req, res) => {
+  const body = updateItemSchema.parse(req.body);
+  const item = await prisma.krs.findUnique({ where: { id: req.params.krsId } });
+  if (!item) throw NotFound('Item KRS tidak ditemukan');
+  const updated = await prisma.krs.update({
+    where: { id: item.id },
+    data: { status: body.status, catatan: body.catatan ?? item.catatan },
+  });
+  void writeAudit(req, {
+    action: 'krs.item.update.akademik',
+    entity: 'mahasiswa',
+    entityId: item.mahasiswaId,
+    metadata: { krsId: item.id, statusBaru: body.status },
+  });
+  res.json(updated);
 });
 
 krsRouter.post('/krs/:mahasiswaId/validasi', async (req, res) => {
-  const { action, catatan } = validasiSchema.parse(req.body);
+  const { action, catatan, cicilanUkt } = validasiSchema.parse(req.body);
   const semester = await getActiveSemester();
 
   const list = await prisma.krs.findMany({
@@ -147,6 +232,46 @@ krsRouter.post('/krs/:mahasiswaId/validasi', async (req, res) => {
     metadata: { updated: list.length, catatan: catatan ?? null, krsIds: list.map((k) => k.id) },
   });
 
+  // Feeder sync + auto-create tagihan UKT saat disetujui
+  let tagihanInfo: { dibuat: boolean; nominal?: number; potonganBeasiswa?: number; cicilan?: number; fullBeasiswa?: boolean; sudahAda?: boolean } = { dibuat: false };
+  if (action === 'setujui') {
+    void (async () => {
+      for (const k of list) {
+        const payload = await buildFeederPayload('krs', k.id);
+        if (payload) {
+          await enqueueFeederChange({
+            entity: 'krs',
+            entityId: k.id,
+            operation: k.feederId ? 'update' : 'create',
+            payload,
+          });
+        }
+      }
+    })();
+
+    // Auto-create tagihan UKT — pakai helper yang memperhitungkan kategori UKT + beasiswa + cicilan
+    const m = await prisma.mahasiswa.findUnique({ where: { id: req.params.mahasiswaId } });
+    if (m) {
+      const result = await createTagihanUkt({
+        mahasiswa: m,
+        semester: { id: semester.id, kode: semester.kode },
+        cicilan: cicilanUkt ?? m.defaultCicilanUkt ?? 1,
+      });
+      if (result.skipped === null && result.tagihanIds.length > 0) {
+        tagihanInfo = {
+          dibuat: true,
+          nominal: result.hitung.sisaTagihan,
+          potonganBeasiswa: result.hitung.totalPotongan,
+          cicilan: result.cicilan,
+        } as any;
+      } else if (result.skipped === 'full_coverage') {
+        tagihanInfo = { dibuat: false, fullBeasiswa: true } as any;
+      } else if (result.skipped === 'sudah_ada') {
+        tagihanInfo = { dibuat: false, sudahAda: true } as any;
+      }
+    }
+  }
+
   void (async () => {
     const userId = await userIdFromMahasiswa(req.params.mahasiswaId);
     if (!userId) return;
@@ -161,8 +286,9 @@ krsRouter.post('/krs/:mahasiswaId/validasi', async (req, res) => {
       link: '/mahasiswa/krs',
       entity: 'krs',
       entityId: req.params.mahasiswaId,
+      sendEmail: true,
     });
   })();
 
-  res.json({ ok: true, updated: list.length });
+  res.json({ ok: true, updated: list.length, tagihanInfo });
 });

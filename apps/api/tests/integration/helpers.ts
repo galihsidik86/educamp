@@ -34,6 +34,41 @@ export async function resetDb() {
     prisma.pendaftaranBeasiswa.deleteMany({}),
     prisma.beasiswa.deleteMany({}),
     prisma.surat.deleteMany({}),
+    prisma.konsultasiDpa.deleteMany({}),
+    prisma.tiketReply.deleteMany({}),
+    prisma.tiket.deleteMany({}),
+    prisma.sertifikasi.deleteMany({}),
+    prisma.prestasi.deleteMany({}),
+    prisma.mutasiMahasiswa.deleteMany({}),
+    prisma.dokumenAkses.deleteMany({}),
+    prisma.dokumen.deleteMany({}),
+    prisma.kategoriDokumen.deleteMany({}),
+    prisma.feederQueue.deleteMany({}),
+    prisma.feederSyncLog.deleteMany({}),
+    prisma.feederConfig.deleteMany({}),
+    prisma.bkdItem.deleteMany({}),
+    prisma.bkdLaporan.deleteMany({}),
+    prisma.waliMahasiswa.deleteMany({}),
+    prisma.wali.deleteMany({}),
+    prisma.nilaiCpmk.deleteMany({}),
+    prisma.cpmkCpl.deleteMany({}),
+    prisma.cpmk.deleteMany({}),
+    prisma.cpl.deleteMany({}),
+    prisma.sertifikatDigital.deleteMany({}),
+    // SPMI cleanup (deep → shallow karena FK)
+    prisma.jawabanKepuasan.deleteMany({}),
+    prisma.responseKepuasan.deleteMany({}),
+    prisma.pertanyaanKepuasan.deleteMany({}),
+    prisma.kuesionerKepuasan.deleteMany({}),
+    prisma.keputusanRtm.deleteMany({}),
+    prisma.rapatTinjauanManajemen.deleteMany({}),
+    prisma.tindakLanjutCapa.deleteMany({}),
+    prisma.temuanAmi.deleteMany({}),
+    prisma.auditorAmi.deleteMany({}),
+    prisma.lingkupAmi.deleteMany({}),
+    prisma.auditMutuInternal.deleteMany({}),
+    prisma.pengukuranStandar.deleteMany({}),
+    prisma.standarMutu.deleteMany({}),
     // Forum: thread cascade ke reply
     prisma.forumThread.deleteMany({}),
     // EDOM: kuesioner cascade ke aspek+response+jawaban
@@ -44,7 +79,11 @@ export async function resetDb() {
     prisma.pengabdian.deleteMany({}),
     prisma.submitTugas.deleteMany({}),
     prisma.tugas.deleteMany({}),
+    prisma.kuisAttempt.deleteMany({}),
+    prisma.kuisSoal.deleteMany({}),
+    prisma.kuis.deleteMany({}),
     prisma.bahanAjar.deleteMany({}),
+    prisma.kelasDosen.deleteMany({}),
     prisma.kelas.deleteMany({}),
     prisma.mataKuliahKurikulum.deleteMany({}),
     prisma.prasyarat.deleteMany({}),
@@ -54,12 +93,14 @@ export async function resetDb() {
     prisma.dosen.deleteMany({}),
     prisma.akademik.deleteMany({}),
     prisma.user.deleteMany({}),
+    prisma.kalenderAkademik.deleteMany({}),
     prisma.semester.deleteMany({}),
     prisma.tahunAjaran.deleteMany({}),
     prisma.ruangan.deleteMany({}),
     prisma.prodi.deleteMany({}),
     prisma.fakultas.deleteMany({}),
     prisma.pengumuman.deleteMany({}),
+    prisma.institusiConfig.deleteMany({}),
   ]);
 }
 
@@ -161,6 +202,12 @@ export async function createFixtures() {
       ruanganId: ruangan.id, kodeKelas: 'A', kapasitas: 40,
       hari: Hari.selasa, jamMulai: '10:00', jamSelesai: '11:40',
     },
+  });
+  await prisma.kelasDosen.createMany({
+    data: [
+      { kelasId: kelas1.id, dosenId: dosen.id, peran: 'lead' },
+      { kelasId: kelas2.id, dosenId: dosen.id, peran: 'lead' },
+    ],
   });
 
   return {

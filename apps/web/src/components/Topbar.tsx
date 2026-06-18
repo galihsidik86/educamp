@@ -7,6 +7,7 @@ const titleByRole = {
   mahasiswa: 'Portal Mahasiswa',
   dosen: 'Portal Dosen',
   akademik: 'Portal Akademik',
+  wali: 'Portal Wali',
 } as const;
 
 export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {

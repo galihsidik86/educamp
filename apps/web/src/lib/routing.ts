@@ -5,5 +5,6 @@ export const roleHomePath = (role: Role): string => {
     case 'mahasiswa': return '/mahasiswa';
     case 'dosen':     return '/dosen';
     case 'akademik':  return '/akademik';
+    case 'wali':      return '/wali';
   }
 };

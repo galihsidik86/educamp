@@ -43,6 +43,46 @@ suratRouter.get('/surat', async (req, res) => {
   res.json({ items });
 });
 
+/** Akademik buat surat manual untuk mahasiswa (misalnya by request lisan / atas inisiatif). */
+const createSchema = z.object({
+  mahasiswaId: z.string().uuid(),
+  jenis: z.enum(JENIS),
+  judul: z.string().min(5).max(200),
+  keperluan: z.string().min(3).max(1000),
+  status: z.enum(STATUS).optional(),
+  nomorSurat: z.string().max(50).optional().nullable(),
+});
+
+suratRouter.post('/surat', async (req, res) => {
+  const body = createSchema.parse(req.body);
+  const m = await prisma.mahasiswa.findUnique({ where: { id: body.mahasiswaId } });
+  if (!m) throw BadRequest('Mahasiswa tidak ditemukan');
+  const data: any = {
+    mahasiswaId: body.mahasiswaId,
+    jenis: body.jenis,
+    judul: body.judul,
+    keperluan: body.keperluan,
+    status: body.status ?? 'disetujui',
+    nomorSurat: body.nomorSurat ?? null,
+  };
+  if (data.status === 'disetujui') data.tanggalDisetujui = new Date();
+  if (data.status === 'selesai') {
+    data.tanggalDisetujui = new Date();
+    data.tanggalSelesai = new Date();
+  }
+  const created = await prisma.surat.create({ data });
+  void writeAudit(req, { action: 'surat.create.akademik', entity: 'surat', entityId: created.id });
+  res.status(201).json(created);
+});
+
+suratRouter.delete('/surat/:id', async (req, res) => {
+  const exists = await prisma.surat.findUnique({ where: { id: req.params.id } });
+  if (!exists) throw NotFound('Surat tidak ditemukan');
+  await prisma.surat.delete({ where: { id: exists.id } });
+  void writeAudit(req, { action: 'surat.delete.akademik', entity: 'surat', entityId: exists.id });
+  res.status(204).end();
+});
+
 suratRouter.patch('/surat/:id', async (req, res) => {
   const body = patchSchema.parse(req.body);
   const existing = await prisma.surat.findUnique({ where: { id: req.params.id } });

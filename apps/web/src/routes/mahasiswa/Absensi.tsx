@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Button, Card } from '@/ds';
-import { ChevronDown, ChevronRight, Printer } from 'lucide-react';
+import { ChevronDown, ChevronRight, Printer, CalendarClock, KeyRound } from 'lucide-react';
 import { useMahasiswaAbsensi } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
-import { formatTanggalWaktu, capitalize } from '@/lib/format';
+import { formatTanggalWaktu, formatTanggal, capitalize } from '@/lib/format';
 
 const STATUS_LABEL: Record<string, string> = {
   hadir: 'Hadir', izin: 'Izin', sakit: 'Sakit', alpa: 'Alpa',
@@ -23,15 +23,25 @@ export function MahasiswaAbsensi() {
         title="Absensi"
         subtitle="Rekap kehadiran Anda untuk setiap kelas semester aktif."
         right={
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={!canPrint}
-            leftIcon={<Printer size={14} />}
-            onClick={() => navigate('/mahasiswa/absensi/cetak')}
-          >
-            Cetak Rekap
-          </Button>
+          <div className="row" style={{ gap: 4 }}>
+            <Button
+              variant="primary"
+              size="sm"
+              leftIcon={<KeyRound size={14} />}
+              onClick={() => navigate('/mahasiswa/absensi/pin')}
+            >
+              Self Check-In
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={!canPrint}
+              leftIcon={<Printer size={14} />}
+              onClick={() => navigate('/mahasiswa/absensi/cetak')}
+            >
+              Cetak Rekap
+            </Button>
+          </div>
         }
       />
 
@@ -103,8 +113,23 @@ export function MahasiswaAbsensi() {
                           {k.detail.map((d) => (
                             <tr key={d.pertemuanKe}>
                               <td className="num mono">{d.pertemuanKe}</td>
-                              <td className="mono">{formatTanggalWaktu(d.tanggal)}</td>
-                              <td>{d.topik ?? <span className="muted">—</span>}</td>
+                              <td className="mono">
+                                {formatTanggalWaktu(d.tanggal)}
+                                {d.tanggalAsli && (
+                                  <div className="muted" style={{ fontSize: 'var(--text-xs)', marginTop: 2 }}>
+                                    <CalendarClock size={11} style={{ verticalAlign: 'middle', marginRight: 2 }} />
+                                    Dipindah dari {formatTanggal(d.tanggalAsli)}
+                                  </div>
+                                )}
+                              </td>
+                              <td>
+                                {d.topik ?? <span className="muted">—</span>}
+                                {d.alasanReschedule && (
+                                  <div className="muted" style={{ fontSize: 'var(--text-xs)', marginTop: 2 }}>
+                                    Alasan: {d.alasanReschedule}
+                                  </div>
+                                )}
+                              </td>
                               <td>
                                 {d.status
                                   ? <span className={`pill ${pillForStatus(d.status)}`}>{STATUS_LABEL[d.status] ?? capitalize(d.status)}</span>

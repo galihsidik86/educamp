@@ -23,7 +23,10 @@ authRouter.post('/login', authLimiter, async (req, res) => {
     res.json({
       accessToken,
       refreshToken,
-      user: { id: user.id, email: user.email, role: user.role },
+      user: {
+        id: user.id, email: user.email, role: user.role,
+        passwordMustChange: user.passwordMustChange,
+      },
     });
   } catch (err) {
     void writeAudit(req, {

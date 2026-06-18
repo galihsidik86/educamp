@@ -13,6 +13,12 @@ import { tugasRouter } from './tugas.js';
 import { bimbinganRouter } from './bimbingan.js';
 import { penelitianRouter } from './penelitian.js';
 import { pengabdianRouter } from './pengabdian.js';
+import { konsultasiRouter } from './konsultasi.js';
+import { kuisRouter } from './kuis.js';
+import { dpaDashboardRouter } from './dpa-dashboard.js';
+import { bkdRouter } from './bkd.js';
+import { cpmkRouter } from './cpmk.js';
+import { ewsRouter as dosenEwsRouter } from './ews.js';
 
 export const dosenRouter = Router();
 
@@ -33,3 +39,9 @@ dosenRouter.use(tugasRouter);
 dosenRouter.use(bimbinganRouter);
 dosenRouter.use(penelitianRouter);
 dosenRouter.use(pengabdianRouter);
+dosenRouter.use(konsultasiRouter);
+dosenRouter.use(kuisRouter);
+dosenRouter.use(dpaDashboardRouter);
+dosenRouter.use(bkdRouter);
+dosenRouter.use(cpmkRouter);
+dosenRouter.use(dosenEwsRouter);

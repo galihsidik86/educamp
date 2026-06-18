@@ -37,7 +37,12 @@ export function DosenInputNilaiList() {
                 <td className="mono">{k.kodeMK}</td>
                 <td>{k.namaMK}</td>
                 <td className="num">{k.sks}</td>
-                <td>{k.kodeKelas}</td>
+                <td>
+                  {k.kodeKelas}
+                  {k.peran !== 'lead' && (
+                    <span className="muted" style={{ fontSize: 'var(--text-xs)', marginLeft: 6 }}>· {capitalize(k.peran)}</span>
+                  )}
+                </td>
                 <td className="mono">
                   {k.hari ? `${capitalize(k.hari)}, ${k.jamMulai}–${k.jamSelesai}` : '—'}
                   {k.ruangan && <span className="muted"> · {k.ruangan}</span>}

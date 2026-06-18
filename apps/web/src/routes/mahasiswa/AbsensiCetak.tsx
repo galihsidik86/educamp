@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Printer } from 'lucide-react';
 import { Button } from '@/ds';
+import { NamaInstitusiText } from '@/components/KopInstitusi';
 import { useMahasiswaAbsensi, useProfil } from '@/lib/queries';
 import { formatTanggalWaktu, capitalize } from '@/lib/format';
 
@@ -38,7 +39,7 @@ export function MahasiswaAbsensiCetak() {
       <div className="krs-cetak__sheet">
         <header className="krs-cetak__head">
           <div className="krs-cetak__brand">
-            <strong>INSTITUT AGAMA ISLAM TAZKIA</strong>
+            <strong><NamaInstitusiText /></strong>
             <div>{profil.data.prodi.fakultas.nama}</div>
             <div>Program Studi {profil.data.prodi.nama}</div>
           </div>

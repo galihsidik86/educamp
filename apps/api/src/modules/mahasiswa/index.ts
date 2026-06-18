@@ -18,6 +18,15 @@ import { tugasRouter } from './tugas.js';
 import { suratRouter } from './surat.js';
 import { keuanganRouter } from './keuangan.js';
 import { triDharmaRouter } from './tri-dharma.js';
+import { konsultasiRouter } from './konsultasi.js';
+import { kuisRouter } from './kuis.js';
+import { tiketRouter } from './tiket.js';
+import { skpiRouter } from './skpi.js';
+import { mutasiRouter } from './mutasi.js';
+import { sertifikatRouter } from './sertifikat.js';
+import { prestasiRouter } from './prestasi.js';
+import { sertifikasiRouter } from './sertifikasi.js';
+import { heregistrasiRouter } from './heregistrasi.js';
 
 export const mahasiswaRouter = Router();
 
@@ -43,3 +52,12 @@ mahasiswaRouter.use(tugasRouter);
 mahasiswaRouter.use(suratRouter);
 mahasiswaRouter.use(keuanganRouter);
 mahasiswaRouter.use(triDharmaRouter);
+mahasiswaRouter.use(konsultasiRouter);
+mahasiswaRouter.use(kuisRouter);
+mahasiswaRouter.use(tiketRouter);
+mahasiswaRouter.use(skpiRouter);
+mahasiswaRouter.use(mutasiRouter);
+mahasiswaRouter.use(sertifikatRouter);
+mahasiswaRouter.use(prestasiRouter);
+mahasiswaRouter.use(sertifikasiRouter);
+mahasiswaRouter.use(heregistrasiRouter);

@@ -4,6 +4,9 @@ import { prisma } from '../../db.js';
 import { hashPassword } from '../../lib/password.js';
 import { BadRequest, Conflict, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
+import { ensureUangPangkal } from '../../lib/tagihan-ukt.js';
+import { calculateIp } from '../../lib/grade.js';
+import { getActiveSemester } from '../../lib/context.js';
 
 export const mahasiswaRouter = Router();
 
@@ -22,6 +25,8 @@ const createSchema = z.object({
   angkatan: z.number().int().min(1990).max(2100),
   prodiId: z.string().uuid(),
   dpaId: z.string().uuid().optional().nullable(),
+  kategoriUktId: z.string().uuid().optional().nullable(),
+  defaultCicilanUkt: z.number().int().min(1).max(12).optional(),
   status: z.enum(STATUS).default('aktif'),
 });
 
@@ -48,6 +53,7 @@ mahasiswaRouter.get('/mahasiswa', async (req, res) => {
       user: { select: { email: true, isActive: true } },
       prodi: { select: { kode: true, nama: true } },
       dpa: { select: { id: true, nama: true } },
+      kategoriUkt: { select: { id: true, kode: true, nama: true, nominalSemester: true } },
     },
     orderBy: [{ angkatan: 'desc' }, { nim: 'asc' }],
     take: 200,
@@ -62,6 +68,7 @@ mahasiswaRouter.get('/mahasiswa/:id', async (req, res) => {
       user: { select: { email: true, isActive: true } },
       prodi: { include: { fakultas: true } },
       dpa: true,
+      kategoriUkt: true,
     },
   });
   if (!m) throw NotFound();
@@ -215,6 +222,8 @@ mahasiswaRouter.post('/mahasiswa', async (req, res) => {
           angkatan: body.angkatan,
           prodiId: body.prodiId,
           dpaId: body.dpaId ?? null,
+          kategoriUktId: body.kategoriUktId ?? null,
+          defaultCicilanUkt: body.defaultCicilanUkt ?? 1,
           status: body.status,
         },
       },
@@ -227,7 +236,10 @@ mahasiswaRouter.post('/mahasiswa', async (req, res) => {
     entityId: created.mahasiswa!.id,
     metadata: { nim: body.nim, nama: body.nama, prodiId: body.prodiId },
   });
-  res.status(201).json(created.mahasiswa);
+
+  // Auto-create tagihan uang pangkal (kalau Prodi.tarifUangPangkal di-set)
+  const pangkal = await ensureUangPangkal(created.mahasiswa!.id);
+  res.status(201).json({ ...created.mahasiswa, uangPangkal: pangkal });
 });
 
 mahasiswaRouter.patch('/mahasiswa/:id', async (req, res) => {
@@ -253,6 +265,8 @@ mahasiswaRouter.patch('/mahasiswa/:id', async (req, res) => {
       ...(body.angkatan !== undefined && { angkatan: body.angkatan }),
       ...(body.prodiId !== undefined && { prodiId: body.prodiId }),
       ...(body.dpaId !== undefined && { dpaId: body.dpaId }),
+      ...(body.kategoriUktId !== undefined && { kategoriUktId: body.kategoriUktId }),
+      ...(body.defaultCicilanUkt !== undefined && { defaultCicilanUkt: body.defaultCicilanUkt }),
       ...(body.status !== undefined && { status: body.status }),
     },
   });
@@ -292,4 +306,109 @@ mahasiswaRouter.post('/mahasiswa/:id/reset-password', async (req, res) => {
     metadata: { targetRole: 'mahasiswa', nim: m.nim, customPassword: !!password },
   });
   res.json({ ok: true, password: password ? '****' : `default: NIM (${m.nim})` });
+});
+
+// ============================================================
+// Transkrip & Absensi mahasiswa (akademik view)
+// ============================================================
+
+mahasiswaRouter.get('/mahasiswa/:id/transkrip', async (req, res) => {
+  const m = await prisma.mahasiswa.findUnique({
+    where: { id: req.params.id },
+    include: { prodi: { include: { fakultas: true } } },
+  });
+  if (!m) throw NotFound('Mahasiswa tidak ditemukan');
+  const nilai = await prisma.nilai.findMany({
+    where: { mahasiswaId: m.id, status: 'finalized' },
+    include: {
+      krs: {
+        include: { kelas: { include: { mataKuliah: true, semester: { include: { tahunAjaran: true } } } } },
+      },
+    },
+    orderBy: [{ krs: { kelas: { semester: { kode: 'asc' } } } }],
+  });
+  const items = nilai.map((n) => ({
+    semesterKode: n.krs.kelas.semester.kode,
+    semesterNama: `${n.krs.kelas.semester.jenis} ${n.krs.kelas.semester.tahunAjaran.kode}`,
+    kodeMK: n.krs.kelas.mataKuliah.kode,
+    namaMK: n.krs.kelas.mataKuliah.nama,
+    sks: n.krs.kelas.mataKuliah.sks,
+    nilaiHuruf: n.nilaiHuruf,
+    nilaiAngka: n.nilaiAngka,
+    bobot: n.bobot,
+  }));
+  const ipk = calculateIp(items.map((i) => ({ sks: i.sks, bobot: i.bobot ?? null })));
+  res.json({
+    mahasiswa: {
+      nim: m.nim, nama: m.nama, angkatan: m.angkatan,
+      prodi: { kode: m.prodi.kode, nama: m.prodi.nama, jenjang: m.prodi.jenjang },
+      fakultas: { kode: m.prodi.fakultas.kode, nama: m.prodi.fakultas.nama },
+    },
+    ipk: ipk.ip,
+    totalSksLulus: ipk.totalSks,
+    items,
+  });
+});
+
+mahasiswaRouter.get('/mahasiswa/:id/absensi', async (req, res) => {
+  const m = await prisma.mahasiswa.findUnique({
+    where: { id: req.params.id },
+    include: { prodi: { include: { fakultas: true } } },
+  });
+  if (!m) throw NotFound('Mahasiswa tidak ditemukan');
+  const semesterId = (req.query.semesterId as string | undefined) ?? (await getActiveSemester()).id;
+  const semester = await prisma.semester.findUnique({ where: { id: semesterId }, include: { tahunAjaran: true } });
+  if (!semester) throw NotFound('Semester tidak ditemukan');
+
+  const krs = await prisma.krs.findMany({
+    where: { mahasiswaId: m.id, semesterId, status: 'disetujui' },
+    include: {
+      kelas: {
+        include: {
+          mataKuliah: true,
+          dosen: { select: { nama: true, gelarDepan: true, gelarBelakang: true } },
+          pertemuan: {
+            orderBy: { pertemuanKe: 'asc' },
+            include: { absensi: { where: { mahasiswaId: m.id }, select: { status: true, catatan: true } } },
+          },
+        },
+      },
+    },
+  });
+
+  const items = krs.map((k) => {
+    const c: Record<string, number> = { hadir: 0, izin: 0, sakit: 0, alpa: 0 };
+    let totalDinilai = 0;
+    const detail: Array<{ pertemuanKe: number; tanggal: string; topik: string | null; status: string | null; catatan: string | null }> = [];
+    for (const p of k.kelas.pertemuan) {
+      const a = p.absensi[0];
+      const status = a?.status ?? null;
+      if (status) { c[status]!++; totalDinilai++; }
+      detail.push({ pertemuanKe: p.pertemuanKe, tanggal: p.tanggal.toISOString(), topik: p.topik, status, catatan: a?.catatan ?? null });
+    }
+    const persentaseHadir = totalDinilai > 0 ? Math.round((c.hadir / totalDinilai) * 100) : null;
+    return {
+      kelasId: k.kelas.id,
+      kodeMK: k.kelas.mataKuliah.kode,
+      namaMK: k.kelas.mataKuliah.nama,
+      sks: k.kelas.mataKuliah.sks,
+      kodeKelas: k.kelas.kodeKelas,
+      dosen: [k.kelas.dosen.gelarDepan, k.kelas.dosen.nama, k.kelas.dosen.gelarBelakang].filter(Boolean).join(' '),
+      totalPertemuan: k.kelas.pertemuan.length,
+      totalDinilai,
+      ringkasan: c,
+      persentaseHadir,
+      detail,
+    };
+  });
+
+  res.json({
+    mahasiswa: {
+      nim: m.nim, nama: m.nama, angkatan: m.angkatan,
+      prodi: { kode: m.prodi.kode, nama: m.prodi.nama },
+      fakultas: { nama: m.prodi.fakultas.nama },
+    },
+    semester: { id: semester.id, kode: semester.kode, jenis: semester.jenis, tahunAjaran: { kode: semester.tahunAjaran.kode } },
+    items,
+  });
 });

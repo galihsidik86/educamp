@@ -31,6 +31,15 @@ export type DosenProfil = {
 };
 export const useDosenProfil = () => useApi<DosenProfil>(['dosen-profil'], '/dosen/profil');
 
+export type DosenProfilUpdate = { nama?: string; gelarDepan?: string | null; gelarBelakang?: string | null };
+export function useUpdateDosenProfil() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: DosenProfilUpdate) => api('/dosen/profil', { method: 'PATCH', body: JSON.stringify(patch) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['dosen-profil'] }),
+  });
+}
+
 export type DosenJadwalItem = {
   id: string; kodeMK: string; namaMK: string; sks: number; kodeKelas: string;
   ruangan: string | null;
@@ -48,6 +57,7 @@ export type DosenKelas = {
   id: string; kodeMK: string; namaMK: string; sks: number; kodeKelas: string;
   hari: string | null; jamMulai: string | null; jamSelesai: string | null;
   ruangan: string | null; pesertaCount: number; semester: string;
+  peran: 'lead' | 'anggota' | 'asisten';
 };
 export const useDosenKelas = () =>
   useApi<{ kelas: DosenKelas[] }>(['dosen-kelas'], '/dosen/kelas');
@@ -59,6 +69,12 @@ export type DosenKelasDetail = {
     ruangan: string | null;
     semester: { kode: string; nama: string };
     periodeNilai: { mulai: string | null; selesai: string | null };
+    peran: 'lead' | 'anggota' | 'asisten';
+    team: Array<{
+      dosenId: string; nidn: string; nama: string;
+      gelarDepan: string | null; gelarBelakang: string | null;
+      peran: 'lead' | 'anggota' | 'asisten';
+    }>;
   };
   peserta: Array<{
     krsId: string;
@@ -86,6 +102,30 @@ export function useUpdateNilai(kelasId: string | undefined) {
   return useMutation({
     mutationFn: ({ krsId, patch }: { krsId: string; patch: NilaiPatch }) =>
       api(`/dosen/nilai/${krsId}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['dosen-kelas', kelasId] }),
+  });
+}
+
+export type NilaiImportResult = {
+  totalRows: number;
+  created: number;
+  failed: number;
+  results: Array<{ row: number; key: string | null; status: 'created' | 'failed'; message?: string }>;
+};
+export function useImportNilai(kelasId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (rows: Array<Record<string, string>>) =>
+      apiPost<NilaiImportResult>(`/dosen/kelas/${kelasId}/nilai/import`, { rows }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['dosen-kelas', kelasId] }),
+  });
+}
+
+export type FinalizeAllResult = { ok: boolean; finalized: number; belumDinilai: number; sudahFinal: number; message: string };
+export function useFinalizeAllNilai(kelasId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiPost<FinalizeAllResult>(`/dosen/kelas/${kelasId}/nilai/finalize-all`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['dosen-kelas', kelasId] }),
   });
 }
@@ -282,6 +322,9 @@ export type PertemuanItem = {
   catatan: string | null;
   totalAbsensi: number;
   ringkasan: { hadir: number; izin: number; sakit: number; alpa: number };
+  tanggalAsli: string | null;
+  alasanReschedule: string | null;
+  ruangan: { kode: string; nama: string } | null;
 };
 export type PertemuanList = {
   kelas: { id: string; kodeMK: string; namaMK: string; kodeKelas: string };
@@ -289,6 +332,44 @@ export type PertemuanList = {
 };
 export const useDosenPertemuan = (kelasId: string | undefined) =>
   useApi<PertemuanList>(['dosen-pertemuan', kelasId], `/dosen/kelas/${kelasId}/pertemuan`, { enabled: !!kelasId });
+
+export type RuanganDosen = { id: string; kode: string; nama: string; gedung: string | null; kapasitas: number };
+export const useDosenRuangan = () =>
+  useApi<{ items: RuanganDosen[] }>(['dosen-ruangan'], '/dosen/ruangan');
+
+// ============================================================
+// DPA Dashboard
+// ============================================================
+
+export type DpaDashboard = {
+  ringkasan: {
+    totalMahasiswa: number;
+    krsPending: number;
+    atRiskIpk: number;
+    kritisKehadiran: number;
+    ipkRataRata: number | null;
+    semester: { kode: string; nama: string };
+    threshold: { ipkAtRisk: number; kehadiranKritis: number };
+  };
+  items: Array<{
+    id: string;
+    nim: string;
+    nama: string;
+    angkatan: number;
+    status: string;
+    prodi: { kode: string; nama: string };
+    ipk: number | null;
+    sksAmbil: number;
+    krsCount: number;
+    krsPending: boolean;
+    persenHadir: number | null;
+    atRiskIpk: boolean;
+    kritisKehadiran: boolean;
+  }>;
+};
+
+export const useDpaDashboard = () =>
+  useApi<DpaDashboard>(['dpa-dashboard'], '/dosen/dpa-dashboard');
 
 export type KehadiranRekap = {
   kelas: { id: string; kodeMK: string; namaMK: string; kodeKelas: string };
@@ -318,6 +399,17 @@ export type AbsensiPertemuan = {
 export const useDosenAbsensiPertemuan = (pertemuanId: string | undefined) =>
   useApi<AbsensiPertemuan>(['dosen-absensi-pertemuan', pertemuanId], `/dosen/pertemuan/${pertemuanId}/absensi`, { enabled: !!pertemuanId });
 
+export type PinStatus = {
+  pin: string | null;
+  expiresAt: string | null;
+  dibuatPada: string | null;
+  isActive: boolean;
+  hadirViaPin: number;
+  totalHadir: number;
+};
+export const useDosenPinStatus = (pertemuanId: string | undefined, opts: { refetchInterval?: number } = {}) =>
+  useApi<PinStatus>(['dosen-pin-status', pertemuanId], `/dosen/pertemuan/${pertemuanId}/pin-status`, { enabled: !!pertemuanId, ...opts });
+
 export function useDosenAbsensiActions(kelasId?: string, pertemuanId?: string) {
   const qc = useQueryClient();
   const inv = () => Promise.all([
@@ -338,6 +430,18 @@ export function useDosenAbsensiActions(kelasId?: string, pertemuanId?: string) {
     deletePertemuan: useMutation({
       mutationFn: (id: string) => api(`/dosen/pertemuan/${id}`, { method: 'DELETE' }),
       onSuccess: inv,
+    }),
+    reschedulePertemuan: useMutation({
+      mutationFn: ({ id, body }: { id: string; body: { tanggal: string; ruanganId?: string | null; alasan: string; durasiMenit?: number } }) =>
+        apiPost(`/dosen/pertemuan/${id}/reschedule`, body),
+      onSuccess: inv,
+    }),
+    generatePin: useMutation({
+      mutationFn: ({ id, durasiMenit }: { id: string; durasiMenit?: number }) =>
+        apiPost<{ pin: string; expiresAt: string; dibuatPada: string }>(`/dosen/pertemuan/${id}/generate-pin`, { durasiMenit }),
+    }),
+    clearPin: useMutation({
+      mutationFn: (id: string) => api(`/dosen/pertemuan/${id}/pin`, { method: 'DELETE' }),
     }),
     setAbsensi: useMutation({
       mutationFn: ({ pertemuanId: pid, items }: { pertemuanId: string; items: Array<{ mahasiswaId: string; status: AbsensiStatus; catatan?: string | null }> }) =>
@@ -461,3 +565,38 @@ export function usePengabdianActions() {
     }),
   };
 }
+
+// ============================================================
+// EWS — peringatan dini bimbingan DPA
+// ============================================================
+export type DosenEwsIndikator = {
+  jenis: 'ipk' | 'sks_progres' | 'absensi' | 'tunggakan' | 'heregistrasi' | 'nilai_buruk';
+  severity: 'tinggi' | 'sedang' | 'rendah';
+  judul: string;
+  detail: string;
+  nilai: number | string;
+  threshold: number | string;
+  poin: number;
+};
+export type DosenEwsMahasiswa = {
+  mahasiswaId: string;
+  nim: string;
+  nama: string;
+  angkatan: number;
+  status: string;
+  prodi: { kode: string; nama: string };
+  dpa: { id: string; nama: string } | null;
+  semesterBerjalan: number;
+  ipk: number;
+  totalSks: number;
+  skorRisiko: number;
+  tingkat: 'tinggi' | 'sedang' | 'rendah' | 'aman';
+  indikator: DosenEwsIndikator[];
+};
+export type DosenEwsList = {
+  ringkasan: { total: number; tinggi: number; sedang: number; rendah: number };
+  items: DosenEwsMahasiswa[];
+};
+export const useDosenEws = () => useApi<DosenEwsList>(['dosen-ews'], '/dosen/ews/bimbingan');
+export const useDosenEwsMahasiswa = (mahasiswaId: string | undefined) =>
+  useApi<DosenEwsMahasiswa>(['dosen-ews-mhs', mahasiswaId], `/dosen/ews/${mahasiswaId}`, { enabled: !!mahasiswaId });

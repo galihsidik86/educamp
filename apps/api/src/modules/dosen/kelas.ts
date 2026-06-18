@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../../db.js';
-import { getActiveSemester, getDosenForUser } from '../../lib/context.js';
-import { BadRequest, Forbidden, NotFound } from '../../lib/errors.js';
+import { getActiveSemester, getDosenForUser, requireKelasOwnership } from '../../lib/context.js';
+import { BadRequest, NotFound } from '../../lib/errors.js';
 import { angkaToHuruf, hurufToBobot } from '../../lib/grade.js';
 import { writeAudit } from '../../lib/audit.js';
 import { createNotifikasi, userIdFromMahasiswa } from '../../lib/notifikasi.js';
+import { enqueueFeederChange, buildFeederPayload } from '../../lib/feeder/queue.js';
 
 export const kelasRouter = Router();
 
@@ -17,11 +18,15 @@ kelasRouter.get('/kelas', async (req, res) => {
   const semesterId = (req.query.semesterId as string | undefined) ?? (await getActiveSemester()).id;
 
   const kelas = await prisma.kelas.findMany({
-    where: { dosenId: d.id, semesterId },
+    where: {
+      semesterId,
+      OR: [{ dosenId: d.id }, { team: { some: { dosenId: d.id } } }],
+    },
     include: {
       mataKuliah: true,
       ruangan: true,
       semester: { include: { tahunAjaran: true } },
+      team: { where: { dosenId: d.id }, select: { peran: true } },
       _count: { select: { krs: { where: { status: { in: ['diajukan', 'disetujui'] } } } } },
     },
     orderBy: [{ hari: 'asc' }, { jamMulai: 'asc' }],
@@ -40,6 +45,7 @@ kelasRouter.get('/kelas', async (req, res) => {
       ruangan: k.ruangan?.kode ?? null,
       pesertaCount: k._count.krs,
       semester: `${k.semester.jenis} ${k.semester.tahunAjaran.kode}`,
+      peran: k.team[0]?.peran ?? (k.dosenId === d.id ? 'lead' : 'anggota'),
     })),
   });
 });
@@ -56,6 +62,9 @@ kelasRouter.get('/kelas/:id', async (req, res) => {
       mataKuliah: true,
       ruangan: true,
       semester: { include: { tahunAjaran: true } },
+      team: {
+        include: { dosen: { select: { id: true, nidn: true, nama: true, gelarDepan: true, gelarBelakang: true } } },
+      },
       krs: {
         where: { status: { in: ['diajukan', 'disetujui'] } },
         include: {
@@ -67,7 +76,7 @@ kelasRouter.get('/kelas/:id', async (req, res) => {
     },
   });
   if (!k) throw NotFound('Kelas tidak ditemukan');
-  if (k.dosenId !== d.id) throw Forbidden('Anda bukan pengampu kelas ini');
+  const peran = await requireKelasOwnership(d.id, k.id);
 
   res.json({
     kelas: {
@@ -85,6 +94,15 @@ kelasRouter.get('/kelas/:id', async (req, res) => {
         mulai: k.semester.nilaiMulai,
         selesai: k.semester.nilaiSelesai,
       },
+      peran,
+      team: k.team.map((t) => ({
+        dosenId: t.dosenId,
+        nidn: t.dosen.nidn,
+        nama: t.dosen.nama,
+        gelarDepan: t.dosen.gelarDepan,
+        gelarBelakang: t.dosen.gelarBelakang,
+        peran: t.peran,
+      })),
     },
     peserta: k.krs.map((r) => ({
       krsId: r.id,
@@ -131,7 +149,7 @@ kelasRouter.patch('/nilai/:krsId', async (req, res) => {
     include: { kelas: true },
   });
   if (!krs) throw NotFound('KRS tidak ditemukan');
-  if (krs.kelas.dosenId !== d.id) throw Forbidden('Anda bukan pengampu kelas ini');
+  await requireKelasOwnership(d.id, krs.kelasId);
 
   // Hitung huruf+bobot kalau angka diset
   let nilaiHuruf: string | null | undefined;
@@ -214,9 +232,209 @@ kelasRouter.patch('/nilai/:krsId', async (req, res) => {
         link: '/mahasiswa/nilai',
         entity: 'nilai',
         entityId: nilai.id,
+        sendEmail: true,
       });
+    })();
+
+    // Feeder sync: kirim nilai final ke outbox
+    void (async () => {
+      const payload = await buildFeederPayload('nilai', nilai.id);
+      if (payload) {
+        await enqueueFeederChange({
+          entity: 'nilai',
+          entityId: nilai.id,
+          operation: nilai.feederId ? 'update' : 'create',
+          payload,
+        });
+      }
     })();
   }
 
   res.json(nilai);
+});
+
+/**
+ * Batch finalize semua nilai di satu kelas.
+ * Hanya finalize yang sudah punya nilaiAngka dan belum berstatus 'finalized'.
+ * Skip yang masih kosong (report ke response).
+ */
+const nilaiImportRowSchema = z.object({
+  nim: z.string().min(1),
+  tugas: z.coerce.number().min(0).max(100).optional().nullable(),
+  uts: z.coerce.number().min(0).max(100).optional().nullable(),
+  uas: z.coerce.number().min(0).max(100).optional().nullable(),
+  praktikum: z.coerce.number().min(0).max(100).optional().nullable(),
+  kehadiran: z.coerce.number().min(0).max(100).optional().nullable(),
+  nilaiAngka: z.coerce.number().min(0).max(100).optional().nullable(),
+  status: z.enum(['belum', 'draft', 'finalized']).optional(),
+});
+const nilaiImportBodySchema = z.object({
+  rows: z.array(z.record(z.string(), z.string().nullable().optional())).max(500),
+});
+
+/**
+ * Bulk import nilai untuk semua peserta kelas via Excel.
+ * Lookup KRS by NIM + kelasId. Skip baris kalau NIM tidak ada di peserta.
+ * Otomatis hitung huruf+bobot dari nilaiAngka. Status default 'draft'.
+ */
+kelasRouter.post('/kelas/:kelasId/nilai/import', async (req, res) => {
+  const d = await getDosenForUser(req.user!.sub);
+  await requireKelasOwnership(d.id, req.params.kelasId);
+  const { rows } = nilaiImportBodySchema.parse(req.body);
+  if (rows.length === 0) throw BadRequest('Tidak ada baris untuk diimpor');
+
+  const krsList = await prisma.krs.findMany({
+    where: { kelasId: req.params.kelasId, status: 'disetujui' },
+    include: { mahasiswa: { select: { id: true, nim: true } } },
+  });
+  const krsByNim = new Map(krsList.map((k) => [k.mahasiswa.nim, k]));
+
+  type ImportResult = { row: number; key: string | null; status: 'created' | 'failed'; message?: string };
+  const results: ImportResult[] = [];
+  let updated = 0; let failed = 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    const raw = rows[i]!;
+    const rowNo = i + 1;
+    const clean = Object.fromEntries(
+      Object.entries(raw).map(([k, v]) => [k, v === '' || v == null ? undefined : v]),
+    );
+    const parsed = nilaiImportRowSchema.safeParse(clean);
+    if (!parsed.success) {
+      failed++;
+      results.push({ row: rowNo, key: (clean.nim as string | undefined) ?? null, status: 'failed', message: parsed.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ') });
+      continue;
+    }
+    const r = parsed.data;
+    const krs = krsByNim.get(r.nim);
+    if (!krs) { failed++; results.push({ row: rowNo, key: r.nim, status: 'failed', message: `NIM tidak terdaftar di kelas ini: ${r.nim}` }); continue; }
+
+    let nilaiHuruf: string | null | undefined;
+    let bobot: number | null | undefined;
+    if (r.nilaiAngka != null) {
+      const h = angkaToHuruf(r.nilaiAngka);
+      nilaiHuruf = h;
+      bobot = hurufToBobot(h);
+    }
+    if (r.status === 'finalized' && r.nilaiAngka == null) {
+      // Cek existing
+      const existing = await prisma.nilai.findUnique({ where: { krsId: krs.id } });
+      if (!existing?.nilaiAngka) {
+        failed++;
+        results.push({ row: rowNo, key: r.nim, status: 'failed', message: 'Tidak bisa finalisasi tanpa nilai angka' });
+        continue;
+      }
+    }
+    try {
+      await prisma.nilai.upsert({
+        where: { krsId: krs.id },
+        create: {
+          krsId: krs.id,
+          mahasiswaId: krs.mahasiswaId,
+          tugas: r.tugas ?? null,
+          uts: r.uts ?? null,
+          uas: r.uas ?? null,
+          praktikum: r.praktikum ?? null,
+          kehadiran: r.kehadiran ?? null,
+          nilaiAngka: r.nilaiAngka ?? null,
+          nilaiHuruf: nilaiHuruf ?? null,
+          bobot: bobot ?? null,
+          status: r.status ?? 'draft',
+        },
+        update: {
+          ...(r.tugas !== undefined && { tugas: r.tugas }),
+          ...(r.uts !== undefined && { uts: r.uts }),
+          ...(r.uas !== undefined && { uas: r.uas }),
+          ...(r.praktikum !== undefined && { praktikum: r.praktikum }),
+          ...(r.kehadiran !== undefined && { kehadiran: r.kehadiran }),
+          ...(r.nilaiAngka !== undefined && { nilaiAngka: r.nilaiAngka }),
+          ...(nilaiHuruf !== undefined && { nilaiHuruf }),
+          ...(bobot !== undefined && { bobot }),
+          ...(r.status !== undefined && { status: r.status }),
+        },
+      });
+      updated++;
+      results.push({ row: rowNo, key: r.nim, status: 'created' });
+    } catch (e: any) {
+      failed++;
+      results.push({ row: rowNo, key: r.nim, status: 'failed', message: e?.message ?? 'gagal upsert' });
+    }
+  }
+  res.json({ totalRows: rows.length, created: updated, failed, results });
+});
+
+kelasRouter.post('/kelas/:kelasId/nilai/finalize-all', async (req, res) => {
+  const d = await getDosenForUser(req.user!.sub);
+  await requireKelasOwnership(d.id, req.params.kelasId);
+
+  const krsList = await prisma.krs.findMany({
+    where: { kelasId: req.params.kelasId, status: 'disetujui' },
+    include: { nilai: true, kelas: { include: { mataKuliah: true } } },
+  });
+
+  const siapFinalize = krsList.filter((k) => k.nilai && k.nilai.nilaiAngka != null && k.nilai.status !== 'finalized');
+  const belumDinilai = krsList.filter((k) => !k.nilai || k.nilai.nilaiAngka == null);
+  const sudahFinal = krsList.filter((k) => k.nilai?.status === 'finalized');
+
+  if (siapFinalize.length === 0) {
+    return res.json({
+      ok: true,
+      finalized: 0,
+      belumDinilai: belumDinilai.length,
+      sudahFinal: sudahFinal.length,
+      message: belumDinilai.length > 0
+        ? `Tidak ada yang difinalisasi. ${belumDinilai.length} mahasiswa belum diberi nilai.`
+        : 'Semua nilai sudah final sebelumnya.',
+    });
+  }
+
+  await prisma.nilai.updateMany({
+    where: { id: { in: siapFinalize.map((k) => k.nilai!.id) } },
+    data: { status: 'finalized' },
+  });
+
+  void writeAudit(req, {
+    action: 'nilai.finalize.batch',
+    entity: 'kelas',
+    entityId: req.params.kelasId,
+    metadata: { finalized: siapFinalize.length, belumDinilai: belumDinilai.length },
+  });
+
+  // Notif + feeder sync untuk masing-masing
+  void (async () => {
+    for (const k of siapFinalize) {
+      const userId = await userIdFromMahasiswa(k.mahasiswaId);
+      if (userId) {
+        await createNotifikasi({
+          userId,
+          title: `Nilai ${k.kelas.mataKuliah.kode} telah dirilis`,
+          body: `Nilai akhir ${k.kelas.mataKuliah.nama}: ${k.nilai!.nilaiHuruf ?? '-'} (${k.nilai!.nilaiAngka ?? '-'}). Lihat detail di Nilai & Transkrip.`,
+          type: 'nilai',
+          link: '/mahasiswa/nilai',
+          entity: 'nilai',
+          entityId: k.nilai!.id,
+          sendEmail: true,
+        });
+      }
+      const payload = await buildFeederPayload('nilai', k.nilai!.id);
+      if (payload) {
+        await enqueueFeederChange({
+          entity: 'nilai',
+          entityId: k.nilai!.id,
+          operation: k.nilai!.feederId ? 'update' : 'create',
+          payload,
+        });
+      }
+    }
+  })();
+
+  res.json({
+    ok: true,
+    finalized: siapFinalize.length,
+    belumDinilai: belumDinilai.length,
+    sudahFinal: sudahFinal.length,
+    message: belumDinilai.length > 0
+      ? `${siapFinalize.length} nilai difinalisasi. ${belumDinilai.length} mahasiswa belum diberi nilai (perlu input dulu).`
+      : `Semua ${siapFinalize.length} nilai berhasil difinalisasi.`,
+  });
 });

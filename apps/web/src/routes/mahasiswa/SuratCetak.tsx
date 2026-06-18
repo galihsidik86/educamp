@@ -2,14 +2,18 @@ import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Printer } from 'lucide-react';
 import { Button } from '@/ds';
+import { NamaInstitusiText } from '@/components/KopInstitusi';
 import { useSuratDetail, useProfil } from '@/lib/queries';
 import { formatTanggal } from '@/lib/format';
+import { useInstitusiPublic } from '@/lib/queries-institusi';
 
 export function MahasiswaSuratCetak() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const profil = useProfil();
   const surat = useSuratDetail(id);
+  const inst = useInstitusiPublic();
+  const namaInst = inst.data?.nama || 'Institut Agama Islam Tazkia';
 
   useEffect(() => {
     document.body.classList.add('print-mode');
@@ -39,7 +43,7 @@ export function MahasiswaSuratCetak() {
       <div className="krs-cetak__sheet">
         <header className="krs-cetak__head">
           <div className="krs-cetak__brand">
-            <strong>INSTITUT AGAMA ISLAM TAZKIA</strong>
+            <strong><NamaInstitusiText /></strong>
             <div>{profil.data.prodi.fakultas.nama}</div>
             <div>Program Studi {profil.data.prodi.nama}</div>
           </div>
@@ -48,7 +52,7 @@ export function MahasiswaSuratCetak() {
         </header>
 
         <p style={{ margin: '0 0 var(--space-3)', textIndent: '2em', lineHeight: 1.7 }}>
-          Yang bertanda tangan di bawah ini, Kepala Bagian Akademik Institut Agama Islam Tazkia, dengan ini menerangkan bahwa:
+          Yang bertanda tangan di bawah ini, Kepala Bagian Akademik {namaInst}, dengan ini menerangkan bahwa:
         </p>
 
         <table className="krs-cetak__bio" style={{ marginBottom: 'var(--space-4)' }}>
@@ -63,7 +67,7 @@ export function MahasiswaSuratCetak() {
         </table>
 
         <p style={{ margin: '0 0 var(--space-3)', textIndent: '2em', lineHeight: 1.7 }}>
-          Benar adalah mahasiswa{profil.data.jenisKelamin === 'P' ? '/i' : ''} aktif Institut Agama Islam Tazkia dengan keperluan sebagai berikut:
+          Benar adalah mahasiswa{profil.data.jenisKelamin === 'P' ? '/i' : ''} aktif {namaInst} dengan keperluan sebagai berikut:
         </p>
 
         <div style={{

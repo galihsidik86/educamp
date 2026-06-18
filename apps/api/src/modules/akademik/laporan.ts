@@ -180,3 +180,133 @@ laporanRouter.get('/laporan/kehadiran', async (req, res) => {
     items,
   });
 });
+
+/**
+ * Laporan honor mengajar dosen per periode tanggal — untuk pengajuan ke SDM.
+ * Group per dosen × kelas, hitung jumlah pertemuan yang sudah dilaksanakan
+ * (= ada absensi tercatat) dalam rentang tanggalMulai..tanggalSelesai.
+ *
+ * Query: ?tanggalMulai=YYYY-MM-DD&tanggalSelesai=YYYY-MM-DD&dosenId=<opt>&prodiId=<opt>
+ */
+laporanRouter.get('/laporan/honor-dosen', async (req, res) => {
+  const tanggalMulaiStr = (req.query.tanggalMulai as string | undefined)?.trim();
+  const tanggalSelesaiStr = (req.query.tanggalSelesai as string | undefined)?.trim();
+  if (!tanggalMulaiStr || !tanggalSelesaiStr) {
+    return res.status(400).json({
+      error: { code: 'VALIDATION_ERROR', message: 'Parameter tanggalMulai dan tanggalSelesai wajib (format YYYY-MM-DD)' },
+    });
+  }
+  const tanggalMulai = new Date(tanggalMulaiStr);
+  const tanggalSelesai = new Date(tanggalSelesaiStr);
+  // Selesai inklusif sampai akhir hari
+  tanggalSelesai.setHours(23, 59, 59, 999);
+  if (isNaN(tanggalMulai.getTime()) || isNaN(tanggalSelesai.getTime())) {
+    return res.status(400).json({
+      error: { code: 'VALIDATION_ERROR', message: 'Format tanggal tidak valid' },
+    });
+  }
+
+  const dosenIdFilter = req.query.dosenId as string | undefined;
+  const prodiIdFilter = req.query.prodiId as string | undefined;
+
+  // Ambil semua pertemuan dalam range yang sudah terlaksana (punya absensi)
+  const pertemuan = await prisma.pertemuan.findMany({
+    where: {
+      tanggal: { gte: tanggalMulai, lte: tanggalSelesai },
+      absensi: { some: {} },
+      ...(dosenIdFilter && { kelas: { dosenId: dosenIdFilter } }),
+      ...(prodiIdFilter && { kelas: { mataKuliah: { prodiId: prodiIdFilter } } }),
+    },
+    include: {
+      kelas: {
+        include: {
+          dosen: { select: { id: true, nidn: true, nama: true, gelarDepan: true, gelarBelakang: true, jabatanFungsional: true } },
+          mataKuliah: { select: { kode: true, nama: true, sks: true, prodiId: true, prodi: { select: { kode: true, nama: true } } } },
+          semester: { select: { kode: true } },
+        },
+      },
+      _count: { select: { absensi: true } },
+    },
+    orderBy: { tanggal: 'asc' },
+  });
+
+  // Group per dosen → list kelas → pertemuan
+  type KelasRow = {
+    kelasId: string;
+    kodeMK: string;
+    namaMK: string;
+    kodeKelas: string;
+    sks: number;
+    semesterKode: string;
+    prodi: { kode: string; nama: string };
+    pertemuan: Array<{ id: string; pertemuanKe: number; tanggal: Date; topik: string | null; jumlahPeserta: number }>;
+  };
+  type DosenRow = {
+    dosen: { id: string; nidn: string; nama: string; gelarLengkap: string; jabatan: string | null };
+    kelas: Map<string, KelasRow>;
+  };
+  const byDosen = new Map<string, DosenRow>();
+
+  for (const p of pertemuan) {
+    const d = p.kelas.dosen;
+    const gelarLengkap = [d.gelarDepan, d.nama, d.gelarBelakang].filter(Boolean).join(' ');
+    if (!byDosen.has(d.id)) {
+      byDosen.set(d.id, {
+        dosen: {
+          id: d.id, nidn: d.nidn, nama: d.nama,
+          gelarLengkap,
+          jabatan: d.jabatanFungsional ?? null,
+        },
+        kelas: new Map(),
+      });
+    }
+    const dr = byDosen.get(d.id)!;
+    if (!dr.kelas.has(p.kelas.id)) {
+      dr.kelas.set(p.kelas.id, {
+        kelasId: p.kelas.id,
+        kodeMK: p.kelas.mataKuliah.kode,
+        namaMK: p.kelas.mataKuliah.nama,
+        kodeKelas: p.kelas.kodeKelas,
+        sks: p.kelas.mataKuliah.sks,
+        semesterKode: p.kelas.semester.kode,
+        prodi: p.kelas.mataKuliah.prodi,
+        pertemuan: [],
+      });
+    }
+    dr.kelas.get(p.kelas.id)!.pertemuan.push({
+      id: p.id,
+      pertemuanKe: p.pertemuanKe,
+      tanggal: p.tanggal,
+      topik: p.topik,
+      jumlahPeserta: p._count.absensi,
+    });
+  }
+
+  const items = Array.from(byDosen.values()).map((dr) => {
+    const kelasList = Array.from(dr.kelas.values());
+    const totalPertemuan = kelasList.reduce((s, k) => s + k.pertemuan.length, 0);
+    // Ekuivalen SKS pertemuan: sks MK × jumlah pertemuan (1 pertemuan ≈ 1 SKS-jam tergantung kebijakan PT)
+    const totalSksPertemuan = kelasList.reduce((s, k) => s + (k.sks * k.pertemuan.length), 0);
+    return {
+      dosen: dr.dosen,
+      totalKelas: kelasList.length,
+      totalPertemuan,
+      totalSksPertemuan,
+      kelas: kelasList.sort((a, b) => a.kodeMK.localeCompare(b.kodeMK)),
+    };
+  }).sort((a, b) => a.dosen.gelarLengkap.localeCompare(b.dosen.gelarLengkap));
+
+  res.json({
+    periode: {
+      tanggalMulai: tanggalMulai.toISOString(),
+      tanggalSelesai: tanggalSelesai.toISOString(),
+    },
+    ringkasan: {
+      totalDosen: items.length,
+      totalKelas: items.reduce((s, i) => s + i.totalKelas, 0),
+      totalPertemuan: items.reduce((s, i) => s + i.totalPertemuan, 0),
+      totalSksPertemuan: items.reduce((s, i) => s + i.totalSksPertemuan, 0),
+    },
+    items,
+  });
+});

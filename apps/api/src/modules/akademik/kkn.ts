@@ -4,6 +4,7 @@ import { prisma } from '../../db.js';
 import { BadRequest, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
 import { createNotifikasi, userIdFromMahasiswa } from '../../lib/notifikasi.js';
+import { issueSertifikat } from '../../lib/sertifikat.js';
 
 export const kknRouter = Router();
 
@@ -108,6 +109,21 @@ kknRouter.patch('/kkn/:id', async (req, res) => {
         entity: 'kkn',
         entityId: updated.id,
       });
+    })();
+  }
+
+  // Auto-issue sertifikat saat transisi ke 'selesai'
+  if (body.status === 'selesai' && existing.status !== 'selesai') {
+    void (async () => {
+      await issueSertifikat({
+        mahasiswaId: updated.mahasiswaId,
+        jenis: 'kkn',
+        judul: `Sertifikat KKN ${updated.periode}`,
+        deskripsi: `Telah menyelesaikan Kuliah Kerja Nyata di ${updated.lokasi}${updated.nilai ? ` dengan nilai ${updated.nilai}` : ''}.`,
+        periode: updated.periode,
+        sumberEntity: 'kkn',
+        sumberId: updated.id,
+      }).catch((e) => console.error('[sertifikat] gagal auto-issue KKN:', e));
     })();
   }
 

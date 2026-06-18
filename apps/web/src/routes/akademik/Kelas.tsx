@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react';
 import { Alert, Button, Input, Select } from '@/ds';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users, Upload } from 'lucide-react';
 import {
   useKelasAdmin, useKelasActions, useMataKuliah, useAdminDosen,
   useRuangan, usePeriode,
-  type Kelas, type KelasInput,
+  useKelasTeam, useKelasTeamActions,
+  type Kelas, type KelasInput, type KelasTeamItem,
 } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { ExcelImportModal } from '@/components/ExcelImportModal';
 import { ApiError } from '@/lib/api';
 import { capitalize } from '@/lib/format';
 
@@ -22,6 +24,9 @@ export function AdminKelas() {
   const { data, isLoading, error } = useKelasAdmin({ semesterId: semIdEff });
   const actions = useKelasActions();
   const [modal, setModal] = useState<{ mode: 'create' } | { mode: 'edit'; kelas: Kelas } | null>(null);
+  const [teamFor, setTeamFor] = useState<Kelas | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const aktifSemKode = aktif?.kode ?? '20261';
 
   const onDelete = async (k: Kelas) => {
     if (!confirm(`Hapus kelas ${k.mataKuliah.kode} ${k.kodeKelas}?`)) return;
@@ -35,7 +40,12 @@ export function AdminKelas() {
         eyebrow="KURIKULUM"
         title="Kelas (Penawaran)"
         subtitle="Kelola kelas per semester — assign MK, dosen, ruangan, jadwal."
-        right={<Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setModal({ mode: 'create' })}>Tambah Kelas</Button>}
+        right={
+          <div className="row" style={{ gap: 'var(--space-2)' }}>
+            <Button variant="ghost" leftIcon={<Upload size={16} />} onClick={() => setImportOpen(true)}>Import Excel</Button>
+            <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setModal({ mode: 'create' })}>Tambah Kelas</Button>
+          </div>
+        }
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
@@ -79,6 +89,7 @@ export function AdminKelas() {
                 <td className="num">{k._count.krs}/{k.kapasitas}</td>
                 <td>
                   <div className="row" style={{ gap: 6, justifyContent: 'flex-end' }}>
+                    <Button size="sm" variant="ghost" leftIcon={<Users size={12} />} onClick={() => setTeamFor(k)}>Team</Button>
                     <Button size="sm" variant="ghost" leftIcon={<Pencil size={12} />} onClick={() => setModal({ mode: 'edit', kelas: k })}>Edit</Button>
                     <Button size="sm" variant="ghost" leftIcon={<Trash2 size={12} />} onClick={() => onDelete(k)}>Hapus</Button>
                   </div>
@@ -102,7 +113,120 @@ export function AdminKelas() {
           }}
         />
       )}
+
+      {teamFor && (
+        <TeamModal kelas={teamFor} onClose={() => setTeamFor(null)} />
+      )}
+
+      <ExcelImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import Kelas (Penawaran) via Excel"
+        expectedHeaders={['mkKode', 'semesterKode', 'dosenNidn', 'kodeKelas']}
+        optionalHeaders={['kapasitas', 'hari', 'jamMulai', 'jamSelesai', 'ruanganKode']}
+        templateFilename="template-kelas.xlsx"
+        keyHeader="MK / Kelas"
+        notes={<>MK & dosen via kode/NIDN. <code>semesterKode</code>: contoh <code>{aktifSemKode}</code> (semester aktif). <code>hari</code>: senin–minggu. Jam format <code>HH:MM</code>. Pertemuan otomatis di-generate 16 minggu.</>}
+        sampleRows={[
+          { mkKode: 'IF-3101', semesterKode: aktifSemKode, dosenNidn: '0412019001', kodeKelas: 'A', kapasitas: 40, hari: 'senin', jamMulai: '08:00', jamSelesai: '10:30', ruanganKode: 'R-201' },
+          { mkKode: 'IF-3102', semesterKode: aktifSemKode, dosenNidn: '0412019002', kodeKelas: 'B', kapasitas: 35, hari: 'rabu', jamMulai: '13:00', jamSelesai: '15:30' },
+        ]}
+        importMutation={actions.importCsv}
+      />
     </div>
+  );
+}
+
+function TeamModal({ kelas, onClose }: { kelas: Kelas; onClose: () => void }) {
+  const team = useKelasTeam(kelas.id);
+  const dosen = useAdminDosen();
+  const actions = useKelasTeamActions(kelas.id);
+  const [addDosenId, setAddDosenId] = useState('');
+  const [addPeran, setAddPeran] = useState<KelasTeamItem['peran']>('anggota');
+  const [err, setErr] = useState<string | null>(null);
+
+  const onAdd = async () => {
+    setErr(null);
+    if (!addDosenId) { setErr('Pilih dosen'); return; }
+    try {
+      await actions.add.mutateAsync({ dosenId: addDosenId, peran: addPeran });
+      setAddDosenId(''); setAddPeran('anggota');
+    } catch (e: any) { setErr(e?.message ?? 'Gagal'); }
+  };
+
+  const onChangePeran = async (dosenId: string, peran: KelasTeamItem['peran']) => {
+    setErr(null);
+    try { await actions.update.mutateAsync({ dosenId, peran }); }
+    catch (e: any) { setErr(e?.message ?? 'Gagal'); }
+  };
+
+  const onRemove = async (dosenId: string, nama: string) => {
+    if (!confirm(`Hapus ${nama} dari team?`)) return;
+    setErr(null);
+    try { await actions.remove.mutateAsync(dosenId); }
+    catch (e: any) { setErr(e?.message ?? 'Gagal'); }
+  };
+
+  const existingIds = new Set(team.data?.items.map((t) => t.dosenId) ?? []);
+  const dosenAvailable = dosen.data?.items.filter((d) => !existingIds.has(d.id)) ?? [];
+
+  return (
+    <Modal open onClose={onClose} title={`Team Dosen — ${kelas.mataKuliah.kode} ${kelas.kodeKelas}`} width={700}>
+      <div className="stack" style={{ padding: 'var(--space-4)' }}>
+        {err && <Alert variant="danger" title="Gagal">{err}</Alert>}
+
+        <div className="tz-table-wrap">
+          <table className="tz-table">
+            <thead>
+              <tr><th>NIDN</th><th>Nama</th><th>Peran</th><th></th></tr>
+            </thead>
+            <tbody>
+              {team.isLoading && <tr><td colSpan={4} className="muted center">Memuat…</td></tr>}
+              {team.data?.items.length === 0 && <tr><td colSpan={4} className="muted center">Belum ada anggota team.</td></tr>}
+              {team.data?.items.map((t) => (
+                <tr key={t.dosenId}>
+                  <td className="mono">{t.nidn}</td>
+                  <td>{[t.gelarDepan, t.nama, t.gelarBelakang].filter(Boolean).join(' ')}</td>
+                  <td>
+                    <Select value={t.peran} onChange={(e) => onChangePeran(t.dosenId, (e.target as HTMLSelectElement).value as KelasTeamItem['peran'])}>
+                      <option value="lead">Lead</option>
+                      <option value="anggota">Anggota</option>
+                      <option value="asisten">Asisten</option>
+                    </Select>
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    <Button size="sm" variant="ghost" leftIcon={<Trash2 size={12} />} disabled={t.peran === 'lead'} onClick={() => onRemove(t.dosenId, t.nama)}>Hapus</Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="row" style={{ gap: 'var(--space-3)', alignItems: 'flex-end' }}>
+          <div style={{ flex: 2 }}>
+            <Select label="Tambah dosen" value={addDosenId} onChange={(e) => setAddDosenId((e.target as HTMLSelectElement).value)}>
+              <option value="">— pilih dosen —</option>
+              {dosenAvailable.map((d) => (
+                <option key={d.id} value={d.id}>{[d.gelarDepan, d.nama, d.gelarBelakang].filter(Boolean).join(' ')} ({d.nidn})</option>
+              ))}
+            </Select>
+          </div>
+          <div style={{ flex: 1 }}>
+            <Select label="Peran" value={addPeran} onChange={(e) => setAddPeran((e.target as HTMLSelectElement).value as KelasTeamItem['peran'])}>
+              <option value="anggota">Anggota</option>
+              <option value="asisten">Asisten</option>
+              <option value="lead">Lead</option>
+            </Select>
+          </div>
+          <Button variant="primary" leftIcon={<Plus size={14} />} disabled={actions.add.isPending} onClick={onAdd}>Tambah</Button>
+        </div>
+
+        <div className="row" style={{ justifyContent: 'flex-end' }}>
+          <Button variant="ghost" onClick={onClose}>Tutup</Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 

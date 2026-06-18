@@ -10,7 +10,10 @@ dashboardRouter.get('/dashboard', async (req, res) => {
 
   const [kelasAktif, totalBimbingan, penelitianAktif, pengabdianAktif, pengumuman] = await Promise.all([
     prisma.kelas.findMany({
-      where: { dosenId: d.id, semesterId: semester.id },
+      where: {
+        semesterId: semester.id,
+        OR: [{ dosenId: d.id }, { team: { some: { dosenId: d.id } } }],
+      },
       include: {
         mataKuliah: true,
         ruangan: { select: { kode: true } },

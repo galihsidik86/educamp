@@ -5,6 +5,7 @@ import { getActiveSemester, getMahasiswaForUser } from '../../lib/context.js';
 import { BadRequest, Conflict, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
 import { calculateIp, dynamicMaxSks, hurufToBobot } from '../../lib/grade.js';
+import { formatDosenLabel } from '../../lib/dosen-format.js';
 
 export const krsRouter = Router();
 
@@ -39,36 +40,68 @@ krsRouter.get('/krs/penawaran', async (req, res) => {
   const m = await getMahasiswaForUser(req.user!.sub);
   const semester = await getActiveSemester();
 
+  // Filter: MK prodi mahasiswa ATAU MK wajib universitas (terbuka utk semua prodi)
   const kelas = await prisma.kelas.findMany({
     where: {
       semesterId: semester.id,
-      mataKuliah: { prodiId: m.prodiId },
+      OR: [
+        { mataKuliah: { prodiId: m.prodiId } },
+        { mataKuliah: { jenis: 'wajib_universitas' } },
+      ],
     },
     include: {
       mataKuliah: true,
       dosen: { select: { nidn: true, nama: true, gelarDepan: true, gelarBelakang: true } },
+      team: { include: { dosen: { select: { nama: true, gelarDepan: true, gelarBelakang: true } } } },
       ruangan: true,
       _count: { select: { krs: true } },
     },
     orderBy: [{ hari: 'asc' }, { jamMulai: 'asc' }],
   });
 
+  // Riwayat nilai mahasiswa — untuk MK yang sudah pernah lulus, tampilkan info
+  // supaya mahasiswa sadar (boleh ambil ulang utk perbaikan nilai, tapi tahu konteksnya).
+  const riwayat = await prisma.nilai.findMany({
+    where: { mahasiswaId: m.id, status: 'finalized' },
+    include: { krs: { include: { kelas: { select: { mataKuliahId: true } } } } },
+  });
+  type RiwayatRow = { lulus: boolean; nilaiHuruf: string | null; bobot: number };
+  const riwayatByMk = new Map<string, RiwayatRow>();
+  for (const n of riwayat) {
+    const mkId = n.krs.kelas.mataKuliahId;
+    const b = n.bobot ?? 0;
+    const cur = riwayatByMk.get(mkId);
+    if (!cur || cur.bobot < b) {
+      // Lulus = bobot >= 1.0 (huruf D atau lebih tinggi). E (0.0) berarti tidak lulus.
+      riwayatByMk.set(mkId, { lulus: b >= 1.0, nilaiHuruf: n.nilaiHuruf, bobot: b });
+    }
+  }
+
   res.json({
     semester: { kode: semester.kode, jenis: semester.jenis, krsSelesai: semester.krsSelesai },
-    kelas: kelas.map((k) => ({
-      id: k.id,
-      kodeMK: k.mataKuliah.kode,
-      namaMK: k.mataKuliah.nama,
-      sks: k.mataKuliah.sks,
-      kodeKelas: k.kodeKelas,
-      dosen: [k.dosen.gelarDepan, k.dosen.nama, k.dosen.gelarBelakang].filter(Boolean).join(' '),
-      ruangan: k.ruangan?.kode ?? null,
-      hari: k.hari,
-      jamMulai: k.jamMulai,
-      jamSelesai: k.jamSelesai,
-      kapasitas: k.kapasitas,
-      terisi: k._count.krs,
-    })),
+    kelas: kelas.map((k) => {
+      const r = riwayatByMk.get(k.mataKuliahId);
+      return {
+        id: k.id,
+        kodeMK: k.mataKuliah.kode,
+        namaMK: k.mataKuliah.nama,
+        sks: k.mataKuliah.sks,
+        jenisMK: k.mataKuliah.jenis,
+        kodeKelas: k.kodeKelas,
+        dosen: formatDosenLabel(k.dosen, k.team),
+        ruangan: k.ruangan?.kode ?? null,
+        hari: k.hari,
+        jamMulai: k.jamMulai,
+        jamSelesai: k.jamSelesai,
+        kapasitas: k.kapasitas,
+        terisi: k._count.krs,
+        riwayat: r ? {
+          lulus: r.lulus,
+          nilaiHuruf: r.nilaiHuruf,
+          bobot: r.bobot,
+        } : null,
+      };
+    }),
   });
 });
 
@@ -86,6 +119,7 @@ krsRouter.get('/krs', async (req, res) => {
         include: {
           mataKuliah: true,
           dosen: { select: { nama: true, gelarDepan: true, gelarBelakang: true } },
+          team: { include: { dosen: { select: { nama: true, gelarDepan: true, gelarBelakang: true } } } },
           ruangan: true,
         },
       },
@@ -128,7 +162,7 @@ krsRouter.get('/krs', async (req, res) => {
         namaMK: it.kelas.mataKuliah.nama,
         sks: it.kelas.mataKuliah.sks,
         kodeKelas: it.kelas.kodeKelas,
-        dosen: [it.kelas.dosen.gelarDepan, it.kelas.dosen.nama, it.kelas.dosen.gelarBelakang].filter(Boolean).join(' '),
+        dosen: formatDosenLabel(it.kelas.dosen, it.kelas.team),
         ruangan: it.kelas.ruangan?.kode ?? null,
         hari: it.kelas.hari,
         jamMulai: it.kelas.jamMulai,
@@ -169,7 +203,10 @@ krsRouter.post('/krs/items', async (req, res) => {
   });
   if (!kelas) throw NotFound('Kelas tidak ditemukan');
   if (kelas.semesterId !== semester.id) throw BadRequest('Kelas bukan dari semester aktif');
-  if (kelas.mataKuliah.prodiId !== m.prodiId) throw BadRequest('Kelas bukan dari prodi Anda');
+  // MK wajib_universitas terbuka utk semua prodi; selain itu harus dari prodi mahasiswa
+  if (kelas.mataKuliah.prodiId !== m.prodiId && kelas.mataKuliah.jenis !== 'wajib_universitas') {
+    throw BadRequest('Kelas bukan dari prodi Anda');
+  }
   if (kelas._count.krs >= kelas.kapasitas) throw Conflict('Kapasitas kelas penuh');
 
   // cek KRS existing

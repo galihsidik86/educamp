@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import crypto from 'node:crypto';
 import { prisma } from '../../db.js';
 import { BadRequest, Conflict, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
@@ -104,7 +105,20 @@ yudisiumRouter.patch('/yudisium/:id', async (req, res) => {
   const data: any = { ...body };
   if (body.tanggalLulus !== undefined) data.tanggalLulus = body.tanggalLulus ? new Date(body.tanggalLulus) : null;
 
+  // Auto-generate token verifikasi saat transisi pertama kali ke 'wisuda'
+  if (body.status === 'wisuda' && existing.status !== 'wisuda' && !existing.verifikasiToken) {
+    data.verifikasiToken = generateVerifikasiToken();
+  }
+
   const updated = await prisma.yudisium.update({ where: { id: existing.id }, data });
+
+  // Auto-sync mahasiswa.status → 'lulus' saat yudisium berstatus 'wisuda'
+  if (body.status === 'wisuda' && existing.status !== 'wisuda') {
+    await prisma.mahasiswa.update({
+      where: { id: updated.mahasiswaId },
+      data: { status: 'lulus' },
+    });
+  }
   void writeAudit(req, {
     action: 'yudisium.update.akademik',
     entity: 'yudisium',
@@ -135,3 +149,26 @@ yudisiumRouter.patch('/yudisium/:id', async (req, res) => {
 
   res.json(updated);
 });
+
+/** Generate / regen token verifikasi (untuk QR di ijazah & SKL). */
+yudisiumRouter.post('/yudisium/:id/regen-token', async (req, res) => {
+  const existing = await prisma.yudisium.findUnique({ where: { id: req.params.id } });
+  if (!existing) throw NotFound('Pendaftaran yudisium tidak ditemukan');
+  const token = generateVerifikasiToken();
+  const updated = await prisma.yudisium.update({
+    where: { id: existing.id },
+    data: { verifikasiToken: token },
+  });
+  void writeAudit(req, {
+    action: 'yudisium.regen_token',
+    entity: 'yudisium',
+    entityId: updated.id,
+    metadata: { tokenLama: existing.verifikasiToken },
+  });
+  res.json({ verifikasiToken: updated.verifikasiToken });
+});
+
+/** Helper: generate token URL-safe 16 char (~96 bit entropy). */
+function generateVerifikasiToken(): string {
+  return crypto.randomBytes(12).toString('base64url');
+}

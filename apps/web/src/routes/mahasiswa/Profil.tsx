@@ -1,15 +1,19 @@
-import { Card, Alert, Button } from '@/ds';
+import { useState } from 'react';
+import { Card, Alert, Button, Input } from '@/ds';
 import { useNavigate } from 'react-router-dom';
-import { IdCard } from 'lucide-react';
-import { useProfil } from '@/lib/queries';
+import { IdCard, Pencil } from 'lucide-react';
+import { useProfil, useUpdateProfil, type ProfilUpdate } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { ChangePasswordCard } from '@/components/ChangePasswordCard';
+import { Modal } from '@/components/Modal';
 import { formatTanggal } from '@/lib/format';
+import { ApiError } from '@/lib/api';
 
 export function MahasiswaProfil() {
   const { data, isLoading, error } = useProfil();
   const navigate = useNavigate();
+  const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) return <p className="muted">Memuat profil…</p>;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat profil">Coba muat ulang.</Alert>;
@@ -27,6 +31,9 @@ export function MahasiswaProfil() {
         right={
           <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
             <StatusPill status={data.status} />
+            <Button variant="ghost" size="sm" leftIcon={<Pencil size={14} />} onClick={() => setEditOpen(true)}>
+              Edit Profil
+            </Button>
             <Button variant="ghost" size="sm" leftIcon={<IdCard size={14} />} onClick={() => navigate('/mahasiswa/profil/kartu')}>
               Cetak Kartu
             </Button>
@@ -56,12 +63,73 @@ export function MahasiswaProfil() {
         </Card>
       </div>
 
-      <Alert variant="info" title="Edit profil belum tersedia">
-        Perubahan data identitas hubungi BAAK. Untuk ganti password, gunakan formulir di bawah.
+      <Alert variant="info" title="Data identitas inti">
+        NIM, nama, jenis kelamin, prodi, dan status hanya bisa diubah oleh BAAK. Kontak (alamat, telepon, tempat/tgl lahir) bisa Anda perbarui sendiri lewat <strong>Edit Profil</strong>.
       </Alert>
 
       <ChangePasswordCard />
+
+      {editOpen && (
+        <EditProfilModal
+          initial={{
+            tempatLahir: data.tempatLahir,
+            tanggalLahir: data.tanggalLahir,
+            alamat: data.alamat,
+            telepon: data.telepon,
+          }}
+          onClose={() => setEditOpen(false)}
+        />
+      )}
     </div>
+  );
+}
+
+function EditProfilModal({ initial, onClose }: { initial: ProfilUpdate; onClose: () => void }) {
+  const update = useUpdateProfil();
+  const [form, setForm] = useState<ProfilUpdate>({
+    tempatLahir: initial.tempatLahir ?? '',
+    tanggalLahir: initial.tanggalLahir ? String(initial.tanggalLahir).slice(0, 10) : '',
+    alamat: initial.alamat ?? '',
+    telepon: initial.telepon ?? '',
+  });
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr(null);
+    try {
+      await update.mutateAsync({
+        tempatLahir: form.tempatLahir || null,
+        tanggalLahir: form.tanggalLahir || null,
+        alamat: form.alamat || null,
+        telepon: form.telepon || null,
+      });
+      onClose();
+    } catch (e) {
+      setErr(e instanceof ApiError ? e.message : 'Gagal menyimpan');
+    }
+  };
+
+  return (
+    <Modal open onClose={onClose} title="Edit Profil" width={520}>
+      <form onSubmit={submit} className="stack">
+        {err && <Alert variant="danger" title="Gagal">{err}</Alert>}
+        <div className="row" style={{ gap: 'var(--space-3)' }}>
+          <div style={{ flex: 1 }}>
+            <Input label="Tempat lahir" value={form.tempatLahir ?? ''} onChange={(e) => setForm({ ...form, tempatLahir: (e.target as HTMLInputElement).value })} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <Input label="Tanggal lahir" type="date" value={form.tanggalLahir ?? ''} onChange={(e) => setForm({ ...form, tanggalLahir: (e.target as HTMLInputElement).value })} />
+          </div>
+        </div>
+        <Input label="Telepon" value={form.telepon ?? ''} onChange={(e) => setForm({ ...form, telepon: (e.target as HTMLInputElement).value })} placeholder="081234567890" />
+        <Input label="Alamat" value={form.alamat ?? ''} onChange={(e) => setForm({ ...form, alamat: (e.target as HTMLInputElement).value })} />
+        <div className="row" style={{ justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+          <Button variant="ghost" type="button" onClick={onClose}>Batal</Button>
+          <Button variant="primary" type="submit" disabled={update.isPending}>{update.isPending ? 'Menyimpan…' : 'Simpan'}</Button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 

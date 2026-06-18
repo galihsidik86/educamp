@@ -7,6 +7,7 @@ import { Button, Input, Alert } from '@/ds';
 import { useAuth } from '@/lib/auth';
 import { ApiError } from '@/lib/api';
 import { roleHomePath } from '@/lib/routing';
+import { useInstitusiPublic } from '@/lib/queries-institusi';
 
 const schema = z.object({
   identifier: z.string().min(3, 'Masukkan email atau NIM'),
@@ -17,6 +18,8 @@ type FormData = z.infer<typeof schema>;
 
 export function Login() {
   const { state, login } = useAuth();
+  const inst = useInstitusiPublic();
+  const namaPendek = inst.data?.namaPendek || inst.data?.nama || 'STMIK Tazkia';
   const navigate = useNavigate();
   const location = useLocation();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -48,12 +51,12 @@ export function Login() {
         <div>
           <span className="login__eyebrow">PORTAL AKADEMIK</span>
           <div className="login__hero">
-            <h1>Assalamu'alaikum,<br/>selamat datang di SIAKAD Tazkia</h1>
+            <h1>Assalamu'alaikum,<br/>selamat datang di SIAKAD {namaPendek}</h1>
             <p>Akses Kartu Rencana Studi, jadwal, nilai, keuangan, dan layanan Tri Dharma dalam satu portal.</p>
           </div>
         </div>
         <div>
-          <small style={{ opacity: 0.7 }}>STMIK Tazkia · Kampus Luar Biasa!</small>
+          <small style={{ opacity: 0.7 }}>{namaPendek}{inst.data?.tagline ? ` · ${inst.data.tagline}` : ''}</small>
         </div>
       </aside>
 
@@ -89,7 +92,7 @@ export function Login() {
           </Button>
 
           <p className="muted" style={{ fontSize: 'var(--text-xs)', textAlign: 'center' }}>
-            Lupa password? Hubungi BAAK STMIK Tazkia.
+            Lupa password? Hubungi BAAK {namaPendek}.
           </p>
         </form>
       </section>

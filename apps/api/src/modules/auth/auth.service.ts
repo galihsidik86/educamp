@@ -29,16 +29,19 @@ export async function login(identifier: string, password: string, meta: { userAg
 
   const jti = crypto.randomUUID();
   const refreshToken = signRefreshToken({ sub: user.id, jti });
-  await prisma.refreshToken.create({
-    data: {
-      id: jti,
-      userId: user.id,
-      tokenHash: hashToken(refreshToken),
-      expiresAt: refreshExpiresAt(),
-      userAgent: meta.userAgent?.slice(0, 255),
-      ip: meta.ip?.slice(0, 64),
-    },
-  });
+  await prisma.$transaction([
+    prisma.refreshToken.create({
+      data: {
+        id: jti,
+        userId: user.id,
+        tokenHash: hashToken(refreshToken),
+        expiresAt: refreshExpiresAt(),
+        userAgent: meta.userAgent?.slice(0, 255),
+        ip: meta.ip?.slice(0, 64),
+      },
+    }),
+    prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
+  ]);
 
   return { accessToken, refreshToken, user };
 }
@@ -104,7 +107,10 @@ export async function changePassword(userId: string, currentPassword: string, ne
   if (!ok) throw BadRequest('Password lama salah');
 
   const hash = await hashPassword(newPassword);
-  await prisma.user.update({ where: { id: user.id }, data: { passwordHash: hash } });
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash: hash, passwordMustChange: false },
+  });
 
   // revoke semua refresh token aktif (paksa relogin di device lain)
   await prisma.refreshToken.updateMany({

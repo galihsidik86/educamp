@@ -1,6 +1,9 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { getActiveSemester, getMahasiswaForUser } from '../../lib/context.js';
+import { BadRequest, NotFound } from '../../lib/errors.js';
+import { writeAudit } from '../../lib/audit.js';
 
 export const absensiRouter = Router();
 
@@ -42,6 +45,8 @@ absensiRouter.get('/absensi', async (req, res) => {
       topik: string | null;
       status: string | null;
       catatan: string | null;
+      tanggalAsli: string | null;
+      alasanReschedule: string | null;
     }> = [];
     for (const p of k.kelas.pertemuan) {
       const a = p.absensi[0];
@@ -56,6 +61,8 @@ absensiRouter.get('/absensi', async (req, res) => {
         topik: p.topik,
         status,
         catatan: a?.catatan ?? null,
+        tanggalAsli: p.tanggalAsli ? p.tanggalAsli.toISOString() : null,
+        alasanReschedule: p.alasanReschedule,
       });
     }
     const persentaseHadir = totalDinilai > 0 ? Math.round((c.hadir / totalDinilai) * 100) : null;
@@ -76,3 +83,79 @@ absensiRouter.get('/absensi', async (req, res) => {
 
   res.json({ items });
 });
+
+const submitPinSchema = z.object({
+  pin: z.string().regex(/^\d{6}$/, 'PIN harus 6 digit angka'),
+});
+
+/**
+ * Mahasiswa submit PIN untuk self check-in.
+ * - Cari pertemuan dengan PIN aktif (belum expired)
+ * - Validasi mahasiswa adalah peserta KRS disetujui di kelas-nya
+ * - Cegah double submit (sudah hadir/izin/sakit/alpa di pertemuan tsb)
+ * - Catat IP + UA untuk audit anti-titip absen
+ */
+absensiRouter.post('/absensi/pin', async (req, res) => {
+  const m = await getMahasiswaForUser(req.user!.sub);
+  const { pin } = submitPinSchema.parse(req.body);
+  const now = new Date();
+
+  const pertemuan = await prisma.pertemuan.findFirst({
+    where: { pinKehadiran: pin, pinExpiresAt: { gt: now } },
+    include: { kelas: { include: { mataKuliah: { select: { kode: true, nama: true } } } } },
+  });
+  if (!pertemuan) throw BadRequest('PIN tidak valid atau sudah kedaluwarsa');
+
+  // Validasi peserta
+  const krs = await prisma.krs.findFirst({
+    where: { mahasiswaId: m.id, kelasId: pertemuan.kelasId, status: 'disetujui' },
+  });
+  if (!krs) throw BadRequest('Anda bukan peserta kelas pertemuan ini');
+
+  // Cek apakah sudah ada absensi
+  const existing = await prisma.absensi.findUnique({
+    where: { pertemuanId_mahasiswaId: { pertemuanId: pertemuan.id, mahasiswaId: m.id } },
+  });
+  if (existing && existing.status === 'hadir') {
+    throw BadRequest('Anda sudah tercatat hadir untuk pertemuan ini');
+  }
+
+  const data = {
+    status: 'hadir' as const,
+    inputViaPin: true,
+    inputPada: now,
+    inputIp: req.ip?.slice(0, 64),
+    inputUserAgent: req.headers['user-agent']?.slice(0, 255),
+  };
+
+  const absensi = await prisma.absensi.upsert({
+    where: { pertemuanId_mahasiswaId: { pertemuanId: pertemuan.id, mahasiswaId: m.id } },
+    create: { pertemuanId: pertemuan.id, mahasiswaId: m.id, ...data },
+    update: data,
+  });
+
+  void writeAudit(req, {
+    action: 'absensi.pin.submit',
+    entity: 'absensi',
+    entityId: absensi.id,
+    metadata: { pertemuanId: pertemuan.id, kelasId: pertemuan.kelasId, ip: data.inputIp },
+  });
+
+  res.json({
+    ok: true,
+    pertemuan: {
+      pertemuanKe: pertemuan.pertemuanKe,
+      tanggal: pertemuan.tanggal,
+      topik: pertemuan.topik,
+    },
+    kelas: {
+      kodeMK: pertemuan.kelas.mataKuliah.kode,
+      namaMK: pertemuan.kelas.mataKuliah.nama,
+      kodeKelas: pertemuan.kelas.kodeKelas,
+    },
+    inputPada: data.inputPada,
+  });
+});
+
+// Use NotFound import (avoid unused) — helper might extend later
+void NotFound;

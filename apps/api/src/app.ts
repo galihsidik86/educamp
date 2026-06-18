@@ -16,8 +16,13 @@ import { authRouter } from './modules/auth/auth.routes.js';
 import { mahasiswaRouter } from './modules/mahasiswa/index.js';
 import { dosenRouter } from './modules/dosen/index.js';
 import { akademikRouter } from './modules/akademik/index.js';
+import { waliRouter } from './modules/wali/index.js';
 import { notifikasiRouter } from './modules/notifikasi/index.js';
 import { forumRouter } from './modules/forum/index.js';
+import { kalenderSharedRouter } from './modules/kalender/index.js';
+import { dokumenSharedRouter } from './modules/dokumen/index.js';
+import { verifikasiRouter } from './modules/verifikasi/index.js';
+import { institusiPublicRouter } from './modules/akademik/institusi.js';
 
 export function createApp(): Express {
   const app = express();
@@ -42,12 +47,20 @@ export function createApp(): Express {
     res.json({ ok: true, service: 'siakad-api', env: env.NODE_ENV, ts: new Date().toISOString() });
   });
 
+  // Public endpoint untuk verifikasi ijazah (no auth)
+  app.use('/verifikasi', verifikasiRouter);
+  // Identitas kampus (no auth) — utk sidebar, kop laporan, halaman verifikasi
+  app.use('/public', institusiPublicRouter);
+
   app.use('/auth', authRouter);
   app.use('/notifikasi', notifikasiRouter);
   app.use('/forum', forumRouter);
+  app.use('/kalender', kalenderSharedRouter);
+  app.use('/dokumen', dokumenSharedRouter);
   app.use('/mahasiswa', mahasiswaRouter);
   app.use('/dosen', dosenRouter);
   app.use('/akademik', akademikRouter);
+  app.use('/wali', waliRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

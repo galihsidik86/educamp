@@ -184,3 +184,112 @@ describe('Laporan kehadiran akademik', () => {
     expect(k1.kritis).toBe(0);
   });
 });
+
+describe('Reschedule pertemuan', () => {
+  async function buatPertemuan(token: string, tanggal: string) {
+    const r = await request(app)
+      .post(`/dosen/kelas/${f.kelas1.id}/pertemuan`).set('Authorization', `Bearer ${token}`)
+      .send({ tanggal, topik: 'Sesi A' });
+    return r.body.id as string;
+  }
+
+  it('reschedule valid → tanggalAsli ter-snapshot + notif ke peserta', async () => {
+    const token = await loginAs(request(app), f.dosenUser.email);
+    const id = await buatPertemuan(token, '2026-09-07T08:00');
+
+    const r = await request(app)
+      .post(`/dosen/pertemuan/${id}/reschedule`).set('Authorization', `Bearer ${token}`)
+      .send({
+        tanggal: '2026-09-09T13:00',
+        alasan: 'Dosen ada dinas luar kota, dipindah ke Rabu sore.',
+      });
+    expect(r.status).toBe(200);
+    expect(new Date(r.body.tanggal).toISOString()).toBe(new Date('2026-09-09T13:00').toISOString());
+    expect(new Date(r.body.tanggalAsli).toISOString()).toBe(new Date('2026-09-07T08:00').toISOString());
+    expect(r.body.alasanReschedule).toMatch(/dinas/i);
+
+    await new Promise((res) => setTimeout(res, 200));
+    const notif = await prisma.notifikasi.findMany({ where: { userId: f.mahasiswaUser.id, type: 'jadwal' } });
+    expect(notif.length).toBeGreaterThan(0);
+    expect(notif[0]!.title).toMatch(/dipindah/i);
+  });
+
+  it('reschedule kedua kali → tanggalAsli tetap snapshot pertama', async () => {
+    const token = await loginAs(request(app), f.dosenUser.email);
+    const id = await buatPertemuan(token, '2026-09-07T08:00');
+    await request(app).post(`/dosen/pertemuan/${id}/reschedule`).set('Authorization', `Bearer ${token}`)
+      .send({ tanggal: '2026-09-09T13:00', alasan: 'Dipindah pertama kali karena dosen sakit.' });
+    const r = await request(app).post(`/dosen/pertemuan/${id}/reschedule`).set('Authorization', `Bearer ${token}`)
+      .send({ tanggal: '2026-09-10T13:00', alasan: 'Dipindah lagi karena ruangan rusak.' });
+    expect(new Date(r.body.tanggalAsli).toISOString()).toBe(new Date('2026-09-07T08:00').toISOString());
+    expect(new Date(r.body.tanggal).toISOString()).toBe(new Date('2026-09-10T13:00').toISOString());
+  });
+
+  it('alasan terlalu pendek → 400', async () => {
+    const token = await loginAs(request(app), f.dosenUser.email);
+    const id = await buatPertemuan(token, '2026-09-07T08:00');
+    const r = await request(app).post(`/dosen/pertemuan/${id}/reschedule`).set('Authorization', `Bearer ${token}`)
+      .send({ tanggal: '2026-09-09T13:00', alasan: 'X' });
+    expect(r.status).toBe(400);
+  });
+
+  it('tanggal baru sama dengan tanggal saat ini → 400', async () => {
+    const token = await loginAs(request(app), f.dosenUser.email);
+    const id = await buatPertemuan(token, '2026-09-07T08:00');
+    const r = await request(app).post(`/dosen/pertemuan/${id}/reschedule`).set('Authorization', `Bearer ${token}`)
+      .send({ tanggal: '2026-09-07T08:00', alasan: 'Test alasan dummy untuk validasi.' });
+    expect(r.status).toBe(400);
+  });
+
+  it('bentrok ruangan → 400', async () => {
+    const token = await loginAs(request(app), f.dosenUser.email);
+    // Buat pertemuan A di ruang R-T01 jam 13:00
+    const a = await buatPertemuan(token, '2026-09-09T13:00');
+    await request(app).post(`/dosen/pertemuan/${a}/reschedule`).set('Authorization', `Bearer ${token}`)
+      .send({ tanggal: '2026-09-09T13:00', alasan: 'Tidak akan dipakai.', ruanganId: f.ruangan.id }).catch(() => {/* ignore — same date */});
+    // Set ruangan ke pertemuan A langsung
+    await prisma.pertemuan.update({ where: { id: a }, data: { ruanganId: f.ruangan.id } });
+
+    // Buat pertemuan B di kelas berbeda, coba reschedule ke slot bentrok dengan A
+    const b = await request(app)
+      .post(`/dosen/kelas/${f.kelas2.id}/pertemuan`).set('Authorization', `Bearer ${token}`)
+      .send({ tanggal: '2026-09-10T08:00' });
+    const r = await request(app).post(`/dosen/pertemuan/${b.body.id}/reschedule`).set('Authorization', `Bearer ${token}`)
+      .send({ tanggal: '2026-09-09T13:30', ruanganId: f.ruangan.id, alasan: 'Coba pakai ruangan yang sama padahal bentrok.' });
+    expect(r.status).toBe(400);
+    expect(r.body.error.message).toMatch(/ruangan/i);
+  });
+
+  it('bentrok jadwal dosen sendiri (kelas lain) → 400', async () => {
+    const token = await loginAs(request(app), f.dosenUser.email);
+    // Pertemuan di kelas1 jam 13:00
+    const a = await buatPertemuan(token, '2026-09-09T13:00');
+    // Pertemuan kelas2 → coba reschedule ke slot yang bentrok dengan kelas1
+    const b = await request(app)
+      .post(`/dosen/kelas/${f.kelas2.id}/pertemuan`).set('Authorization', `Bearer ${token}`)
+      .send({ tanggal: '2026-09-10T08:00' });
+    const r = await request(app).post(`/dosen/pertemuan/${b.body.id}/reschedule`).set('Authorization', `Bearer ${token}`)
+      .send({ tanggal: '2026-09-09T13:30', alasan: 'Tabrakan dengan kelas saya sendiri.' });
+    expect(r.status).toBe(400);
+    expect(r.body.error.message).toMatch(/bentrok|pertemuan/i);
+    void a;
+  });
+
+  it('dosen lain tidak boleh reschedule', async () => {
+    const dosenToken = await loginAs(request(app), f.dosenUser.email);
+    const id = await buatPertemuan(dosenToken, '2026-09-07T08:00');
+
+    const pw = (await import('../../src/lib/password.js')).hashPassword;
+    const h = await pw('password123');
+    await prisma.user.create({
+      data: {
+        email: 'dosen-x@test.id', passwordHash: h, role: 'dosen',
+        dosen: { create: { nidn: '8888888888', nama: 'Dosen X', prodiId: f.prodi.id } },
+      },
+    });
+    const xToken = await loginAs(request(app), 'dosen-x@test.id');
+    const r = await request(app).post(`/dosen/pertemuan/${id}/reschedule`).set('Authorization', `Bearer ${xToken}`)
+      .send({ tanggal: '2026-09-09T13:00', alasan: 'Dosen lain coba reschedule.' });
+    expect(r.status).toBe(403);
+  });
+});

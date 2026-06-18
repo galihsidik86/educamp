@@ -24,5 +24,10 @@ export function ProtectedRoute({ role, children }: { role: Role; children: React
     return <Navigate to={home} replace />;
   }
 
+  // Forced password change → blokir akses sampai user ganti password.
+  if (state.user.passwordMustChange && location.pathname !== '/ganti-password') {
+    return <Navigate to="/ganti-password" replace />;
+  }
+
   return <>{children}</>;
 }

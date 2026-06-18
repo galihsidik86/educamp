@@ -2,8 +2,11 @@ import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Printer } from 'lucide-react';
 import { Button } from '@/ds';
+import { NamaInstitusiText } from '@/components/KopInstitusi';
+import { QRCodeSVG } from 'qrcode.react';
 import { useYudisium, useProfil } from '@/lib/queries';
 import { formatIp, formatTanggal } from '@/lib/format';
+import { useInstitusiPublic } from '@/lib/queries-institusi';
 
 const PREDIKAT_LABEL: Record<string, string> = {
   cumlaude: 'Cumlaude',
@@ -16,6 +19,8 @@ export function MahasiswaYudisiumCetakSkl() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const profil = useProfil();
+  const inst = useInstitusiPublic();
+  const namaInst = inst.data?.nama || 'Institut Agama Islam Tazkia';
   const list = useYudisium();
 
   useEffect(() => {
@@ -45,7 +50,7 @@ export function MahasiswaYudisiumCetakSkl() {
       <div className="krs-cetak__sheet">
         <header className="krs-cetak__head">
           <div className="krs-cetak__brand">
-            <strong>INSTITUT AGAMA ISLAM TAZKIA</strong>
+            <strong><NamaInstitusiText /></strong>
             <div>{profil.data.prodi.fakultas.nama}</div>
             <div>Program Studi {profil.data.prodi.nama}</div>
           </div>
@@ -54,7 +59,7 @@ export function MahasiswaYudisiumCetakSkl() {
         </header>
 
         <p style={{ margin: '0 0 var(--space-3)', textIndent: '2em', lineHeight: 1.7 }}>
-          Yang bertanda tangan di bawah ini, Kepala Bagian Akademik Institut Agama Islam Tazkia, dengan ini menerangkan bahwa:
+          Yang bertanda tangan di bawah ini, Kepala Bagian Akademik {namaInst}, dengan ini menerangkan bahwa:
         </p>
 
         <table className="krs-cetak__bio" style={{ marginBottom: 'var(--space-4)' }}>
@@ -101,7 +106,17 @@ export function MahasiswaYudisiumCetakSkl() {
         </p>
 
         <div className="krs-cetak__ttd">
-          <div></div>
+          {y.verifikasiToken ? (
+            <div style={{ textAlign: 'center', fontSize: 'var(--text-xs)' }}>
+              <div style={{ padding: 'var(--space-2)', background: 'white', display: 'inline-block', border: '1px solid #999' }}>
+                <QRCodeSVG value={`${window.location.origin}/verifikasi/${y.verifikasiToken}`} size={96} includeMargin={false} />
+              </div>
+              <div className="muted" style={{ marginTop: 4 }}>Pindai untuk verifikasi</div>
+              <div className="mono muted" style={{ fontSize: '10px', wordBreak: 'break-all', maxWidth: 120 }}>
+                {window.location.origin}/verifikasi/{y.verifikasiToken}
+              </div>
+            </div>
+          ) : <div></div>}
           <div>
             <div>Bogor, {tanggalCetak}</div>
             <div>Kepala Bagian Akademik</div>

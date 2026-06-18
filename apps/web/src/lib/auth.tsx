@@ -1,16 +1,19 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { apiGet, apiPost, tokenStore, ApiError } from './api';
 
-export type Role = 'mahasiswa' | 'dosen' | 'akademik';
+export type Role = 'mahasiswa' | 'dosen' | 'akademik' | 'wali';
 
 export type AuthUser = {
   id: string;
   email: string;
   role: Role;
+  passwordMustChange?: boolean;
+  isActive?: boolean;
   // profile details from /auth/me
   mahasiswa?: { nim: string; nama: string; angkatan: number; prodi: { kode: string; nama: string; fakultas: { nama: string } } } | null;
   dosen?: { nidn: string; nama: string; gelarDepan?: string | null; gelarBelakang?: string | null; prodi: { kode: string; nama: string } } | null;
   akademik?: { nama: string; jabatan?: string | null } | null;
+  wali?: { nama: string; telepon: string | null } | null;
 };
 
 type AuthState =

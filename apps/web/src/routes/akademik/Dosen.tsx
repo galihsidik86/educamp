@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Alert, Button, Input, Select } from '@/ds';
-import { Plus, Pencil, Trash2, KeyRound } from 'lucide-react';
+import { Plus, Pencil, Trash2, KeyRound, Upload } from 'lucide-react';
 import { useAdminDosen, useDosenActions, useProdi, type AdminDosen, type CreateDosenInput } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { ExcelImportModal } from '@/components/ExcelImportModal';
 import { ApiError } from '@/lib/api';
 import { formatStatus } from '@/lib/format';
 
@@ -15,6 +16,7 @@ export function AdminDosenPage() {
   const prodi = useProdi();
   const actions = useDosenActions();
   const [modal, setModal] = useState<{ mode: 'create' } | { mode: 'edit'; dosen: AdminDosen } | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const onDelete = async (d: AdminDosen) => {
     if (!confirm(`Hapus dosen ${d.nidn} — ${d.nama}? Akun & semua data terkait akan dihapus.`)) return;
@@ -36,7 +38,12 @@ export function AdminDosenPage() {
         eyebrow="MASTER DATA"
         title="Dosen"
         subtitle="Kelola data dosen & akun login."
-        right={<Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setModal({ mode: 'create' })}>Tambah Dosen</Button>}
+        right={
+          <div className="row" style={{ gap: 'var(--space-2)' }}>
+            <Button variant="ghost" leftIcon={<Upload size={16} />} onClick={() => setImportOpen(true)}>Import Excel</Button>
+            <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setModal({ mode: 'create' })}>Tambah Dosen</Button>
+          </div>
+        }
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
@@ -100,6 +107,22 @@ export function AdminDosenPage() {
           }}
         />
       )}
+
+      <ExcelImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import Dosen via Excel"
+        expectedHeaders={['nidn', 'nama', 'email', 'prodiKode']}
+        optionalHeaders={['gelarDepan', 'gelarBelakang', 'jabatanFungsional', 'jabatanStruktural', 'isDpa']}
+        templateFilename="template-dosen.xlsx"
+        keyHeader="NIDN"
+        notes={<>Password awal = NIDN. Prodi via kode. <code>jabatanFungsional</code>: asisten_ahli/lektor/lektor_kepala/guru_besar/tenaga_pengajar. <code>isDpa</code>: true/false.</>}
+        sampleRows={[
+          { nidn: '0412019001', nama: 'Dr. Andi Setiawan', email: 'andi.setiawan@tazkia.ac.id', prodiKode: '55201', gelarDepan: 'Dr.', gelarBelakang: 'M.Kom.', jabatanFungsional: 'lektor', jabatanStruktural: '', isDpa: 'true' },
+          { nidn: '0412019002', nama: 'Siti Aminah', email: 'siti.aminah@tazkia.ac.id', prodiKode: '55201', gelarBelakang: 'M.T.', jabatanFungsional: 'asisten_ahli' },
+        ]}
+        importMutation={actions.importCsv}
+      />
     </div>
   );
 }

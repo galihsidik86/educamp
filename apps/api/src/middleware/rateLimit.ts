@@ -30,3 +30,16 @@ export const writeLimiter = rateLimit({
   message: { error: { code: 'TOO_MANY_REQUESTS', message: 'Permintaan terlalu sering, tunggu sebentar.' } },
   skip: () => (env.NODE_ENV as string) === 'test',
 });
+
+/**
+ * Rate-limit endpoint verifikasi ijazah publik — mencegah brute-force token.
+ * 20 req / menit / IP.
+ */
+export const rateLimitVerifikasi = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 20,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: { code: 'TOO_MANY_REQUESTS', message: 'Terlalu banyak permintaan verifikasi.' } },
+  skip: () => (env.NODE_ENV as string) === 'test',
+});

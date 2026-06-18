@@ -11,7 +11,15 @@ import { Modal } from '@/components/Modal';
 import { formatRupiah, formatTanggal, formatStatus } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
-const JENIS = ['spp', 'pembangunan', 'praktikum', 'wisuda', 'ujian', 'lainnya'] as const;
+const JENIS = ['ukt', 'uang_pangkal', 'praktikum', 'wisuda', 'ujian', 'lainnya'] as const;
+const JENIS_LABEL: Record<(typeof JENIS)[number], string> = {
+  ukt: 'UKT',
+  uang_pangkal: 'Uang Pangkal',
+  praktikum: 'Praktikum',
+  wisuda: 'Wisuda',
+  ujian: 'Ujian',
+  lainnya: 'Lainnya',
+};
 const METODE: PembayaranInput['metode'][] = ['transfer_bank', 'va', 'tunai', 'qris', 'ewallet'];
 
 export function AdminKeuangan() {
@@ -109,8 +117,8 @@ function BulkModal({ onClose }: { onClose: () => void }) {
   const actions = useKeuanganActions();
   const [form, setForm] = useState<Partial<BulkTagihanInput>>({
     semesterId: aktif?.id ?? '',
-    jenis: 'spp',
-    deskripsi: 'SPP Semester',
+    jenis: 'ukt',
+    deskripsi: 'UKT Semester',
     jumlah: 4500000,
     jatuhTempo: '',
     prodiId: undefined,
@@ -144,7 +152,7 @@ function BulkModal({ onClose }: { onClose: () => void }) {
         <div className="row" style={{ gap: 'var(--space-3)' }}>
           <div style={{ flex: 1 }}>
             <Select label="Jenis" value={form.jenis} onChange={(e) => setForm({ ...form, jenis: (e.target as HTMLSelectElement).value })}>
-              {JENIS.map((j) => <option key={j} value={j}>{formatStatus(j)}</option>)}
+              {JENIS.map((j) => <option key={j} value={j}>{JENIS_LABEL[j]}</option>)}
             </Select>
           </div>
           <div style={{ flex: 2 }}>

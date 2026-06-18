@@ -45,3 +45,31 @@ export function parseCsv(text: string): { headers: string[]; rows: Record<string
   });
   return { headers, rows };
 }
+
+/** Bungkus nilai dengan tanda kutip jika mengandung koma/quote/newline. */
+function csvCell(v: string): string {
+  if (/[",\n\r]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
+  return v;
+}
+
+/**
+ * Buat string CSV dari header + baris contoh, lalu picu download di browser.
+ * `sampleRows` opsional — kalau diisi, jadi baris contoh siap edit.
+ */
+export function downloadCsvTemplate(filename: string, headers: readonly string[], sampleRows: Array<Record<string, string | number | undefined>> = []) {
+  const lines = [headers.join(',')];
+  for (const row of sampleRows) {
+    lines.push(headers.map((h) => csvCell(String(row[h] ?? ''))).join(','));
+  }
+  const csv = lines.join('\n') + '\n';
+  // BOM agar Excel mengenali UTF-8 (penting kalau ada karakter non-ASCII)
+  const blob = new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}

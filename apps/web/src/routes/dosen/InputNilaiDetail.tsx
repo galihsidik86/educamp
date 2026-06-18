@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Alert, Button, Card } from '@/ds';
-import { ChevronLeft, Save, CheckCircle2 } from 'lucide-react';
-import { useDosenKelasDetail, useUpdateNilai, type NilaiPatch } from '@/lib/queries-dosen';
+import { ChevronLeft, Save, CheckCircle2, Upload } from 'lucide-react';
+import { useDosenKelasDetail, useUpdateNilai, useFinalizeAllNilai, useImportNilai, type NilaiPatch } from '@/lib/queries-dosen';
+import { ExcelImportModal } from '@/components/ExcelImportModal';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { capitalize, formatTanggal } from '@/lib/format';
@@ -42,6 +43,21 @@ export function DosenInputNilaiDetail() {
   const { kelasId } = useParams<{ kelasId: string }>();
   const { data, isLoading, error } = useDosenKelasDetail(kelasId);
   const update = useUpdateNilai(kelasId);
+  const finalizeAll = useFinalizeAllNilai(kelasId);
+  const importNilai = useImportNilai(kelasId);
+  const [batchMsg, setBatchMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+
+  const handleFinalizeAll = async () => {
+    if (!confirm('Finalisasi semua nilai yang sudah lengkap di kelas ini? Mahasiswa akan menerima notifikasi.')) return;
+    setBatchMsg(null);
+    try {
+      const r = await finalizeAll.mutateAsync();
+      setBatchMsg({ ok: r.ok, text: r.message });
+    } catch (e) {
+      setBatchMsg({ ok: false, text: e instanceof ApiError ? e.message : 'Gagal finalisasi batch' });
+    }
+  };
   const [rows, setRows] = useState<Record<string, RowDraft>>({});
 
   useEffect(() => {
@@ -104,7 +120,48 @@ export function DosenInputNilaiDetail() {
         eyebrow={`KELAS ${k.kodeKelas} · ${k.semester.nama.toUpperCase()}`}
         title={k.namaMK}
         subtitle={`${k.kodeMK} · ${k.sks} SKS · ${k.hari ? capitalize(k.hari) + ', ' + k.jamMulai + '–' + k.jamSelesai : '—'}${k.ruangan ? ' · ' + k.ruangan : ''}`}
+        right={
+          <div className="row" style={{ gap: 6 }}>
+            <Link to={`/dosen/nilai/${k.id}/cpmk`}>
+              <Button variant="ghost" size="sm">Input Nilai CPMK</Button>
+            </Link>
+            <Button variant="ghost" size="sm" leftIcon={<Upload size={14} />} disabled={!periodeAktif} onClick={() => setImportOpen(true)}>
+              Import Excel
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              leftIcon={<CheckCircle2 size={14} />}
+              disabled={!periodeAktif || finalizeAll.isPending}
+              onClick={handleFinalizeAll}
+            >
+              {finalizeAll.isPending ? 'Memproses…' : 'Finalisasi Semua'}
+            </Button>
+          </div>
+        }
       />
+
+      {batchMsg && (
+        <Alert variant={batchMsg.ok ? 'success' : 'warning'} title={batchMsg.ok ? 'Selesai' : 'Perhatian'}>
+          {batchMsg.text}
+        </Alert>
+      )}
+
+      {k.team && k.team.length > 1 && (
+        <Card>
+          <div className="muted" style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+            Team Teaching · Peran Anda: {capitalize(k.peran)}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+            {k.team.map((t) => (
+              <span key={t.dosenId} style={{ padding: '2px 8px', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', fontSize: 'var(--text-xs)' }}>
+                <span className="mono muted" style={{ marginRight: 4 }}>{capitalize(t.peran)}:</span>
+                {[t.gelarDepan, t.nama, t.gelarBelakang].filter(Boolean).join(' ')}
+              </span>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {!periodeAktif && (
         <Alert variant="warning" title="Periode penilaian telah ditutup">
@@ -170,6 +227,19 @@ export function DosenInputNilaiDetail() {
           Untuk menfinalisasi, nilai angka harus terisi.
         </p>
       </Card>
+
+      <ExcelImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        title={`Import Nilai · ${k.kodeMK} ${k.kodeKelas}`}
+        expectedHeaders={['nim']}
+        optionalHeaders={['tugas', 'uts', 'uas', 'praktikum', 'kehadiran', 'nilaiAngka', 'status']}
+        templateFilename={`template-nilai-${k.kodeMK}-${k.kodeKelas}.xlsx`}
+        keyHeader="NIM"
+        notes={<>Nilai komponen 0–100. <code>nilaiAngka</code> opsional — kalau diisi, huruf & bobot dihitung otomatis. <code>status</code>: belum/draft/finalized (default <code>draft</code>; <code>finalized</code> wajib punya nilaiAngka).</>}
+        sampleRows={data.peserta.slice(0, 3).map((p) => ({ nim: p.mahasiswa.nim, tugas: 80, uts: 75, uas: 78, kehadiran: 95 }))}
+        importMutation={importNilai}
+      />
     </div>
   );
 }

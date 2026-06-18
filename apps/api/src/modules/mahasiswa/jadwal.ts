@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../../db.js';
 import { getActiveSemester, getMahasiswaForUser } from '../../lib/context.js';
+import { formatDosenLabel } from '../../lib/dosen-format.js';
 
 export const jadwalRouter = Router();
 
@@ -15,6 +16,7 @@ jadwalRouter.get('/jadwal', async (req, res) => {
         include: {
           mataKuliah: true,
           dosen: { select: { nama: true, gelarDepan: true, gelarBelakang: true } },
+          team: { include: { dosen: { select: { nama: true, gelarDepan: true, gelarBelakang: true } } } },
           ruangan: true,
         },
       },
@@ -31,7 +33,7 @@ jadwalRouter.get('/jadwal', async (req, res) => {
         namaMK: i.kelas.mataKuliah.nama,
         sks: i.kelas.mataKuliah.sks,
         kodeKelas: i.kelas.kodeKelas,
-        dosen: [i.kelas.dosen.gelarDepan, i.kelas.dosen.nama, i.kelas.dosen.gelarBelakang].filter(Boolean).join(' '),
+        dosen: formatDosenLabel(i.kelas.dosen, i.kelas.team),
         ruangan: i.kelas.ruangan?.kode ?? null,
         hari: i.kelas.hari!,
         jamMulai: i.kelas.jamMulai!,

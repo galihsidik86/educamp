@@ -24,7 +24,40 @@ const taSchema = z.object({
 
 periodeRouter.post('/periode/tahun-ajaran', async (req, res) => {
   const body = taSchema.parse(req.body);
-  res.status(201).json(await prisma.tahunAjaran.create({ data: body }));
+  const created = await prisma.tahunAjaran.create({ data: body });
+  void writeAudit(req, { action: 'periode.ta.create', entity: 'tahun-ajaran', entityId: created.id });
+  res.status(201).json(created);
+});
+
+periodeRouter.patch('/periode/tahun-ajaran/:id', async (req, res) => {
+  const ta = await prisma.tahunAjaran.findUnique({ where: { id: req.params.id } });
+  if (!ta) throw NotFound('Tahun ajaran tidak ditemukan');
+  const body = taSchema.partial().parse(req.body);
+  const updated = await prisma.tahunAjaran.update({ where: { id: ta.id }, data: body });
+  void writeAudit(req, { action: 'periode.ta.update', entity: 'tahun-ajaran', entityId: ta.id, metadata: { fields: Object.keys(body) } });
+  res.json(updated);
+});
+
+/** Aktifkan TA — sekaligus nonaktifkan TA lain. */
+periodeRouter.post('/periode/tahun-ajaran/:id/aktifkan', async (req, res) => {
+  const ta = await prisma.tahunAjaran.findUnique({ where: { id: req.params.id } });
+  if (!ta) throw NotFound('Tahun ajaran tidak ditemukan');
+  await prisma.$transaction([
+    prisma.tahunAjaran.updateMany({ data: { isAktif: false }, where: { isAktif: true } }),
+    prisma.tahunAjaran.update({ where: { id: ta.id }, data: { isAktif: true } }),
+  ]);
+  void writeAudit(req, { action: 'periode.ta.aktifkan', entity: 'tahun-ajaran', entityId: ta.id, metadata: { kode: ta.kode } });
+  res.json({ ok: true });
+});
+
+periodeRouter.delete('/periode/tahun-ajaran/:id', async (req, res) => {
+  const ta = await prisma.tahunAjaran.findUnique({ where: { id: req.params.id }, include: { _count: { select: { semester: true } } } });
+  if (!ta) throw NotFound('Tahun ajaran tidak ditemukan');
+  if (ta._count.semester > 0) throw BadRequest(`Tahun ajaran masih punya ${ta._count.semester} semester — hapus dulu semesternya`);
+  if (ta.isAktif) throw BadRequest('Tahun ajaran aktif tidak boleh dihapus');
+  await prisma.tahunAjaran.delete({ where: { id: ta.id } });
+  void writeAudit(req, { action: 'periode.ta.delete', entity: 'tahun-ajaran', entityId: ta.id });
+  res.status(204).end();
 });
 
 const semesterSchema = z.object({

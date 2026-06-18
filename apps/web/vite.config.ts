@@ -23,8 +23,9 @@ export default defineConfig({
     },
     proxy: {
       // Mirror nginx prod: /api/auth/login → api:4000/auth/login
+      // Override target via VITE_API_PROXY_TARGET env (e.g. when port 4000 sudah dipakai)
       '/api': {
-        target: 'http://localhost:4000',
+        target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:4001',
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ''),
       },

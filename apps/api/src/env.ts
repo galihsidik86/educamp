@@ -17,6 +17,13 @@ const schema = z.object({
   JWT_ACCESS_TTL: z.string().default('15m'),
   JWT_REFRESH_TTL: z.string().default('30d'),
   CORS_ORIGINS: z.string().default('http://localhost:5173'),
+  // SMTP — opsional. Kalau tidak di-set, email akan di-log ke console (mode dev).
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().positive().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_SECURE: z.coerce.boolean().default(false),
+  MAIL_FROM: z.string().default('SIAKAD Tazkia <no-reply@tazkia.ac.id>'),
 });
 
 const parsed = schema.safeParse(process.env);

@@ -57,6 +57,85 @@ dosenRouter.get('/dosen/:id', async (req, res) => {
   res.json(d);
 });
 
+const importRowSchema = z.object({
+  nidn: z.string().min(5).max(20),
+  nama: z.string().min(3).max(120),
+  email: z.string().email(),
+  prodiKode: z.string().min(1),
+  gelarDepan: z.string().max(30).optional().nullable(),
+  gelarBelakang: z.string().max(30).optional().nullable(),
+  jabatanFungsional: z.enum(JABATAN).optional().nullable(),
+  jabatanStruktural: z.string().max(80).optional().nullable(),
+  isDpa: z.string().optional().nullable(),
+});
+const importBodySchema = z.object({
+  rows: z.array(z.record(z.string(), z.string().nullable().optional())).max(500),
+});
+
+dosenRouter.post('/dosen/import', async (req, res) => {
+  const { rows } = importBodySchema.parse(req.body);
+  if (rows.length === 0) throw BadRequest('Tidak ada baris untuk diimpor');
+
+  const prodiList = await prisma.prodi.findMany({ select: { id: true, kode: true } });
+  const prodiByKode = new Map(prodiList.map((p) => [p.kode, p.id]));
+
+  type ImportResult = { row: number; key: string | null; status: 'created' | 'failed'; message?: string };
+  const results: ImportResult[] = [];
+  let created = 0; let failed = 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    const raw = rows[i]!;
+    const rowNo = i + 1;
+    const clean = Object.fromEntries(
+      Object.entries(raw).map(([k, v]) => [k, v === '' || v == null ? undefined : v]),
+    );
+    const parsed = importRowSchema.safeParse(clean);
+    if (!parsed.success) {
+      failed++;
+      results.push({ row: rowNo, key: (clean.nidn as string | undefined) ?? null, status: 'failed', message: parsed.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ') });
+      continue;
+    }
+    const r = parsed.data;
+    const prodiId = prodiByKode.get(r.prodiKode);
+    if (!prodiId) { failed++; results.push({ row: rowNo, key: r.nidn, status: 'failed', message: `Kode prodi tidak ditemukan: ${r.prodiKode}` }); continue; }
+    const [dupEmail, dupNidn] = await Promise.all([
+      prisma.user.findUnique({ where: { email: r.email }, select: { id: true } }),
+      prisma.dosen.findUnique({ where: { nidn: r.nidn }, select: { id: true } }),
+    ]);
+    if (dupEmail) { failed++; results.push({ row: rowNo, key: r.nidn, status: 'failed', message: `Email sudah dipakai: ${r.email}` }); continue; }
+    if (dupNidn) { failed++; results.push({ row: rowNo, key: r.nidn, status: 'failed', message: `NIDN sudah dipakai: ${r.nidn}` }); continue; }
+
+    try {
+      const passwordHash = await hashPassword(r.nidn);
+      const isDpa = r.isDpa != null && /^(true|1|ya|y)$/i.test(r.isDpa);
+      await prisma.user.create({
+        data: {
+          email: r.email,
+          passwordHash,
+          role: 'dosen',
+          dosen: {
+            create: {
+              nidn: r.nidn, nama: r.nama,
+              gelarDepan: r.gelarDepan ?? null,
+              gelarBelakang: r.gelarBelakang ?? null,
+              prodiId,
+              jabatanFungsional: (r.jabatanFungsional as (typeof JABATAN)[number] | null) ?? null,
+              jabatanStruktural: r.jabatanStruktural ?? null,
+              isDpa,
+            },
+          },
+        },
+      });
+      created++;
+      results.push({ row: rowNo, key: r.nidn, status: 'created' });
+    } catch (e: any) {
+      failed++;
+      results.push({ row: rowNo, key: r.nidn, status: 'failed', message: e?.message ?? 'gagal create' });
+    }
+  }
+  res.json({ totalRows: rows.length, created, failed, results });
+});
+
 dosenRouter.post('/dosen', async (req, res) => {
   const body = createSchema.parse(req.body);
   if (await prisma.user.findUnique({ where: { email: body.email } })) throw Conflict('Email sudah dipakai');

@@ -182,17 +182,19 @@ const pembayaranSchema = z.object({
 
 keuanganRouter.get('/keuangan/pembayaran', async (req, res) => {
   const search = (req.query.q as string | undefined)?.trim();
+  const status = req.query.status as string | undefined;
   const items = await prisma.pembayaran.findMany({
     where: {
       ...(search && {
         mahasiswa: { OR: [{ nim: { contains: search } }, { nama: { contains: search } }] },
       }),
+      ...(status && { status: status as any }),
     },
     include: {
       mahasiswa: { select: { nim: true, nama: true } },
       tagihan: { select: { jenis: true, deskripsi: true } },
     },
-    orderBy: { tanggalBayar: 'desc' },
+    orderBy: [{ status: 'asc' }, { tanggalBayar: 'desc' }],
     take: 200,
   });
   res.json({
@@ -205,7 +207,173 @@ keuanganRouter.get('/keuangan/pembayaran', async (req, res) => {
       metode: p.metode,
       buktiUrl: p.buktiUrl,
       catatan: p.catatan,
+      status: p.status,
+      bankPengirim: p.bankPengirim,
+      bankPenerima: p.bankPenerima,
+      noReferensi: p.noReferensi,
       divalidasiOleh: p.divalidasiOleh,
+      validasiPada: p.validasiPada,
+      catatanValidasi: p.catatanValidasi,
+    })),
+  });
+});
+
+const verifikasiSchema = z.object({
+  action: z.enum(['setujui', 'tolak']),
+  catatan: z.string().max(500).optional().nullable(),
+});
+
+/**
+ * Akademik verifikasi bukti pembayaran. Jika setujui:
+ * - status pembayaran → disetujui
+ * - tagihan dihitung ulang (lunas/cicil/belum_bayar)
+ * - notifikasi mahasiswa
+ * Jika tolak: status → ditolak (tagihan tidak terpengaruh).
+ */
+keuanganRouter.post('/keuangan/pembayaran/:id/verifikasi', async (req, res) => {
+  const a = await getAkademikForUser(req.user!.sub);
+  const body = verifikasiSchema.parse(req.body);
+  const p = await prisma.pembayaran.findUnique({
+    where: { id: req.params.id },
+    include: { tagihan: { include: { pembayaran: true } } },
+  });
+  if (!p) throw NotFound('Pembayaran tidak ditemukan');
+  if (p.status !== 'menunggu') throw BadRequest(`Pembayaran sudah ${p.status}`);
+
+  const updated = await prisma.pembayaran.update({
+    where: { id: p.id },
+    data: {
+      status: body.action === 'setujui' ? 'disetujui' : 'ditolak',
+      divalidasiOleh: a.nama,
+      validasiPada: new Date(),
+      catatanValidasi: body.catatan ?? null,
+    },
+  });
+
+  // Hitung ulang status tagihan kalau setujui
+  let statusTagihanBaru: 'lunas' | 'cicil' | 'belum_bayar' = p.tagihan.status as any;
+  if (body.action === 'setujui') {
+    const totalDisetujui = p.tagihan.pembayaran
+      .filter((x) => x.status === 'disetujui' || x.id === p.id)
+      .reduce((s, x) => s + Number(x.jumlah), 0);
+    statusTagihanBaru =
+      totalDisetujui >= Number(p.tagihan.jumlah) ? 'lunas'
+      : totalDisetujui > 0 ? 'cicil'
+      : 'belum_bayar';
+    await prisma.tagihan.update({ where: { id: p.tagihanId }, data: { status: statusTagihanBaru } });
+  }
+
+  void writeAudit(req, {
+    action: `pembayaran.${body.action}.akademik`,
+    entity: 'pembayaran',
+    entityId: p.id,
+    metadata: { mahasiswaId: p.mahasiswaId, jumlah: Number(p.jumlah), statusTagihanBaru },
+  });
+
+  void (async () => {
+    const userId = await userIdFromMahasiswa(p.mahasiswaId);
+    if (!userId) return;
+    const isApprove = body.action === 'setujui';
+    await createNotifikasi({
+      userId,
+      title: isApprove
+        ? (statusTagihanBaru === 'lunas' ? `Tagihan ${p.tagihan.deskripsi} LUNAS` : 'Pembayaran Anda diverifikasi')
+        : 'Bukti pembayaran ditolak',
+      body: isApprove
+        ? `Rp ${Number(p.jumlah).toLocaleString('id-ID')} via ${p.metode.replace(/_/g, ' ')}. ${body.catatan ? 'Catatan: ' + body.catatan : ''}`
+        : `Bukti ditolak${body.catatan ? '. Alasan: ' + body.catatan : ''}. Silakan upload ulang dengan bukti yang valid.`,
+      type: 'keuangan',
+      link: '/mahasiswa/keuangan',
+      entity: 'pembayaran',
+      entityId: p.id,
+    });
+  })();
+
+  res.json(updated);
+});
+
+/**
+ * Rekonsiliasi bank — list pembayaran disetujui dalam periode tanggal
+ * untuk dicocokkan dengan mutasi bank. Tersedia dalam format JSON
+ * (default) atau CSV (?format=csv).
+ */
+keuanganRouter.get('/keuangan/rekonsiliasi', async (req, res) => {
+  const dari = (req.query.dari as string | undefined)?.trim();
+  const sampai = (req.query.sampai as string | undefined)?.trim();
+  const bankPenerima = (req.query.bankPenerima as string | undefined)?.trim();
+  const metode = (req.query.metode as string | undefined)?.trim();
+  if (!dari || !sampai) throw BadRequest('Parameter dari & sampai wajib (YYYY-MM-DD)');
+  const tanggalAwal = new Date(dari);
+  const tanggalAkhir = new Date(sampai);
+  tanggalAkhir.setHours(23, 59, 59, 999);
+  if (isNaN(tanggalAwal.getTime()) || isNaN(tanggalAkhir.getTime())) throw BadRequest('Format tanggal tidak valid');
+
+  const items = await prisma.pembayaran.findMany({
+    where: {
+      status: 'disetujui',
+      tanggalBayar: { gte: tanggalAwal, lte: tanggalAkhir },
+      ...(bankPenerima && { bankPenerima: { contains: bankPenerima } }),
+      ...(metode && { metode: metode as any }),
+    },
+    include: {
+      mahasiswa: { select: { nim: true, nama: true, prodi: { select: { kode: true, nama: true } } } },
+      tagihan: { select: { jenis: true, deskripsi: true, semester: { select: { kode: true } } } },
+    },
+    orderBy: { tanggalBayar: 'asc' },
+  });
+
+  const total = items.reduce((s, p) => s + Number(p.jumlah), 0);
+  const perMetode = items.reduce<Record<string, { count: number; total: number }>>((acc, p) => {
+    const k = p.metode;
+    (acc[k] = acc[k] || { count: 0, total: 0 }).count++;
+    acc[k]!.total += Number(p.jumlah);
+    return acc;
+  }, {});
+
+  if (req.query.format === 'csv') {
+    const lines: string[] = [];
+    lines.push(['Tanggal Bayar', 'No Referensi', 'NIM', 'Nama Mahasiswa', 'Prodi', 'Jenis Tagihan', 'Semester', 'Metode', 'Bank Pengirim', 'Bank Penerima', 'Jumlah', 'Divalidasi Oleh'].join(','));
+    for (const p of items) {
+      lines.push([
+        p.tanggalBayar.toISOString().slice(0, 10),
+        p.noReferensi ?? '',
+        p.mahasiswa.nim,
+        `"${p.mahasiswa.nama.replace(/"/g, '""')}"`,
+        p.mahasiswa.prodi.kode,
+        p.tagihan.jenis,
+        p.tagihan.semester?.kode ?? '',
+        p.metode,
+        p.bankPengirim ?? '',
+        p.bankPenerima ?? '',
+        Number(p.jumlah),
+        `"${(p.divalidasiOleh ?? '').replace(/"/g, '""')}"`,
+      ].join(','));
+    }
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="rekonsiliasi-${dari}-sd-${sampai}.csv"`);
+    return res.send(lines.join('\n'));
+  }
+
+  res.json({
+    periode: { dari, sampai },
+    ringkasan: {
+      total,
+      jumlahTransaksi: items.length,
+      perMetode: Object.entries(perMetode).map(([m, v]) => ({ metode: m, count: v.count, total: v.total })),
+    },
+    items: items.map((p) => ({
+      id: p.id,
+      tanggalBayar: p.tanggalBayar,
+      mahasiswa: p.mahasiswa,
+      tagihan: p.tagihan,
+      jumlah: Number(p.jumlah),
+      metode: p.metode,
+      bankPengirim: p.bankPengirim,
+      bankPenerima: p.bankPenerima,
+      noReferensi: p.noReferensi,
+      buktiUrl: p.buktiUrl,
+      divalidasiOleh: p.divalidasiOleh,
+      validasiPada: p.validasiPada,
     })),
   });
 });
@@ -266,6 +434,7 @@ keuanganRouter.post('/keuangan/pembayaran', async (req, res) => {
       link: '/mahasiswa/keuangan',
       entity: 'pembayaran',
       entityId: created.id,
+      sendEmail: status === 'lunas',
     });
   })();
 
