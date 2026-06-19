@@ -1,4 +1,4 @@
-name: Deploy to Domainesia
+name: Deploy to VPS
 
 on:
   push:
@@ -21,6 +21,6 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script_stop: true
-          command_timeout: 15m
+          command_timeout: 20m
           script: |
-            bash $HOME/stmik-app/scripts/deploy.sh
+            bash /opt/siakad/scripts/deploy-vps.sh
