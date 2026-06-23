@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Alert, Button, Card, Input, Select } from '@/ds';
-import { ChevronLeft, Plus, Trash2, ChevronRight, Printer, CalendarClock } from 'lucide-react';
+import { ChevronLeft, Plus, Trash2, ChevronRight, Printer, CalendarClock, CheckCircle2, Circle, CircleDashed } from 'lucide-react';
 import { useDosenPertemuan, useDosenAbsensiActions, useDosenKehadiranRekap, useDosenRuangan, type PertemuanItem } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
@@ -9,6 +9,14 @@ import { formatTanggalWaktu, formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
 type Tab = 'pertemuan' | 'rekap';
+type IsiFilter = 'semua' | 'terisi' | 'belum';
+
+/** Status pengisian satu pertemuan relatif jumlah peserta KRS disetujui. */
+function statusIsi(totalAbsensi: number, pesertaCount: number): 'terisi' | 'sebagian' | 'kosong' {
+  if (pesertaCount === 0 || totalAbsensi === 0) return totalAbsensi === 0 ? 'kosong' : 'sebagian';
+  if (totalAbsensi >= pesertaCount) return 'terisi';
+  return 'sebagian';
+}
 
 export function DosenAbsensiKelas() {
   const { kelasId } = useParams<{ kelasId: string }>();
@@ -22,6 +30,29 @@ export function DosenAbsensiKelas() {
   const [form, setForm] = useState({ tanggal: '', topik: '', catatan: '' });
   const [actErr, setActErr] = useState<string | null>(null);
   const [reschedule, setReschedule] = useState<PertemuanItem | null>(null);
+  const [isiFilter, setIsiFilter] = useState<IsiFilter>('semua');
+
+  const pesertaCount = data?.kelas.pesertaCount ?? 0;
+
+  const counts = useMemo(() => {
+    const c = { total: 0, terisi: 0, belum: 0 };
+    for (const p of data?.items ?? []) {
+      c.total += 1;
+      const s = statusIsi(p.totalAbsensi, pesertaCount);
+      if (s === 'terisi') c.terisi += 1;
+      else c.belum += 1; // sebagian + kosong → belum terisi
+    }
+    return c;
+  }, [data, pesertaCount]);
+
+  const itemsFiltered = useMemo(() => {
+    if (!data) return [];
+    if (isiFilter === 'semua') return data.items;
+    return data.items.filter((p) => {
+      const s = statusIsi(p.totalAbsensi, pesertaCount);
+      return isiFilter === 'terisi' ? s === 'terisi' : s !== 'terisi';
+    });
+  }, [data, isiFilter, pesertaCount]);
 
   const submitNew = async () => {
     setActErr(null);
@@ -112,11 +143,45 @@ export function DosenAbsensiKelas() {
         <Alert variant="info" title="Belum ada pertemuan">Klik "Tambah Pertemuan" untuk mulai mencatat kehadiran.</Alert>
       )}
 
+      {data.items.length > 0 && (
+        <Card>
+          <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span className="muted" style={{ fontSize: 'var(--text-sm)' }}>
+              Filter presensi · {pesertaCount} peserta KRS disetujui:
+            </span>
+            <Button
+              size="sm"
+              variant={isiFilter === 'semua' ? 'primary' : 'ghost'}
+              onClick={() => setIsiFilter('semua')}
+            >
+              Semua ({counts.total})
+            </Button>
+            <Button
+              size="sm"
+              variant={isiFilter === 'terisi' ? 'primary' : 'ghost'}
+              onClick={() => setIsiFilter('terisi')}
+              leftIcon={<CheckCircle2 size={14} />}
+            >
+              Terisi ({counts.terisi})
+            </Button>
+            <Button
+              size="sm"
+              variant={isiFilter === 'belum' ? 'primary' : 'ghost'}
+              onClick={() => setIsiFilter('belum')}
+              leftIcon={<CircleDashed size={14} />}
+            >
+              Belum terisi ({counts.belum})
+            </Button>
+          </div>
+        </Card>
+      )}
+
       <div className="tz-table-wrap">
         <table className="tz-table">
           <thead>
             <tr>
               <th className="num">#</th>
+              <th>Status</th>
               <th>Tanggal</th>
               <th>Topik</th>
               <th className="num">Hadir</th>
@@ -128,9 +193,15 @@ export function DosenAbsensiKelas() {
             </tr>
           </thead>
           <tbody>
-            {data.items.map((p) => (
+            {data.items.length > 0 && itemsFiltered.length === 0 && (
+              <tr><td colSpan={10} className="muted center">Tidak ada pertemuan pada filter "{isiFilter}".</td></tr>
+            )}
+            {itemsFiltered.map((p) => {
+              const isi = statusIsi(p.totalAbsensi, pesertaCount);
+              return (
               <tr key={p.id}>
                 <td className="num mono">{p.pertemuanKe}</td>
+                <td><IsiBadge status={isi} totalAbsensi={p.totalAbsensi} pesertaCount={pesertaCount} /></td>
                 <td className="mono">
                   {formatTanggalWaktu(p.tanggal)}
                   {p.tanggalAsli && (
@@ -175,7 +246,8 @@ export function DosenAbsensiKelas() {
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -304,6 +376,32 @@ function RescheduleModal({ item, onClose, onSubmit, pending }: {
         </div>
       </div>
     </Modal>
+  );
+}
+
+function IsiBadge({ status, totalAbsensi, pesertaCount }: {
+  status: 'terisi' | 'sebagian' | 'kosong';
+  totalAbsensi: number;
+  pesertaCount: number;
+}) {
+  if (status === 'terisi') {
+    return (
+      <span className="pill pill--success" title={`Semua ${pesertaCount} peserta sudah dinilai`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+        <CheckCircle2 size={12} /> Terisi
+      </span>
+    );
+  }
+  if (status === 'sebagian') {
+    return (
+      <span className="pill pill--warning" title={`${totalAbsensi} dari ${pesertaCount} peserta dinilai`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+        <Circle size={12} /> Sebagian ({totalAbsensi}/{pesertaCount})
+      </span>
+    );
+  }
+  return (
+    <span className="pill pill--neutral" title="Belum ada presensi yang diisi" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+      <CircleDashed size={12} /> Belum
+    </span>
   );
 }
 

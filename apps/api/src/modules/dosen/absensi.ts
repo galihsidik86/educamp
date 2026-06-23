@@ -96,17 +96,20 @@ absensiRouter.get('/kelas/:kelasId/kehadiran-rekap', async (req, res) => {
  */
 absensiRouter.get('/kelas/:kelasId/pertemuan', async (req, res) => {
   const k = await getKelasOwned(req.user!.sub, req.params.kelasId);
-  const pertemuan = await prisma.pertemuan.findMany({
-    where: { kelasId: k.id },
-    orderBy: { pertemuanKe: 'asc' },
-    include: {
-      ruangan: { select: { kode: true, nama: true } },
-      _count: { select: { absensi: true } },
-      absensi: { select: { status: true } },
-    },
-  });
+  const [pertemuan, pesertaCount] = await Promise.all([
+    prisma.pertemuan.findMany({
+      where: { kelasId: k.id },
+      orderBy: { pertemuanKe: 'asc' },
+      include: {
+        ruangan: { select: { kode: true, nama: true } },
+        _count: { select: { absensi: true } },
+        absensi: { select: { status: true } },
+      },
+    }),
+    prisma.krs.count({ where: { kelasId: k.id, status: 'disetujui' } }),
+  ]);
   res.json({
-    kelas: { id: k.id, kodeMK: k.mataKuliah.kode, namaMK: k.mataKuliah.nama, kodeKelas: k.kodeKelas },
+    kelas: { id: k.id, kodeMK: k.mataKuliah.kode, namaMK: k.mataKuliah.nama, kodeKelas: k.kodeKelas, pesertaCount },
     items: pertemuan.map((p) => {
       const c = { hadir: 0, izin: 0, sakit: 0, alpa: 0 };
       for (const a of p.absensi) c[a.status]++;

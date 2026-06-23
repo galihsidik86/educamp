@@ -394,7 +394,7 @@ export type PertemuanItem = {
   ruangan: { kode: string; nama: string } | null;
 };
 export type PertemuanList = {
-  kelas: { id: string; kodeMK: string; namaMK: string; kodeKelas: string };
+  kelas: { id: string; kodeMK: string; namaMK: string; kodeKelas: string; pesertaCount: number };
   items: PertemuanItem[];
 };
 export const useDosenPertemuan = (kelasId: string | undefined) =>
