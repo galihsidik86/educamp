@@ -13,7 +13,7 @@ export function DosenAbsensiList() {
     <div className="stack">
       <PageHead
         eyebrow="PENGAJARAN"
-        title="Absensi Kelas"
+        title="Presensi Kelas"
         subtitle="Kelola pertemuan dan kehadiran mahasiswa untuk setiap kelas yang Anda ampu."
       />
 

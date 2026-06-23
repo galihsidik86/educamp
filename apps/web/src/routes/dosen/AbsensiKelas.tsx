@@ -40,7 +40,7 @@ export function DosenAbsensiKelas() {
   };
 
   const onDelete = async (id: string, ke: number) => {
-    if (!confirm(`Hapus pertemuan ke-${ke}? Semua data absensi pada pertemuan ini akan hilang.`)) return;
+    if (!confirm(`Hapus pertemuan ke-${ke}? Semua data presensi pada pertemuan ini akan hilang.`)) return;
     setActErr(null);
     try { await deletePertemuan.mutateAsync(id); }
     catch (e) { setActErr(e instanceof ApiError ? e.message : 'Gagal'); }
@@ -164,7 +164,7 @@ export function DosenAbsensiKelas() {
                       onClick={() => navigate(`/dosen/absensi/${kelasId}/${p.id}`)}
                       rightIcon={<ChevronRight size={14} />}
                     >
-                      Absensi
+                      Presensi
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => setReschedule(p)} leftIcon={<CalendarClock size={14} />}>
                       Reschedule

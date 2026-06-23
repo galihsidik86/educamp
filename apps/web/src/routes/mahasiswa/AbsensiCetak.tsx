@@ -43,7 +43,7 @@ export function MahasiswaAbsensiCetak() {
             <div>{profil.data.prodi.fakultas.nama}</div>
             <div>Program Studi {profil.data.prodi.nama}</div>
           </div>
-          <h2 className="krs-cetak__title">REKAP ABSENSI</h2>
+          <h2 className="krs-cetak__title">REKAP PRESENSI</h2>
         </header>
 
         <table className="krs-cetak__bio">
@@ -56,7 +56,7 @@ export function MahasiswaAbsensiCetak() {
         </table>
 
         {absensi.data.items.length === 0 && (
-          <p className="muted">Belum ada data absensi.</p>
+          <p className="muted">Belum ada data presensi.</p>
         )}
 
         <table className="krs-cetak__table">

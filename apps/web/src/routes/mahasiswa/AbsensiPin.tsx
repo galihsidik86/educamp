@@ -63,11 +63,11 @@ export function MahasiswaAbsensiPin() {
   return (
     <div className="stack" style={{ maxWidth: 560, margin: '0 auto' }}>
       <Link to="/mahasiswa/absensi" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--text-link)', textDecoration: 'none', fontSize: 'var(--text-sm)' }}>
-        <ChevronLeft size={14} /> Kembali ke absensi
+        <ChevronLeft size={14} /> Kembali ke presensi
       </Link>
 
       <PageHead
-        eyebrow="ABSENSI"
+        eyebrow="PRESENSI"
         title="Self Check-In via PIN"
         subtitle="Masukkan PIN 6 digit yang ditampilkan dosen di kelas untuk mencatat kehadiran Anda."
       />

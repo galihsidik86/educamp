@@ -31,7 +31,7 @@ const itemsByRole: Record<Role, NavGroup[]> = {
         { to: '/mahasiswa/krs',          label: 'KRS',               icon: <ClipboardList size={18} />, end: true },
         { to: '/mahasiswa/krs/riwayat',  label: 'Riwayat KRS',       icon: <History size={18} /> },
         { to: '/mahasiswa/jadwal',       label: 'Jadwal Kuliah',     icon: <CalendarDays size={18} /> },
-        { to: '/mahasiswa/absensi',      label: 'Absensi',           icon: <CalendarCheck size={18} /> },
+        { to: '/mahasiswa/absensi',      label: 'Presensi',          icon: <CalendarCheck size={18} /> },
         { to: '/mahasiswa/materi',       label: 'Materi Kuliah',     icon: <BookOpen size={18} /> },
         { to: '/mahasiswa/tugas',        label: 'Tugas',             icon: <FileText size={18} /> },
         { to: '/mahasiswa/kuis',         label: 'Kuis',              icon: <BrainCircuit size={18} /> },
@@ -111,7 +111,7 @@ const itemsByRole: Record<Role, NavGroup[]> = {
       groupIcon: <BookOpen size={14} />,
       items: [
         { to: '/dosen/jadwal',       label: 'Jadwal Mengajar',    icon: <CalendarDays size={18} /> },
-        { to: '/dosen/absensi',      label: 'Absensi Kelas',      icon: <CalendarCheck size={18} /> },
+        { to: '/dosen/absensi',      label: 'Presensi Kelas',     icon: <CalendarCheck size={18} /> },
         { to: '/dosen/materi',       label: 'Materi Ajar',        icon: <BookOpen size={18} /> },
         { to: '/dosen/tugas',        label: 'Tugas',              icon: <FileText size={18} /> },
         { to: '/dosen/kuis',         label: 'Kuis',               icon: <BrainCircuit size={18} /> },

@@ -20,7 +20,7 @@ export function MahasiswaAbsensi() {
     <div className="stack">
       <PageHead
         eyebrow="AKADEMIK"
-        title="Absensi"
+        title="Presensi"
         subtitle="Rekap kehadiran Anda untuk setiap kelas semester aktif."
         right={
           <div className="row" style={{ gap: 4 }}>

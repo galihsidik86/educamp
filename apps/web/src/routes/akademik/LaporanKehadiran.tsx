@@ -28,7 +28,7 @@ export function AkademikLaporanKehadiran() {
         <div className="row" style={{ gap: 'var(--space-6)', flexWrap: 'wrap' }}>
           <Stat label="Total Kelas" value={r.totalKelas} />
           <Stat label="Total Pertemuan" value={r.totalPertemuan} />
-          <Stat label="Absensi Terisi" value={r.totalAbsensiSemua} />
+          <Stat label="Presensi Terisi" value={r.totalAbsensiSemua} />
           <Stat label="Kehadiran Global" value={r.persentaseGlobal != null ? `${r.persentaseGlobal}%` : '—'} />
           <Stat label="Mahasiswa Kritis" value={r.totalKritis} highlight={r.totalKritis > 0} />
         </div>

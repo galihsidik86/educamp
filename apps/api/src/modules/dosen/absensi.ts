@@ -5,6 +5,7 @@ import { getDosenForUser, requireKelasOwnership } from '../../lib/context.js';
 import { BadRequest, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
 import { createNotifikasiForMany } from '../../lib/notifikasi.js';
+import { notifyWaliPresensi } from '../../lib/notif-presensi.js';
 
 export const absensiRouter = Router();
 
@@ -417,6 +418,7 @@ absensiRouter.post('/pertemuan/:id/absensi', async (req, res) => {
     entityId: p.id,
     metadata: { kelasId: p.kelasId, pertemuanKe: p.pertemuanKe, count: items.length },
   });
+  void notifyWaliPresensi(p.id, items);
   res.json({ ok: true, updated: items.length });
 });
 

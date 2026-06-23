@@ -4,6 +4,7 @@ import { prisma } from '../../db.js';
 import { getActiveSemester, getMahasiswaForUser } from '../../lib/context.js';
 import { BadRequest, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
+import { notifyWaliPresensi } from '../../lib/notif-presensi.js';
 
 export const absensiRouter = Router();
 
@@ -140,6 +141,7 @@ absensiRouter.post('/absensi/pin', async (req, res) => {
     entityId: absensi.id,
     metadata: { pertemuanId: pertemuan.id, kelasId: pertemuan.kelasId, ip: data.inputIp },
   });
+  void notifyWaliPresensi(pertemuan.id, [{ mahasiswaId: m.id, status: 'hadir' }]);
 
   res.json({
     ok: true,

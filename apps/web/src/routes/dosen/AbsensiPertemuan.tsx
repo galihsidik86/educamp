@@ -131,7 +131,7 @@ export function DosenAbsensiPertemuan() {
 
       <div className="row" style={{ justifyContent: 'flex-end' }}>
         <Button variant="primary" leftIcon={<Save size={16} />} disabled={setAbsensi.isPending || data.peserta.length === 0} onClick={save}>
-          {setAbsensi.isPending ? 'Menyimpan…' : 'Simpan absensi'}
+          {setAbsensi.isPending ? 'Menyimpan…' : 'Simpan presensi'}
         </Button>
       </div>
     </div>
@@ -223,7 +223,7 @@ function PinPanel({ pertemuanId }: { pertemuanId: string }) {
               <Button size="sm" variant="ghost" leftIcon={<X size={14} />} onClick={clear}>Hentikan</Button>
             </div>
             <div className="muted" style={{ fontSize: 'var(--text-xs)', marginTop: 'var(--space-2)' }}>
-              Mahasiswa input PIN di menu <strong>Absensi → Self Check-In</strong> atau scan QR.
+              Mahasiswa input PIN di menu <strong>Presensi → Self Check-In</strong> atau scan QR.
               {status.data && ` ${status.data.hadirViaPin} dari ${status.data.totalHadir} hadir via PIN.`}
             </div>
           </div>
