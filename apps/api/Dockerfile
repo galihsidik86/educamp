@@ -35,6 +35,10 @@ RUN npm run build
 
 # ---------- Stage 3: runtime ----------
 FROM node:20-alpine AS runtime
+
+LABEL org.opencontainers.image.title="Tazkia SIAKAD API" \
+      org.opencontainers.image.source="https://github.com/galihsidik86/educamp"
+
 ENV NODE_ENV=production
 ENV TZ=Asia/Jakarta
 

@@ -19,30 +19,14 @@ echo "▶ git pull"
 git fetch origin
 git reset --hard origin/main
 
-# Build images kalau Dockerfiles, lockfile, atau source code app berubah.
-# (Runtime image jalan dist/ hasil tsc — perubahan TS tidak ikut tanpa rebuild.)
-NEEDS_BUILD=0
-if ! git diff --quiet HEAD@{1} HEAD -- \
-    'apps/*/Dockerfile' \
-    'apps/*/package.json' \
-    'apps/api/src/**' \
-    'apps/api/prisma/**' \
-    'apps/web/src/**' \
-    'apps/web/index.html' \
-    'apps/web/vite.config.ts' \
-    'apps/web/nginx.conf' \
-    'package.json' \
-    'package-lock.json' \
-    2>/dev/null; then
-  NEEDS_BUILD=1
-fi
-
-if [ "$NEEDS_BUILD" = "1" ]; then
-  echo "▶ build images (Dockerfile/deps berubah)"
-  docker compose -f docker-compose.prod.yml build
-else
-  echo "▶ skip build (no Dockerfile/deps changes)"
-fi
+# Selalu build — Docker layer cache bikin ini cepat kalau memang tidak ada
+# yang berubah. Sebelumnya kami pakai `git diff HEAD@{1} HEAD` untuk skip
+# build, tapi bash men-buffer skrip yang sedang berjalan: kalau skrip ini
+# sendiri ter-update oleh `git reset --hard` di atas, baris-baris berikutnya
+# bisa berasal dari versi lama atau baru — tidak dapat diandalkan. Selalu
+# build menghilangkan footgun itu, dan rebuild dengan cache penuh ~5 detik.
+echo "▶ build images"
+docker compose -f docker-compose.prod.yml build
 
 # Apply schema kalau berubah
 if ! git diff --quiet HEAD@{1} HEAD -- apps/api/prisma/schema.prisma 2>/dev/null; then
