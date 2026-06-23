@@ -528,3 +528,47 @@ kelasRouter.put('/kelas/:kelasId/bobot', async (req, res) => {
     configured: true,
   });
 });
+
+// ============================================================
+// Rerata nilai Tugas per mahasiswa (untuk tombol Sync di Input Nilai).
+// Mengambil semua submission yang sudah dinilai, normalisasi ke 100
+// pakai Tugas.maxNilai, lalu rata-rata per mahasiswa.
+// ============================================================
+kelasRouter.get('/kelas/:kelasId/tugas-rerata', async (req, res) => {
+  const d = await getDosenForUser(req.user!.sub);
+  await requireKelasOwnership(d.id, req.params.kelasId);
+
+  const totalTugas = await prisma.tugas.count({ where: { kelasId: req.params.kelasId } });
+  const submissions = await prisma.submitTugas.findMany({
+    where: {
+      tugas: { kelasId: req.params.kelasId },
+      nilai: { not: null },
+    },
+    select: {
+      mahasiswaId: true,
+      nilai: true,
+      tugas: { select: { maxNilai: true } },
+    },
+  });
+
+  const byMahasiswa = new Map<string, { sum: number; count: number }>();
+  for (const s of submissions) {
+    if (s.nilai == null) continue;
+    const maxN = s.tugas.maxNilai || 100;
+    const norm = (s.nilai / maxN) * 100;
+    const acc = byMahasiswa.get(s.mahasiswaId) ?? { sum: 0, count: 0 };
+    acc.sum += norm;
+    acc.count += 1;
+    byMahasiswa.set(s.mahasiswaId, acc);
+  }
+
+  const items: Record<string, { rerata: number; dinilai: number }> = {};
+  for (const [mahasiswaId, acc] of byMahasiswa.entries()) {
+    items[mahasiswaId] = {
+      rerata: Math.round((acc.sum / acc.count) * 100) / 100,
+      dinilai: acc.count,
+    };
+  }
+
+  res.json({ totalTugas, items });
+});

@@ -123,6 +123,18 @@ export function useUpdateBobotNilai(kelasId: string | undefined) {
   });
 }
 
+/**
+ * Rerata nilai Tugas per mahasiswa untuk satu kelas.
+ * Sumber: modul Tugas (SubmitTugas.nilai) — sudah dinormalisasi ke 100.
+ * Dipakai oleh tombol "Sync dari Tugas" di Input Nilai.
+ */
+export type KelasTugasRerata = {
+  totalTugas: number;
+  items: Record<string, { rerata: number; dinilai: number }>;
+};
+export const useDosenKelasTugasRerata = (kelasId: string | undefined) =>
+  useApi<KelasTugasRerata>(['dosen-kelas-tugas-rerata', kelasId], `/dosen/kelas/${kelasId}/tugas-rerata`, { enabled: !!kelasId });
+
 /** Hitung nilai akhir dari komponen × bobot. Komponen null diabaikan
  *  (bobot-nya tidak diakumulasi), bukan dianggap 0 — supaya dosen yang
  *  belum input semua komponen tidak ke-penalty unfair. */

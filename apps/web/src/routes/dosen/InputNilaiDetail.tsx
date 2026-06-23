@@ -4,6 +4,7 @@ import { Alert, Button, Card } from '@/ds';
 import { ChevronLeft, Save, CheckCircle2, Upload, Calculator, SlidersHorizontal } from 'lucide-react';
 import {
   useDosenKelasDetail, useUpdateNilai, useFinalizeAllNilai, useImportNilai, useUpdateBobotNilai,
+  useDosenKelasTugasRerata,
   hitungNilaiDariBobot,
   type NilaiPatch, type BobotNilai,
 } from '@/lib/queries-dosen';
@@ -53,6 +54,7 @@ export function DosenInputNilaiDetail() {
   const finalizeAll = useFinalizeAllNilai(kelasId);
   const importNilai = useImportNilai(kelasId);
   const updateBobot = useUpdateBobotNilai(kelasId);
+  const tugasRerata = useDosenKelasTugasRerata(kelasId);
   const [batchMsg, setBatchMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [bobotOpen, setBobotOpen] = useState(false);
@@ -222,7 +224,13 @@ export function DosenInputNilaiDetail() {
                 <tr key={p.krsId}>
                   <td className="mono">{p.mahasiswa.nim}</td>
                   <td>{p.mahasiswa.nama}</td>
-                  <NumCell value={r.tugas}     onChange={(v) => setRow(p.krsId, { tugas: v })}     disabled={!periodeAktif || r.status === 'finalized'} />
+                  <TugasCell
+                    value={r.tugas}
+                    onChange={(v) => setRow(p.krsId, { tugas: v })}
+                    disabled={!periodeAktif || r.status === 'finalized'}
+                    rerata={tugasRerata.data?.items[p.mahasiswa.id] ?? null}
+                    totalTugas={tugasRerata.data?.totalTugas ?? 0}
+                  />
                   <NumCell value={r.uts}       onChange={(v) => setRow(p.krsId, { uts: v })}       disabled={!periodeAktif || r.status === 'finalized'} />
                   <NumCell value={r.uas}       onChange={(v) => setRow(p.krsId, { uas: v })}       disabled={!periodeAktif || r.status === 'finalized'} />
                   <NumCell value={r.praktikum} onChange={(v) => setRow(p.krsId, { praktikum: v })} disabled={!periodeAktif || r.status === 'finalized'} />
@@ -270,7 +278,8 @@ export function DosenInputNilaiDetail() {
 
       <Card>
         <p className="muted" style={{ margin: 0, fontSize: 'var(--text-xs)' }}>
-          Tip — isi komponen lalu klik <strong>Hitung</strong> untuk menjumlahkan dengan bobot di atas, atau input <strong>Nilai Angka</strong> langsung.
+          Tip — klik angka biru di bawah sel <strong>Tugas</strong> untuk mengisi otomatis dari rerata nilai submission modul Tugas.
+          Setelah komponen terisi, klik <strong>Hitung</strong> untuk menjumlahkan dengan bobot di atas, atau input <strong>Nilai Angka</strong> langsung.
           Saat disimpan, huruf (A ≥85, AB ≥75, B ≥70, BC ≥65, C ≥56, D ≥40, E &lt;40) dan bobot skala 4 dihitung otomatis. Finalisasi mensyaratkan nilai angka.
         </p>
       </Card>
@@ -299,6 +308,50 @@ export function DosenInputNilaiDetail() {
         importMutation={importNilai}
       />
     </div>
+  );
+}
+
+function TugasCell({
+  value, onChange, disabled, rerata, totalTugas,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+  rerata: { rerata: number; dinilai: number } | null;
+  totalTugas: number;
+}) {
+  const showHint = rerata != null && rerata.dinilai > 0;
+  const hintText = showHint
+    ? `≈ ${rerata.rerata} (${rerata.dinilai}/${totalTugas})`
+    : null;
+  const apply = () => { if (rerata) onChange(rerata.rerata.toString()); };
+  return (
+    <td className="num">
+      <input
+        type="number" inputMode="decimal" min={0} max={100} step={0.1}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        className="tz-input"
+        style={{ width: 70, textAlign: 'right', fontFamily: 'var(--font-mono)', padding: '4px 6px' }}
+      />
+      {hintText && (
+        <button
+          type="button"
+          onClick={apply}
+          disabled={disabled}
+          title={`Klik: isi otomatis dari rerata Tugas (${rerata!.dinilai} dari ${totalTugas} tugas dinilai)`}
+          style={{
+            display: 'block', marginTop: 2, padding: 0, border: 'none', background: 'none',
+            color: 'var(--text-link)', fontSize: 'var(--text-2xs)',
+            cursor: disabled ? 'not-allowed' : 'pointer', textAlign: 'right', width: '100%',
+            fontFamily: 'var(--font-mono)',
+          }}
+        >
+          {hintText}
+        </button>
+      )}
+    </td>
   );
 }
 
