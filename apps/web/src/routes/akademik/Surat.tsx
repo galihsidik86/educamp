@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Alert, Button, Card, Input, Select } from '@/ds';
-import { Pencil } from 'lucide-react';
+import { Pencil, Printer } from 'lucide-react';
 import { useAdminSurat, useAdminSuratActions, type AdminSuratItem } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
@@ -20,6 +21,7 @@ const JENIS_LABEL: Record<string, string> = {
 };
 
 export function AdminSuratPage() {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({ q: '', status: '', jenis: '' });
   const { data, isLoading, error } = useAdminSurat(filters);
   const [editing, setEditing] = useState<AdminSuratItem | null>(null);
@@ -77,7 +79,12 @@ export function AdminSuratPage() {
                   </div>
                 )}
               </div>
-              <Button size="sm" variant="ghost" leftIcon={<Pencil size={12} />} onClick={() => setEditing(s)}>Validasi</Button>
+              <div className="row" style={{ gap: 4 }}>
+                {s.status === 'selesai' && (
+                  <Button size="sm" variant="primary" leftIcon={<Printer size={12} />} onClick={() => navigate(`/akademik/surat/${s.id}/cetak`)}>Cetak</Button>
+                )}
+                <Button size="sm" variant="ghost" leftIcon={<Pencil size={12} />} onClick={() => setEditing(s)}>Validasi</Button>
+              </div>
             </div>
           </Card>
         ))}

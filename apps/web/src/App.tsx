@@ -143,6 +143,7 @@ import { AdminYudisiumPage } from './routes/akademik/Yudisium';
 import { AdminBeasiswaPage } from './routes/akademik/Beasiswa';
 import { AdminBeasiswaPendaftar } from './routes/akademik/BeasiswaPendaftar';
 import { AdminSuratPage } from './routes/akademik/Surat';
+import { AdminSuratCetak } from './routes/akademik/SuratCetak';
 import { AdminMahasiswaPage } from './routes/akademik/Mahasiswa';
 import { AdminDosenPage } from './routes/akademik/Dosen';
 import { AdminProdi } from './routes/akademik/Prodi';
@@ -362,6 +363,7 @@ export function App() {
         <Route path="beasiswa"            element={<AdminBeasiswaPage />} />
         <Route path="beasiswa/:id/pendaftar" element={<AdminBeasiswaPendaftar />} />
         <Route path="surat"               element={<AdminSuratPage />} />
+        <Route path="surat/:id/cetak"     element={<AdminSuratCetak />} />
         <Route path="audit"         element={<AdminAuditLog />} />
         <Route path="notifikasi"    element={<NotifikasiPage />} />
         <Route path="profil"        element={<AkademikProfil />} />

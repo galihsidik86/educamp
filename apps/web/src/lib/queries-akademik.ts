@@ -434,6 +434,27 @@ export const useAdminSurat = (filters: { status?: string; jenis?: string; q?: st
   return useApi<{ items: AdminSuratItem[] }>(['admin-surat', qs.toString()], `/akademik/surat?${qs}`);
 };
 
+export type AdminSuratDetail = {
+  id: string;
+  jenis: string;
+  judul: string;
+  keperluan: string;
+  status: 'diajukan' | 'disetujui' | 'ditolak' | 'selesai' | 'batal';
+  catatan: string | null;
+  nomorSurat: string | null;
+  tanggalDiajukan: string;
+  tanggalDisetujui: string | null;
+  tanggalSelesai: string | null;
+  mahasiswa: {
+    id: string; nim: string; nama: string;
+    tempatLahir: string | null; tanggalLahir: string | null;
+    angkatan: number; jenisKelamin: 'L' | 'P' | null;
+    prodi: { kode: string; nama: string; fakultas: { nama: string } };
+  };
+};
+export const useAdminSuratDetail = (id: string | undefined) =>
+  useApi<AdminSuratDetail>(['admin-surat-detail', id], `/akademik/surat/${id}`, { enabled: !!id });
+
 export function useAdminSuratActions() {
   const qc = useQueryClient();
   const inv = () => qc.invalidateQueries({ queryKey: ['admin-surat'] });
