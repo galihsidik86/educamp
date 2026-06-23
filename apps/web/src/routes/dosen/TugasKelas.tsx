@@ -2,7 +2,15 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, Card, Input } from '@/ds';
 import { ChevronLeft, Plus, Trash2, Pencil, Users } from 'lucide-react';
-import { useDosenTugas, useDosenTugasActions, useDosenPertemuan, type DosenTugasItem, type DosenTugasInput } from '@/lib/queries-dosen';
+import { useDosenTugas, useDosenTugasActions, useDosenPertemuan, type DosenTugasItem, type DosenTugasInput, type Komponen } from '@/lib/queries-dosen';
+
+const JENIS_LABEL: Record<Komponen, string> = {
+  tugas: 'Tugas',
+  uts: 'UTS',
+  uas: 'UAS',
+  praktikum: 'Praktikum',
+};
+const JENIS_OPTIONS: Komponen[] = ['tugas', 'uts', 'uas', 'praktikum'];
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { formatTanggalWaktu } from '@/lib/format';
@@ -34,12 +42,12 @@ export function DosenTugasKelas() {
       <PageHead
         eyebrow={`${data.kelas.kodeMK} · KELAS ${data.kelas.kodeKelas}`}
         title={data.kelas.namaMK}
-        subtitle="Tugas yang dibuat untuk kelas ini."
-        right={<Button variant="primary" leftIcon={<Plus size={14} />} onClick={() => setModal({ mode: 'create' })}>Tambah Tugas</Button>}
+        subtitle="Pengumpulan tugas, UTS, UAS, atau praktikum untuk kelas ini."
+        right={<Button variant="primary" leftIcon={<Plus size={14} />} onClick={() => setModal({ mode: 'create' })}>Tambah</Button>}
       />
 
       {data.items.length === 0 && (
-        <Alert variant="info" title="Belum ada tugas">Klik "Tambah Tugas" untuk membuat yang pertama.</Alert>
+        <Alert variant="info" title="Belum ada item">Klik "Tambah" untuk membuat tugas, UTS, UAS, atau praktikum pertama.</Alert>
       )}
 
       <div className="stack">
@@ -48,6 +56,7 @@ export function DosenTugasKelas() {
             <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ flex: 1 }}>
                 <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                  <span className={`pill ${t.jenis === 'tugas' ? 'pill--neutral' : 'pill--warning'}`}>{JENIS_LABEL[t.jenis]}</span>
                   <strong style={{ color: 'var(--text-strong)' }}>{t.judul}</strong>
                   {t.pertemuanKe && <span className="pill pill--info">Pertemuan {t.pertemuanKe}</span>}
                 </div>
@@ -99,11 +108,31 @@ function TugasModal({ mode, initial, pertemuanOptions, onClose, onSubmit }: {
     maxNilai: initial?.maxNilai ?? 100,
     linkLampiran: initial?.linkLampiran ?? '',
     pertemuanId: null,
+    jenis: initial?.jenis ?? 'tugas',
   });
 
   return (
-    <Modal open onClose={onClose} title={mode === 'create' ? 'Tambah tugas' : 'Edit tugas'} width={640}>
+    <Modal open onClose={onClose} title={mode === 'create' ? 'Tambah Tugas / Ujian' : 'Edit'} width={640}>
       <div className="stack" style={{ padding: 'var(--space-4)', gap: 'var(--space-3)' }}>
+        <div>
+          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Jenis</label>
+          <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+            {JENIS_OPTIONS.map((j) => (
+              <button
+                key={j}
+                type="button"
+                onClick={() => setForm({ ...form, jenis: j })}
+                className={`pill ${form.jenis === j ? 'pill--success' : 'pill--neutral'}`}
+                style={{ cursor: 'pointer', border: form.jenis === j ? '1px solid var(--success-fg)' : '1px solid transparent', padding: '4px 12px' }}
+              >
+                {JENIS_LABEL[j]}
+              </button>
+            ))}
+          </div>
+          <div className="muted" style={{ fontSize: 'var(--text-xs)', marginTop: 4 }}>
+            Nilai submission akan tersedia untuk disinkronkan ke kolom <strong>{JENIS_LABEL[form.jenis ?? 'tugas']}</strong> di Input Nilai.
+          </div>
+        </div>
         <Input label="Judul" value={form.judul} onChange={(e) => setForm({ ...form, judul: (e.target as HTMLInputElement).value })} />
         <div>
           <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Deskripsi (opsional)</label>

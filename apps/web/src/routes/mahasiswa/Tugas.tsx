@@ -14,8 +14,8 @@ export function MahasiswaTugas() {
     <div className="stack">
       <PageHead
         eyebrow="AKADEMIK"
-        title="Tugas"
-        subtitle="Tugas dari semua mata kuliah yang Anda ikuti."
+        title="Pengumpulan Tugas & Ujian"
+        subtitle="Tugas, UTS, UAS, dan praktikum dari semua mata kuliah yang Anda ikuti."
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}

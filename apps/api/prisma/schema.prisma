@@ -625,6 +625,13 @@ enum StatusSubmitTugas {
   dinilai
 }
 
+enum JenisTugas {
+  tugas
+  uts
+  uas
+  praktikum
+}
+
 model Tugas {
   id            String         @id @default(uuid())
   kelasId       String
@@ -637,6 +644,9 @@ model Tugas {
   deadline      DateTime
   maxNilai      Int            @default(100)
   linkLampiran  String?        @db.Text
+  /// Komponen penilaian tujuan sinkronisasi nilai submission.
+  /// Default 'tugas' agar data lama tidak berubah perilaku.
+  jenis         JenisTugas     @default(tugas)
 
   submission    SubmitTugas[]
 

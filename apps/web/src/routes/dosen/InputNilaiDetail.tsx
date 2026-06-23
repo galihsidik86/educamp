@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Alert, Button, Card } from '@/ds';
-import { ChevronLeft, Save, CheckCircle2, Upload, Calculator, SlidersHorizontal } from 'lucide-react';
+import { ChevronLeft, Save, CheckCircle2, Upload, Calculator, SlidersHorizontal, RefreshCw } from 'lucide-react';
 import {
   useDosenKelasDetail, useUpdateNilai, useFinalizeAllNilai, useImportNilai, useUpdateBobotNilai,
-  useDosenKelasTugasRerata,
+  useDosenKelasNilaiSumber, useSinkronNilai,
   hitungNilaiDariBobot,
   type NilaiPatch, type BobotNilai,
 } from '@/lib/queries-dosen';
@@ -54,7 +54,8 @@ export function DosenInputNilaiDetail() {
   const finalizeAll = useFinalizeAllNilai(kelasId);
   const importNilai = useImportNilai(kelasId);
   const updateBobot = useUpdateBobotNilai(kelasId);
-  const tugasRerata = useDosenKelasTugasRerata(kelasId);
+  const nilaiSumber = useDosenKelasNilaiSumber(kelasId);
+  const sinkronNilai = useSinkronNilai(kelasId);
   const [batchMsg, setBatchMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [bobotOpen, setBobotOpen] = useState(false);
@@ -69,6 +70,17 @@ export function DosenInputNilaiDetail() {
       setBatchMsg({ ok: r.ok, text: r.message });
     } catch (e) {
       setBatchMsg({ ok: false, text: e instanceof ApiError ? e.message : 'Gagal finalisasi batch' });
+    }
+  };
+
+  const handleSinkronAll = async () => {
+    if (!confirm('Sinkron semua nilai komponen (Tugas/UTS/UAS/Praktikum) dari modul Pengumpulan ke seluruh mahasiswa? Mahasiswa dengan nilai finalized akan di-skip; nilaiAngka & huruf tidak disentuh.')) return;
+    setBatchMsg(null);
+    try {
+      const r = await sinkronNilai.mutateAsync();
+      setBatchMsg({ ok: true, text: r.message });
+    } catch (e) {
+      setBatchMsg({ ok: false, text: e instanceof ApiError ? e.message : 'Gagal sinkron' });
     }
   };
   const [rows, setRows] = useState<Record<string, RowDraft>>({});
@@ -140,6 +152,16 @@ export function DosenInputNilaiDetail() {
             </Link>
             <Button variant="ghost" size="sm" leftIcon={<Upload size={14} />} disabled={!periodeAktif} onClick={() => setImportOpen(true)}>
               Import Excel
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<RefreshCw size={14} />}
+              disabled={!periodeAktif || sinkronNilai.isPending}
+              onClick={handleSinkronAll}
+              title="Isi otomatis kolom Tugas/UTS/UAS/Praktikum dari rerata submission semua mahasiswa"
+            >
+              {sinkronNilai.isPending ? 'Sinkron…' : 'Sinkron Semua'}
             </Button>
             <Button
               variant="primary"
@@ -224,16 +246,16 @@ export function DosenInputNilaiDetail() {
                 <tr key={p.krsId}>
                   <td className="mono">{p.mahasiswa.nim}</td>
                   <td>{p.mahasiswa.nama}</td>
-                  <TugasCell
-                    value={r.tugas}
-                    onChange={(v) => setRow(p.krsId, { tugas: v })}
-                    disabled={!periodeAktif || r.status === 'finalized'}
-                    rerata={tugasRerata.data?.items[p.mahasiswa.id] ?? null}
-                    totalTugas={tugasRerata.data?.totalTugas ?? 0}
-                  />
-                  <NumCell value={r.uts}       onChange={(v) => setRow(p.krsId, { uts: v })}       disabled={!periodeAktif || r.status === 'finalized'} />
-                  <NumCell value={r.uas}       onChange={(v) => setRow(p.krsId, { uas: v })}       disabled={!periodeAktif || r.status === 'finalized'} />
-                  <NumCell value={r.praktikum} onChange={(v) => setRow(p.krsId, { praktikum: v })} disabled={!periodeAktif || r.status === 'finalized'} />
+                  {(['tugas', 'uts', 'uas', 'praktikum'] as const).map((k) => (
+                    <KomponenSyncCell
+                      key={k}
+                      value={r[k]}
+                      onChange={(v) => setRow(p.krsId, { [k]: v })}
+                      disabled={!periodeAktif || r.status === 'finalized'}
+                      sumber={nilaiSumber.data?.items[p.mahasiswa.id]?.[k] ?? null}
+                      total={nilaiSumber.data?.total[k] ?? 0}
+                    />
+                  ))}
                   <NumCell value={r.kehadiran} onChange={(v) => setRow(p.krsId, { kehadiran: v })} disabled={!periodeAktif || r.status === 'finalized'} />
                   <NumCell value={r.nilaiAngka} onChange={(v) => setRow(p.krsId, { nilaiAngka: v })} disabled={!periodeAktif || r.status === 'finalized'} strong />
                   <td className="center mono"><strong>{p.nilai?.nilaiHuruf ?? '—'}</strong></td>
@@ -278,8 +300,8 @@ export function DosenInputNilaiDetail() {
 
       <Card>
         <p className="muted" style={{ margin: 0, fontSize: 'var(--text-xs)' }}>
-          Tip — klik angka biru di bawah sel <strong>Tugas</strong> untuk mengisi otomatis dari rerata nilai submission modul Tugas.
-          Setelah komponen terisi, klik <strong>Hitung</strong> untuk menjumlahkan dengan bobot di atas, atau input <strong>Nilai Angka</strong> langsung.
+          Tip — klik angka biru di bawah sel <strong>Tugas/UTS/UAS/Praktik</strong> untuk mengisi otomatis dari rerata submission modul Pengumpulan; atau klik <strong>Sinkron Semua</strong> di atas untuk seluruh mahasiswa sekaligus.
+          Setelah komponen terisi, klik <strong>Hitung</strong> untuk menjumlahkan dengan bobot, atau input <strong>Nilai Angka</strong> langsung.
           Saat disimpan, huruf (A ≥85, AB ≥75, B ≥70, BC ≥65, C ≥56, D ≥40, E &lt;40) dan bobot skala 4 dihitung otomatis. Finalisasi mensyaratkan nilai angka.
         </p>
       </Card>
@@ -311,20 +333,18 @@ export function DosenInputNilaiDetail() {
   );
 }
 
-function TugasCell({
-  value, onChange, disabled, rerata, totalTugas,
+function KomponenSyncCell({
+  value, onChange, disabled, sumber, total,
 }: {
   value: string;
   onChange: (v: string) => void;
   disabled?: boolean;
-  rerata: { rerata: number; dinilai: number } | null;
-  totalTugas: number;
+  sumber: { rerata: number; dinilai: number } | null;
+  total: number;
 }) {
-  const showHint = rerata != null && rerata.dinilai > 0;
-  const hintText = showHint
-    ? `≈ ${rerata.rerata} (${rerata.dinilai}/${totalTugas})`
-    : null;
-  const apply = () => { if (rerata) onChange(rerata.rerata.toString()); };
+  const show = sumber != null && sumber.dinilai > 0;
+  const hint = show ? `≈ ${sumber.rerata} (${sumber.dinilai}/${total})` : null;
+  const apply = () => { if (sumber) onChange(sumber.rerata.toString()); };
   return (
     <td className="num">
       <input
@@ -335,12 +355,12 @@ function TugasCell({
         className="tz-input"
         style={{ width: 70, textAlign: 'right', fontFamily: 'var(--font-mono)', padding: '4px 6px' }}
       />
-      {hintText && (
+      {hint && (
         <button
           type="button"
           onClick={apply}
           disabled={disabled}
-          title={`Klik: isi otomatis dari rerata Tugas (${rerata!.dinilai} dari ${totalTugas} tugas dinilai)`}
+          title={`Klik: isi otomatis dari rerata submission (${sumber!.dinilai} dari ${total} dinilai)`}
           style={{
             display: 'block', marginTop: 2, padding: 0, border: 'none', background: 'none',
             color: 'var(--text-link)', fontSize: 'var(--text-2xs)',
@@ -348,7 +368,7 @@ function TugasCell({
             fontFamily: 'var(--font-mono)',
           }}
         >
-          {hintText}
+          {hint}
         </button>
       )}
     </td>

@@ -124,16 +124,28 @@ export function useUpdateBobotNilai(kelasId: string | undefined) {
 }
 
 /**
- * Rerata nilai Tugas per mahasiswa untuk satu kelas.
- * Sumber: modul Tugas (SubmitTugas.nilai) — sudah dinormalisasi ke 100.
- * Dipakai oleh tombol "Sync dari Tugas" di Input Nilai.
+ * Sumber nilai per komponen per mahasiswa.
+ * - tugas: rerata SubmitTugas (jenis=tugas) yang dinilai + KuisAttempt (masukNilaiTugas)
+ * - uts/uas/praktikum: rerata SubmitTugas dengan jenis sesuai
+ * Dipakai oleh hint Sync per kolom dan tombol "Sinkron semua mahasiswa".
  */
-export type KelasTugasRerata = {
-  totalTugas: number;
-  items: Record<string, { rerata: number; dinilai: number }>;
+export type Komponen = 'tugas' | 'uts' | 'uas' | 'praktikum';
+export type NilaiSumberItem = Partial<Record<Komponen, { rerata: number; dinilai: number }>>;
+export type KelasNilaiSumber = {
+  total: Record<Komponen, number>;
+  items: Record<string, NilaiSumberItem>;
 };
-export const useDosenKelasTugasRerata = (kelasId: string | undefined) =>
-  useApi<KelasTugasRerata>(['dosen-kelas-tugas-rerata', kelasId], `/dosen/kelas/${kelasId}/tugas-rerata`, { enabled: !!kelasId });
+export const useDosenKelasNilaiSumber = (kelasId: string | undefined) =>
+  useApi<KelasNilaiSumber>(['dosen-kelas-nilai-sumber', kelasId], `/dosen/kelas/${kelasId}/nilai-sumber`, { enabled: !!kelasId });
+
+export type SinkronNilaiResult = { updated: number; mahasiswa: number; message: string };
+export function useSinkronNilai(kelasId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiPost<SinkronNilaiResult>(`/dosen/kelas/${kelasId}/sinkron-nilai`, {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['dosen-kelas', kelasId] }),
+  });
+}
 
 /** Hitung nilai akhir dari komponen × bobot. Komponen null diabaikan
  *  (bobot-nya tidak diakumulasi), bukan dianggap 0 — supaya dosen yang
@@ -195,6 +207,7 @@ export type DosenTugasItem = {
   maxNilai: number;
   linkLampiran: string | null;
   pertemuanKe: number | null;
+  jenis: Komponen;
   totalSubmit: number;
   totalDinilai: number;
 };
@@ -212,6 +225,7 @@ export type DosenTugasInput = {
   maxNilai?: number;
   linkLampiran?: string | null;
   pertemuanId?: string | null;
+  jenis?: Komponen;
 };
 
 export type DosenSubmissionItem = {

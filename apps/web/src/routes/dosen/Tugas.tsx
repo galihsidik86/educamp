@@ -13,8 +13,8 @@ export function DosenTugasList() {
     <div className="stack">
       <PageHead
         eyebrow="PENGAJARAN"
-        title="Tugas"
-        subtitle="Buat tugas dan beri nilai submission per kelas."
+        title="Pengumpulan Tugas & Ujian"
+        subtitle="Buat tugas, UTS, UAS, atau praktikum dan beri nilai submission per kelas. Nilai bisa disinkronkan otomatis ke komponen penilaian."
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}

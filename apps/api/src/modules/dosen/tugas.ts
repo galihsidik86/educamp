@@ -14,6 +14,7 @@ const createSchema = z.object({
   maxNilai: z.number().int().min(1).max(100).optional(),
   linkLampiran: z.string().max(500).optional().nullable(),
   pertemuanId: z.string().uuid().optional().nullable(),
+  jenis: z.enum(['tugas', 'uts', 'uas', 'praktikum']).optional(),
 });
 
 async function getKelasOwned(userId: string, kelasId: string) {
@@ -60,6 +61,7 @@ tugasRouter.get('/kelas/:kelasId/tugas', async (req, res) => {
         maxNilai: t.maxNilai,
         linkLampiran: t.linkLampiran,
         pertemuanKe: t.pertemuan?.pertemuanKe ?? null,
+        jenis: t.jenis,
         totalSubmit: t._count.submission,
         totalDinilai: dinilai,
       };
@@ -83,6 +85,7 @@ tugasRouter.post('/kelas/:kelasId/tugas', async (req, res) => {
       maxNilai: body.maxNilai ?? 100,
       linkLampiran: body.linkLampiran ?? null,
       pertemuanId: body.pertemuanId ?? null,
+      jenis: body.jenis ?? 'tugas',
     },
   });
   void writeAudit(req, { action: 'tugas.create', entity: 'tugas', entityId: created.id, metadata: { kelasId: k.id, judul: body.judul } });

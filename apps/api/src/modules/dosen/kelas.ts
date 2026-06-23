@@ -530,68 +530,143 @@ kelasRouter.put('/kelas/:kelasId/bobot', async (req, res) => {
 });
 
 // ============================================================
-// Rerata nilai Tugas per mahasiswa (untuk tombol Sync di Input Nilai).
-// Sumber:
-//   1. SubmitTugas yang sudah dinilai (dinormalisasi ke 100 pakai Tugas.maxNilai)
-//   2. KuisAttempt yang sudah submit untuk Kuis dengan masukNilaiTugas=true
-//      (KuisAttempt.persen sudah 0-100)
-// Keduanya digabung sebagai entri setara, lalu rata-rata per mahasiswa.
-// totalTugas mencakup keduanya — supaya rasio "x/y dinilai" akurat.
+// Sumber nilai per komponen per mahasiswa (untuk sinkronisasi di Input Nilai).
+// Untuk setiap komponen (tugas/uts/uas/praktikum):
+//   - Ambil SubmitTugas yang sudah dinilai pada Tugas dengan jenis = komponen,
+//     normalisasi (nilai/maxNilai * 100), rata-rata per mahasiswa.
+// Khusus komponen 'tugas': juga gabungkan KuisAttempt.persen dari Kuis
+// dengan masukNilaiTugas=true (sudah skala 0-100).
+// total[komponen] = jumlah submission yang dinilai utk komponen itu.
 // ============================================================
-kelasRouter.get('/kelas/:kelasId/tugas-rerata', async (req, res) => {
-  const d = await getDosenForUser(req.user!.sub);
-  await requireKelasOwnership(d.id, req.params.kelasId);
+type SumberAcc = { sum: number; count: number };
+type Komponen = 'tugas' | 'uts' | 'uas' | 'praktikum';
+const KOMPONEN: Komponen[] = ['tugas', 'uts', 'uas', 'praktikum'];
 
-  const [totalTugas, totalKuisIkut] = await Promise.all([
-    prisma.tugas.count({ where: { kelasId: req.params.kelasId } }),
-    prisma.kuis.count({ where: { kelasId: req.params.kelasId, masukNilaiTugas: true } }),
-  ]);
-
+async function computeNilaiSumber(kelasId: string) {
   const submissions = await prisma.submitTugas.findMany({
-    where: {
-      tugas: { kelasId: req.params.kelasId },
-      nilai: { not: null },
-    },
+    where: { tugas: { kelasId }, nilai: { not: null } },
     select: {
       mahasiswaId: true,
       nilai: true,
-      tugas: { select: { maxNilai: true } },
+      tugas: { select: { maxNilai: true, jenis: true } },
     },
   });
-
   const kuisAttempts = await prisma.kuisAttempt.findMany({
     where: {
-      kuis: { kelasId: req.params.kelasId, masukNilaiTugas: true },
+      kuis: { kelasId, masukNilaiTugas: true },
       persen: { not: null },
     },
     select: { mahasiswaId: true, persen: true },
   });
 
-  const byMahasiswa = new Map<string, { sum: number; count: number }>();
+  const acc: Record<Komponen, Map<string, SumberAcc>> = {
+    tugas: new Map(), uts: new Map(), uas: new Map(), praktikum: new Map(),
+  };
+  const total: Record<Komponen, number> = { tugas: 0, uts: 0, uas: 0, praktikum: 0 };
+
   for (const s of submissions) {
     if (s.nilai == null) continue;
+    const k = s.tugas.jenis as Komponen;
     const maxN = s.tugas.maxNilai || 100;
     const norm = (s.nilai / maxN) * 100;
-    const acc = byMahasiswa.get(s.mahasiswaId) ?? { sum: 0, count: 0 };
-    acc.sum += norm;
-    acc.count += 1;
-    byMahasiswa.set(s.mahasiswaId, acc);
+    const cur = acc[k].get(s.mahasiswaId) ?? { sum: 0, count: 0 };
+    cur.sum += norm;
+    cur.count += 1;
+    acc[k].set(s.mahasiswaId, cur);
+    total[k] += 1;
   }
   for (const a of kuisAttempts) {
     if (a.persen == null) continue;
-    const acc = byMahasiswa.get(a.mahasiswaId) ?? { sum: 0, count: 0 };
-    acc.sum += a.persen;
-    acc.count += 1;
-    byMahasiswa.set(a.mahasiswaId, acc);
+    const cur = acc.tugas.get(a.mahasiswaId) ?? { sum: 0, count: 0 };
+    cur.sum += a.persen;
+    cur.count += 1;
+    acc.tugas.set(a.mahasiswaId, cur);
+    total.tugas += 1;
   }
 
-  const items: Record<string, { rerata: number; dinilai: number }> = {};
-  for (const [mahasiswaId, acc] of byMahasiswa.entries()) {
-    items[mahasiswaId] = {
-      rerata: Math.round((acc.sum / acc.count) * 100) / 100,
-      dinilai: acc.count,
-    };
+  // Build per-mahasiswa map
+  const mahasiswaIds = new Set<string>();
+  for (const k of KOMPONEN) for (const id of acc[k].keys()) mahasiswaIds.add(id);
+
+  const items: Record<string, Partial<Record<Komponen, { rerata: number; dinilai: number }>>> = {};
+  for (const id of mahasiswaIds) {
+    const row: Partial<Record<Komponen, { rerata: number; dinilai: number }>> = {};
+    for (const k of KOMPONEN) {
+      const a = acc[k].get(id);
+      if (a && a.count > 0) {
+        row[k] = { rerata: Math.round((a.sum / a.count) * 100) / 100, dinilai: a.count };
+      }
+    }
+    items[id] = row;
   }
 
-  res.json({ totalTugas: totalTugas + totalKuisIkut, items });
+  // total.tugas mencakup kuis ikut (sudah dijumlahkan di loop)
+  return { total, items };
+}
+
+kelasRouter.get('/kelas/:kelasId/nilai-sumber', async (req, res) => {
+  const d = await getDosenForUser(req.user!.sub);
+  await requireKelasOwnership(d.id, req.params.kelasId);
+  const result = await computeNilaiSumber(req.params.kelasId);
+  res.json(result);
+});
+
+// ============================================================
+// Sinkronisasi nilai batch: untuk setiap peserta KRS disetujui, isi
+// kolom Nilai.tugas/uts/uas/praktikum dari rerata sumber. Status nilai
+// disisakan ('belum' jika baru, atau apa adanya jika sudah draft).
+// Tidak mengisi 'finalized' — dosen yang memutuskan finalisasi nanti.
+// ============================================================
+kelasRouter.post('/kelas/:kelasId/sinkron-nilai', async (req, res) => {
+  const d = await getDosenForUser(req.user!.sub);
+  await requireKelasOwnership(d.id, req.params.kelasId);
+
+  const peserta = await prisma.krs.findMany({
+    where: { kelasId: req.params.kelasId, status: 'disetujui' },
+    select: { id: true, mahasiswaId: true, nilai: { select: { status: true } } },
+  });
+  if (peserta.length === 0) {
+    res.json({ updated: 0, mahasiswa: 0, message: 'Tidak ada peserta KRS disetujui.' });
+    return;
+  }
+
+  const { items } = await computeNilaiSumber(req.params.kelasId);
+
+  let updated = 0;
+  let mahasiswaTerupdate = 0;
+  await prisma.$transaction(async (tx) => {
+    for (const p of peserta) {
+      const src = items[p.mahasiswaId];
+      if (!src) continue;
+      const data: Record<string, number> = {};
+      if (src.tugas) data.tugas = src.tugas.rerata;
+      if (src.uts) data.uts = src.uts.rerata;
+      if (src.uas) data.uas = src.uas.rerata;
+      if (src.praktikum) data.praktikum = src.praktikum.rerata;
+      if (Object.keys(data).length === 0) continue;
+      // Skip mahasiswa yang nilainya sudah difinalisasi
+      if (p.nilai?.status === 'finalized') continue;
+
+      await tx.nilai.upsert({
+        where: { krsId: p.id },
+        create: { krsId: p.id, mahasiswaId: p.mahasiswaId, ...data, status: 'draft' },
+        update: data,
+      });
+      updated += Object.keys(data).length;
+      mahasiswaTerupdate += 1;
+    }
+  });
+
+  void writeAudit(req, {
+    action: 'nilai.sinkron',
+    entity: 'kelas',
+    entityId: req.params.kelasId,
+    metadata: { mahasiswa: mahasiswaTerupdate, fieldUpdated: updated },
+  });
+
+  res.json({
+    updated,
+    mahasiswa: mahasiswaTerupdate,
+    message: `${mahasiswaTerupdate} mahasiswa tersinkron (${updated} kolom nilai diperbarui). Mahasiswa dengan nilai finalized di-skip.`,
+  });
 });
