@@ -531,14 +531,22 @@ kelasRouter.put('/kelas/:kelasId/bobot', async (req, res) => {
 
 // ============================================================
 // Rerata nilai Tugas per mahasiswa (untuk tombol Sync di Input Nilai).
-// Mengambil semua submission yang sudah dinilai, normalisasi ke 100
-// pakai Tugas.maxNilai, lalu rata-rata per mahasiswa.
+// Sumber:
+//   1. SubmitTugas yang sudah dinilai (dinormalisasi ke 100 pakai Tugas.maxNilai)
+//   2. KuisAttempt yang sudah submit untuk Kuis dengan masukNilaiTugas=true
+//      (KuisAttempt.persen sudah 0-100)
+// Keduanya digabung sebagai entri setara, lalu rata-rata per mahasiswa.
+// totalTugas mencakup keduanya — supaya rasio "x/y dinilai" akurat.
 // ============================================================
 kelasRouter.get('/kelas/:kelasId/tugas-rerata', async (req, res) => {
   const d = await getDosenForUser(req.user!.sub);
   await requireKelasOwnership(d.id, req.params.kelasId);
 
-  const totalTugas = await prisma.tugas.count({ where: { kelasId: req.params.kelasId } });
+  const [totalTugas, totalKuisIkut] = await Promise.all([
+    prisma.tugas.count({ where: { kelasId: req.params.kelasId } }),
+    prisma.kuis.count({ where: { kelasId: req.params.kelasId, masukNilaiTugas: true } }),
+  ]);
+
   const submissions = await prisma.submitTugas.findMany({
     where: {
       tugas: { kelasId: req.params.kelasId },
@@ -551,6 +559,14 @@ kelasRouter.get('/kelas/:kelasId/tugas-rerata', async (req, res) => {
     },
   });
 
+  const kuisAttempts = await prisma.kuisAttempt.findMany({
+    where: {
+      kuis: { kelasId: req.params.kelasId, masukNilaiTugas: true },
+      persen: { not: null },
+    },
+    select: { mahasiswaId: true, persen: true },
+  });
+
   const byMahasiswa = new Map<string, { sum: number; count: number }>();
   for (const s of submissions) {
     if (s.nilai == null) continue;
@@ -561,6 +577,13 @@ kelasRouter.get('/kelas/:kelasId/tugas-rerata', async (req, res) => {
     acc.count += 1;
     byMahasiswa.set(s.mahasiswaId, acc);
   }
+  for (const a of kuisAttempts) {
+    if (a.persen == null) continue;
+    const acc = byMahasiswa.get(a.mahasiswaId) ?? { sum: 0, count: 0 };
+    acc.sum += a.persen;
+    acc.count += 1;
+    byMahasiswa.set(a.mahasiswaId, acc);
+  }
 
   const items: Record<string, { rerata: number; dinilai: number }> = {};
   for (const [mahasiswaId, acc] of byMahasiswa.entries()) {
@@ -570,5 +593,5 @@ kelasRouter.get('/kelas/:kelasId/tugas-rerata', async (req, res) => {
     };
   }
 
-  res.json({ totalTugas, items });
+  res.json({ totalTugas: totalTugas + totalKuisIkut, items });
 });

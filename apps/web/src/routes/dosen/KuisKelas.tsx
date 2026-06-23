@@ -13,6 +13,7 @@ const EMPTY: KuisInput = {
   durasiMenit: 30,
   mulai: '',
   selesai: '',
+  masukNilaiTugas: false,
 };
 
 export function DosenKuisKelas() {
@@ -93,6 +94,20 @@ export function DosenKuisKelas() {
               <Input label="Durasi (mnt)" type="number" min="5" max="240" value={String(form.durasiMenit)} onChange={(e) => setForm({ ...form, durasiMenit: Number((e.target as HTMLInputElement).value) })} />
             </div>
           </div>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={form.masukNilaiTugas ?? false}
+              onChange={(e) => setForm({ ...form, masukNilaiTugas: e.target.checked })}
+              style={{ marginTop: 3 }}
+            />
+            <span style={{ fontSize: 'var(--text-sm)' }}>
+              <strong>Hitung sebagai nilai Tugas</strong>
+              <div className="muted" style={{ fontSize: 'var(--text-xs)', marginTop: 2 }}>
+                Persen hasil kuis tiap mahasiswa ikut dirata-rata bersama nilai Tugas di Input Nilai.
+              </div>
+            </span>
+          </label>
           <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}>
             <Button variant="ghost" size="sm" onClick={() => setModalOpen(false)}>Batal</Button>
             <Button variant="primary" size="sm" disabled={actions.create.isPending} onClick={save}>{actions.create.isPending ? 'Menyimpan…' : 'Buat'}</Button>
@@ -113,6 +128,7 @@ function KuisCard({ kuis, onOpen }: { kuis: DosenKuisItem; onOpen: () => void })
             <div className="row" style={{ alignItems: 'center', gap: 'var(--space-2)' }}>
               <strong style={{ color: 'var(--text-strong)' }}>{kuis.judul}</strong>
               <span className={`pill ${kuis.isPublished ? 'pill--success' : 'pill--neutral'}`}>{kuis.isPublished ? 'Published' : 'Draft'}</span>
+              {kuis.masukNilaiTugas && <span className="pill pill--info" title="Hitung sebagai nilai Tugas">Tugas</span>}
             </div>
             <div className="muted mono" style={{ fontSize: 'var(--text-xs)', marginTop: 4 }}>
               {formatTanggalWaktu(kuis.mulai)} → {formatTanggalWaktu(kuis.selesai)}

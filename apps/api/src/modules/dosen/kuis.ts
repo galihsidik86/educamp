@@ -15,6 +15,7 @@ const kuisSchema = z.object({
   selesai: z.string().min(1),
   acak: z.boolean().optional(),
   isPublished: z.boolean().optional(),
+  masukNilaiTugas: z.boolean().optional(),
 });
 
 const soalSchema = z.object({
@@ -54,6 +55,7 @@ kuisRouter.post('/kelas/:kelasId/kuis', async (req, res) => {
       selesai,
       acak: body.acak ?? true,
       isPublished: body.isPublished ?? false,
+      masukNilaiTugas: body.masukNilaiTugas ?? false,
     },
   });
   void writeAudit(req, { action: 'kuis.create', entity: 'kuis', entityId: created.id, metadata: { kelasId: req.params.kelasId } });

@@ -13,6 +13,7 @@ export type DosenKuisItem = {
   selesai: string;
   acak: boolean;
   isPublished: boolean;
+  masukNilaiTugas: boolean;
   _count: { soal: number; attempt: number };
 };
 
@@ -28,6 +29,7 @@ export type DosenKuisDetail = {
   selesai: string;
   acak: boolean;
   isPublished: boolean;
+  masukNilaiTugas: boolean;
   kelasId: string;
   kelas: { id: string; kodeKelas: string; mataKuliah: { kode: string; nama: string } };
   soal: Array<{
@@ -52,6 +54,7 @@ export type KuisInput = {
   selesai: string;
   acak?: boolean;
   isPublished?: boolean;
+  masukNilaiTugas?: boolean;
 };
 
 export type SoalInput = {

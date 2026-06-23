@@ -1450,22 +1450,25 @@ enum StatusKuisAttempt {
 }
 
 model Kuis {
-  id           String      @id @default(uuid())
-  kelasId      String
-  kelas        Kelas       @relation(fields: [kelasId], references: [id], onDelete: Cascade)
-  judul        String
-  deskripsi    String?     @db.Text
-  durasiMenit  Int         @default(30)
-  mulai        DateTime
-  selesai      DateTime
-  acak         Boolean     @default(true) // acak urutan soal saat attempt
-  isPublished  Boolean     @default(false)
+  id               String      @id @default(uuid())
+  kelasId          String
+  kelas            Kelas       @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+  judul            String
+  deskripsi        String?     @db.Text
+  durasiMenit      Int         @default(30)
+  mulai            DateTime
+  selesai          DateTime
+  acak             Boolean     @default(true)  // acak urutan soal saat attempt
+  isPublished      Boolean     @default(false)
+  /// Jika true, persen attempt mahasiswa ikut dihitung dalam rerata
+  /// kolom "Tugas" di Input Nilai (bersama SubmitTugas yang sudah dinilai).
+  masukNilaiTugas  Boolean     @default(false)
 
-  soal         KuisSoal[]
-  attempt      KuisAttempt[]
+  soal             KuisSoal[]
+  attempt          KuisAttempt[]
 
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
   @@index([kelasId])
 }

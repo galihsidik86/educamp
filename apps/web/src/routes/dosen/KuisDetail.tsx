@@ -65,6 +65,12 @@ export function DosenKuisDetail() {
     catch (e) { setActErr(e instanceof ApiError ? e.message : 'Gagal'); }
   };
 
+  const toggleMasukNilaiTugas = async () => {
+    setActErr(null);
+    try { await actions.update.mutateAsync({ id: data.id, patch: { masukNilaiTugas: !data.masukNilaiTugas } }); }
+    catch (e) { setActErr(e instanceof ApiError ? e.message : 'Gagal'); }
+  };
+
   return (
     <div className="stack">
       <Link to={`/dosen/kuis/${kelasId}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--text-link)', textDecoration: 'none', fontSize: 'var(--text-sm)' }}>
@@ -89,6 +95,24 @@ export function DosenKuisDetail() {
       />
 
       {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
+
+      <Card>
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)', cursor: 'pointer', margin: 0 }}>
+          <input
+            type="checkbox"
+            checked={data.masukNilaiTugas}
+            onChange={toggleMasukNilaiTugas}
+            disabled={actions.update.isPending}
+            style={{ marginTop: 3 }}
+          />
+          <span style={{ fontSize: 'var(--text-sm)' }}>
+            <strong>Hitung sebagai nilai Tugas</strong>
+            <div className="muted" style={{ fontSize: 'var(--text-xs)', marginTop: 2 }}>
+              Saat aktif, persen attempt mahasiswa untuk kuis ini ikut dirata-rata dengan nilai Tugas di Input Nilai (klik angka biru di kolom Tugas).
+            </div>
+          </span>
+        </label>
+      </Card>
 
       <div className="row" style={{ gap: 'var(--space-2)' }}>
         <Button size="sm" variant={tab === 'soal' ? 'primary' : 'ghost'} onClick={() => setTab('soal')}>Soal</Button>
