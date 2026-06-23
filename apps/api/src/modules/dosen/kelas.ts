@@ -73,6 +73,7 @@ kelasRouter.get('/kelas/:id', async (req, res) => {
         },
         orderBy: { mahasiswa: { nim: 'asc' } },
       },
+      bobotNilai: true,
     },
   });
   if (!k) throw NotFound('Kelas tidak ditemukan');
@@ -103,6 +104,15 @@ kelasRouter.get('/kelas/:id', async (req, res) => {
         gelarBelakang: t.dosen.gelarBelakang,
         peran: t.peran,
       })),
+      bobotNilai: k.bobotNilai
+        ? {
+            tugas: k.bobotNilai.bobotTugas,
+            uts: k.bobotNilai.bobotUts,
+            uas: k.bobotNilai.bobotUas,
+            praktikum: k.bobotNilai.bobotPraktikum,
+            kehadiran: k.bobotNilai.bobotKehadiran,
+          }
+        : null,
     },
     peserta: k.krs.map((r) => ({
       krsId: r.id,
@@ -436,5 +446,85 @@ kelasRouter.post('/kelas/:kelasId/nilai/finalize-all', async (req, res) => {
     message: belumDinilai.length > 0
       ? `${siapFinalize.length} nilai difinalisasi. ${belumDinilai.length} mahasiswa belum diberi nilai (perlu input dulu).`
       : `Semua ${siapFinalize.length} nilai berhasil difinalisasi.`,
+  });
+});
+
+// ============================================================
+// BOBOT NILAI per kelas — dosen tentukan persentase komponen.
+// Default 20/30/40/0/10 (tugas/UTS/UAS/praktikum/kehadiran) bila belum diset.
+// ============================================================
+
+const DEFAULT_BOBOT = { tugas: 20, uts: 30, uas: 40, praktikum: 0, kehadiran: 10 };
+const SUM_TOLERANCE = 0.01;
+
+const bobotSchema = z.object({
+  tugas: z.number().min(0).max(100),
+  uts: z.number().min(0).max(100),
+  uas: z.number().min(0).max(100),
+  praktikum: z.number().min(0).max(100),
+  kehadiran: z.number().min(0).max(100),
+});
+
+kelasRouter.get('/kelas/:kelasId/bobot', async (req, res) => {
+  const d = await getDosenForUser(req.user!.sub);
+  await requireKelasOwnership(d.id, req.params.kelasId);
+  const row = await prisma.bobotNilaiKelas.findUnique({ where: { kelasId: req.params.kelasId } });
+  if (!row) {
+    res.json({ bobot: DEFAULT_BOBOT, configured: false });
+    return;
+  }
+  res.json({
+    bobot: {
+      tugas: row.bobotTugas,
+      uts: row.bobotUts,
+      uas: row.bobotUas,
+      praktikum: row.bobotPraktikum,
+      kehadiran: row.bobotKehadiran,
+    },
+    configured: true,
+  });
+});
+
+kelasRouter.put('/kelas/:kelasId/bobot', async (req, res) => {
+  const d = await getDosenForUser(req.user!.sub);
+  await requireKelasOwnership(d.id, req.params.kelasId);
+  const b = bobotSchema.parse(req.body);
+  const sum = b.tugas + b.uts + b.uas + b.praktikum + b.kehadiran;
+  if (Math.abs(sum - 100) > SUM_TOLERANCE) {
+    throw BadRequest(`Total bobot harus 100% (sekarang ${sum.toFixed(1)}%)`);
+  }
+  const row = await prisma.bobotNilaiKelas.upsert({
+    where: { kelasId: req.params.kelasId },
+    create: {
+      kelasId: req.params.kelasId,
+      bobotTugas: b.tugas,
+      bobotUts: b.uts,
+      bobotUas: b.uas,
+      bobotPraktikum: b.praktikum,
+      bobotKehadiran: b.kehadiran,
+    },
+    update: {
+      bobotTugas: b.tugas,
+      bobotUts: b.uts,
+      bobotUas: b.uas,
+      bobotPraktikum: b.praktikum,
+      bobotKehadiran: b.kehadiran,
+    },
+  });
+  void writeAudit(req, {
+    action: 'nilai.bobot.set',
+    entity: 'kelas',
+    entityId: req.params.kelasId,
+    metadata: b,
+  });
+  res.json({
+    bobot: {
+      tugas: row.bobotTugas,
+      uts: row.bobotUts,
+      uas: row.bobotUas,
+      praktikum: row.bobotPraktikum,
+      kehadiran: row.bobotKehadiran,
+    },
+    configured: true,
   });
 });

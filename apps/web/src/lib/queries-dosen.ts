@@ -75,6 +75,7 @@ export type DosenKelasDetail = {
       gelarDepan: string | null; gelarBelakang: string | null;
       peran: 'lead' | 'anggota' | 'asisten';
     }>;
+    bobotNilai: BobotNilai | null;
   };
   peserta: Array<{
     krsId: string;
@@ -104,6 +105,46 @@ export function useUpdateNilai(kelasId: string | undefined) {
       api(`/dosen/nilai/${krsId}`, { method: 'PATCH', body: JSON.stringify(patch) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['dosen-kelas', kelasId] }),
   });
+}
+
+// ============================================================
+// Bobot nilai per kelas — dosen set persentase komponen.
+// ============================================================
+export type BobotNilai = {
+  tugas: number; uts: number; uas: number;
+  praktikum: number; kehadiran: number;
+};
+export function useUpdateBobotNilai(kelasId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (bobot: BobotNilai) =>
+      api(`/dosen/kelas/${kelasId}/bobot`, { method: 'PUT', body: JSON.stringify(bobot) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['dosen-kelas', kelasId] }),
+  });
+}
+
+/** Hitung nilai akhir dari komponen × bobot. Komponen null diabaikan
+ *  (bobot-nya tidak diakumulasi), bukan dianggap 0 — supaya dosen yang
+ *  belum input semua komponen tidak ke-penalty unfair. */
+export function hitungNilaiDariBobot(
+  k: { tugas?: number | null; uts?: number | null; uas?: number | null; praktikum?: number | null; kehadiran?: number | null },
+  b: BobotNilai,
+): number | null {
+  const pairs: Array<[number | null | undefined, number]> = [
+    [k.tugas, b.tugas], [k.uts, b.uts], [k.uas, b.uas],
+    [k.praktikum, b.praktikum], [k.kehadiran, b.kehadiran],
+  ];
+  let totalNilai = 0;
+  let totalBobot = 0;
+  for (const [val, bobot] of pairs) {
+    if (val == null || bobot === 0) continue;
+    totalNilai += val * bobot;
+    totalBobot += bobot;
+  }
+  if (totalBobot === 0) return null;
+  // Re-scale: bagi dengan totalBobot yang dipakai (bukan 100), supaya komponen
+  // yang belum diinput tidak menarik nilai akhir turun.
+  return Math.round((totalNilai / totalBobot) * 100) / 100;
 }
 
 export type NilaiImportResult = {

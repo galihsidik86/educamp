@@ -497,6 +497,7 @@ model Kelas {
   kuis         Kuis[]
   forumThread  ForumThread[]
   team         KelasDosen[]
+  bobotNilai   BobotNilaiKelas?
 
   feederId     String?    @unique
   lastSyncedAt DateTime?
@@ -507,6 +508,24 @@ model Kelas {
   @@unique([mataKuliahId, semesterId, kodeKelas])
   @@index([semesterId])
   @@index([dosenId])
+}
+
+// ============================================================
+// BOBOT NILAI per kelas — dosen pengampu menentukan persentase
+// komponen (tugas/UTS/UAS/praktikum/kehadiran). Jumlah harus 100%.
+// Tanpa konfigurasi: dosen tetap bisa input nilaiAngka manual.
+// ============================================================
+model BobotNilaiKelas {
+  id              String   @id @default(uuid())
+  kelasId         String   @unique
+  kelas           Kelas    @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+  bobotTugas      Float    @default(20)
+  bobotUts        Float    @default(30)
+  bobotUas        Float    @default(40)
+  bobotPraktikum  Float    @default(0)
+  bobotKehadiran  Float    @default(10)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 // ============================================================

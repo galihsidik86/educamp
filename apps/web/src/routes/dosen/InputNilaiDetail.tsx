@@ -1,13 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Alert, Button, Card } from '@/ds';
-import { ChevronLeft, Save, CheckCircle2, Upload } from 'lucide-react';
-import { useDosenKelasDetail, useUpdateNilai, useFinalizeAllNilai, useImportNilai, type NilaiPatch } from '@/lib/queries-dosen';
+import { ChevronLeft, Save, CheckCircle2, Upload, Calculator, SlidersHorizontal } from 'lucide-react';
+import {
+  useDosenKelasDetail, useUpdateNilai, useFinalizeAllNilai, useImportNilai, useUpdateBobotNilai,
+  hitungNilaiDariBobot,
+  type NilaiPatch, type BobotNilai,
+} from '@/lib/queries-dosen';
 import { ExcelImportModal } from '@/components/ExcelImportModal';
+import { Modal } from '@/components/Modal';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { capitalize, formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+
+const DEFAULT_BOBOT: BobotNilai = { tugas: 20, uts: 30, uas: 40, praktikum: 0, kehadiran: 10 };
 
 type RowDraft = {
   krsId: string;
@@ -45,8 +52,12 @@ export function DosenInputNilaiDetail() {
   const update = useUpdateNilai(kelasId);
   const finalizeAll = useFinalizeAllNilai(kelasId);
   const importNilai = useImportNilai(kelasId);
+  const updateBobot = useUpdateBobotNilai(kelasId);
   const [batchMsg, setBatchMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [bobotOpen, setBobotOpen] = useState(false);
+  const bobot: BobotNilai = data?.kelas.bobotNilai ?? DEFAULT_BOBOT;
+  const bobotConfigured = data?.kelas.bobotNilai != null;
 
   const handleFinalizeAll = async () => {
     if (!confirm('Finalisasi semua nilai yang sudah lengkap di kelas ini? Mahasiswa akan menerima notifikasi.')) return;
@@ -169,6 +180,26 @@ export function DosenInputNilaiDetail() {
         </Alert>
       )}
 
+      <Card>
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+          <div>
+            <div className="muted" style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Bobot komponen {bobotConfigured ? '· dikonfigurasi' : '· default'}
+            </div>
+            <div className="row" style={{ gap: 'var(--space-3)', marginTop: 6, flexWrap: 'wrap' }}>
+              <BobotPill label="Tugas" v={bobot.tugas} />
+              <BobotPill label="UTS" v={bobot.uts} />
+              <BobotPill label="UAS" v={bobot.uas} />
+              <BobotPill label="Praktik" v={bobot.praktikum} />
+              <BobotPill label="Hadir" v={bobot.kehadiran} />
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" leftIcon={<SlidersHorizontal size={14} />} onClick={() => setBobotOpen(true)}>
+            Atur Bobot
+          </Button>
+        </div>
+      </Card>
+
       <div className="tz-table-wrap" style={{ overflow: 'auto' }}>
         <table className="tz-table" style={{ minWidth: 1100 }}>
           <thead>
@@ -201,6 +232,22 @@ export function DosenInputNilaiDetail() {
                   <td><StatusPill status={r.status} /></td>
                   <td>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={!periodeAktif || r.status === 'finalized'}
+                        title="Hitung dari komponen × bobot"
+                        onClick={() => {
+                          const hasil = hitungNilaiDariBobot({
+                            tugas: numOrNull(r.tugas), uts: numOrNull(r.uts), uas: numOrNull(r.uas),
+                            praktikum: numOrNull(r.praktikum), kehadiran: numOrNull(r.kehadiran),
+                          }, bobot);
+                          if (hasil != null) setRow(p.krsId, { nilaiAngka: hasil.toString() });
+                        }}
+                        leftIcon={<Calculator size={12} />}
+                      >
+                        Hitung
+                      </Button>
                       <Button size="sm" variant="secondary" disabled={!r.dirty || r.saving || !periodeAktif} onClick={() => save(p.krsId)} leftIcon={<Save size={12} />}>
                         Simpan
                       </Button>
@@ -223,10 +270,21 @@ export function DosenInputNilaiDetail() {
 
       <Card>
         <p className="muted" style={{ margin: 0, fontSize: 'var(--text-xs)' }}>
-          Tip — input <strong>Nilai Angka</strong> akan otomatis menghitung huruf (A ≥85, AB ≥75, B ≥70, BC ≥65, C ≥56, D ≥40, E &lt;40) dan bobot saat disimpan.
-          Untuk menfinalisasi, nilai angka harus terisi.
+          Tip — isi komponen lalu klik <strong>Hitung</strong> untuk menjumlahkan dengan bobot di atas, atau input <strong>Nilai Angka</strong> langsung.
+          Saat disimpan, huruf (A ≥85, AB ≥75, B ≥70, BC ≥65, C ≥56, D ≥40, E &lt;40) dan bobot skala 4 dihitung otomatis. Finalisasi mensyaratkan nilai angka.
         </p>
       </Card>
+
+      <BobotModal
+        open={bobotOpen}
+        onClose={() => setBobotOpen(false)}
+        initial={bobot}
+        onSave={async (b) => {
+          await updateBobot.mutateAsync(b);
+          setBobotOpen(false);
+        }}
+        saving={updateBobot.isPending}
+      />
 
       <ExcelImportModal
         open={importOpen}
@@ -260,5 +318,79 @@ function NumCell({ value, onChange, disabled, strong }: { value: string; onChang
         }}
       />
     </td>
+  );
+}
+
+function BobotPill({ label, v }: { label: string; v: number }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4 }}>
+      <span className="muted" style={{ fontSize: 'var(--text-xs)' }}>{label}</span>
+      <strong className="mono" style={{ color: 'var(--text-strong)' }}>{v}%</strong>
+    </span>
+  );
+}
+
+function BobotModal({
+  open, onClose, initial, onSave, saving,
+}: {
+  open: boolean; onClose: () => void;
+  initial: BobotNilai;
+  onSave: (b: BobotNilai) => Promise<void> | void;
+  saving: boolean;
+}) {
+  const [draft, setDraft] = useState<BobotNilai>(initial);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) { setDraft(initial); setErr(null); }
+  }, [open, initial]);
+
+  const sum = draft.tugas + draft.uts + draft.uas + draft.praktikum + draft.kehadiran;
+  const sumOk = Math.abs(sum - 100) < 0.01;
+
+  const submit = async () => {
+    setErr(null);
+    if (!sumOk) { setErr(`Total bobot harus 100% (sekarang ${sum.toFixed(1)}%)`); return; }
+    try {
+      await onSave(draft);
+    } catch (e) {
+      setErr(e instanceof ApiError ? e.message : 'Gagal menyimpan bobot');
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={onClose} title="Atur Bobot Komponen Nilai">
+      <p className="muted" style={{ fontSize: 'var(--text-sm)', marginTop: 0 }}>
+        Tentukan persentase tiap komponen. Total harus 100%. Komponen yang bobotnya 0%
+        tidak akan diakumulasi saat tombol Hitung dipakai.
+      </p>
+      <div className="stack" style={{ gap: 'var(--space-2)' }}>
+        {(['tugas', 'uts', 'uas', 'praktikum', 'kehadiran'] as const).map((k) => (
+          <div key={k} className="row" style={{ alignItems: 'center', gap: 'var(--space-3)' }}>
+            <label style={{ width: 110, textTransform: 'capitalize' }}>{k === 'kehadiran' ? 'Kehadiran' : k === 'uts' || k === 'uas' ? k.toUpperCase() : k}</label>
+            <input
+              type="number" min={0} max={100} step={0.5}
+              value={draft[k]}
+              onChange={(e) => setDraft({ ...draft, [k]: Number(e.target.value) || 0 })}
+              className="tz-input mono"
+              style={{ width: 100, textAlign: 'right', padding: '4px 8px' }}
+            />
+            <span className="muted">%</span>
+          </div>
+        ))}
+      </div>
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginTop: 'var(--space-3)' }}>
+        <div style={{ fontSize: 'var(--text-sm)' }}>
+          Total: <strong className="mono" style={{ color: sumOk ? 'var(--success-fg)' : 'var(--danger-fg)' }}>{sum.toFixed(1)}%</strong>
+        </div>
+      </div>
+      {err && <Alert variant="danger" title="Gagal">{err}</Alert>}
+      <div className="row" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 'var(--space-3)' }}>
+        <Button variant="ghost" size="sm" onClick={onClose} disabled={saving}>Batal</Button>
+        <Button variant="primary" size="sm" onClick={submit} disabled={saving || !sumOk}>
+          {saving ? 'Menyimpan…' : 'Simpan Bobot'}
+        </Button>
+      </div>
+    </Modal>
   );
 }
