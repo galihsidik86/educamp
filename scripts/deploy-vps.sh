@@ -26,7 +26,10 @@ git reset --hard origin/main
 # bisa berasal dari versi lama atau baru — tidak dapat diandalkan. Selalu
 # build menghilangkan footgun itu, dan rebuild dengan cache penuh ~5 detik.
 echo "▶ build images"
-docker compose -f docker-compose.prod.yml build
+if ! docker compose -f docker-compose.prod.yml build; then
+  echo "⚠ build gagal — kemungkinan cache BuildKit korup, retry dengan --no-cache"
+  docker compose -f docker-compose.prod.yml build --no-cache
+fi
 
 # Apply schema kalau berubah
 if ! git diff --quiet HEAD@{1} HEAD -- apps/api/prisma/schema.prisma 2>/dev/null; then
