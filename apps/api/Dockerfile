@@ -21,7 +21,9 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+# Catatan: tidak meng-copy /app/apps/api/node_modules — npm workspaces
+# meng-hoist semua deps ke /app/node_modules, jadi folder workspace-local
+# tidak ada. Node resolution akan menemukan deps lewat parent traversal.
 
 COPY package.json ./
 COPY tsconfig.base.json ./
