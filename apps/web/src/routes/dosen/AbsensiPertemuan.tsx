@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Alert, Button, Card } from '@/ds';
-import { ChevronLeft, Save, Check, X, Stethoscope, FileWarning, QrCode, KeyRound, RefreshCw } from 'lucide-react';
+import { Alert, Button, Card, Input } from '@/ds';
+import { ChevronLeft, Save, Check, X, Stethoscope, FileWarning, QrCode, KeyRound, RefreshCw, Search } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useDosenAbsensiPertemuan, useDosenAbsensiActions, useDosenPinStatus, type AbsensiStatus } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
@@ -21,9 +21,13 @@ export function DosenAbsensiPertemuan() {
   const { setAbsensi } = useDosenAbsensiActions(kelasId, pertemuanId);
 
   // Local state of statuses, keyed by mahasiswaId.
+  // PENTING: state ini bertahan saat dosen mencari/memfilter — pencarian
+  // hanya memengaruhi baris yang ditampilkan, tidak menyentuh statuses.
   const [statuses, setStatuses] = useState<Record<string, AbsensiStatus>>({});
+  const [original, setOriginal] = useState<Record<string, AbsensiStatus>>({});
   const [actErr, setActErr] = useState<string | null>(null);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     if (!data) return;
@@ -32,11 +36,31 @@ export function DosenAbsensiPertemuan() {
       init[p.mahasiswaId] = (p.status ?? 'alpa') as AbsensiStatus;
     }
     setStatuses(init);
+    setOriginal(init);
   }, [data]);
 
+  const filtered = useMemo(() => {
+    if (!data) return [];
+    const q = query.trim().toLowerCase();
+    if (!q) return data.peserta;
+    return data.peserta.filter((p) =>
+      p.nim.toLowerCase().includes(q) || p.nama.toLowerCase().includes(q),
+    );
+  }, [data, query]);
+
+  const dirtyCount = useMemo(
+    () => Object.keys(statuses).filter((id) => statuses[id] !== original[id]).length,
+    [statuses, original],
+  );
+
+  /** Tandai semua peserta yang sedang ditampilkan (hasil filter). */
   const setBulk = (status: AbsensiStatus) => {
-    if (!data) return;
-    setStatuses(Object.fromEntries(data.peserta.map((p) => [p.mahasiswaId, status])));
+    if (filtered.length === 0) return;
+    setStatuses((prev) => {
+      const next = { ...prev };
+      for (const p of filtered) next[p.mahasiswaId] = status;
+      return next;
+    });
   };
 
   const save = async () => {
@@ -47,6 +71,7 @@ export function DosenAbsensiPertemuan() {
       const items = Object.entries(statuses).map(([mahasiswaId, status]) => ({ mahasiswaId, status }));
       const res = await setAbsensi.mutateAsync({ pertemuanId, items });
       setSavedMsg(`${(res as any).updated} mahasiswa tersimpan.`);
+      setOriginal(statuses);
     } catch (e) {
       setActErr(e instanceof ApiError ? e.message : 'Gagal');
     }
@@ -76,8 +101,46 @@ export function DosenAbsensiPertemuan() {
       {pertemuanId && <PinPanel pertemuanId={pertemuanId} />}
 
       <Card>
-        <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span className="muted" style={{ fontSize: 'var(--text-sm)' }}>Tandai semua sebagai:</span>
+        <div className="row" style={{ gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 240, position: 'relative' }}>
+            <Input
+              label="Cari NIM atau nama"
+              value={query}
+              onChange={(e) => setQuery((e.target as HTMLInputElement).value)}
+              placeholder="Ketik untuk filter — perubahan status tetap tersimpan"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                title="Bersihkan pencarian"
+                aria-label="Bersihkan pencarian"
+                style={{
+                  position: 'absolute', right: 6, bottom: 6,
+                  border: 'none', background: 'transparent', cursor: 'pointer',
+                  color: 'var(--text-muted)', padding: 4,
+                }}
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', paddingBottom: 8 }}>
+            <Search size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+            {query
+              ? `${filtered.length} dari ${data.peserta.length} peserta`
+              : `${data.peserta.length} peserta`}
+            {dirtyCount > 0 && (
+              <span style={{ marginLeft: 8, color: 'var(--warning-fg)' }}>
+                · {dirtyCount} perubahan belum disimpan
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 'var(--space-3)' }}>
+          <span className="muted" style={{ fontSize: 'var(--text-sm)' }}>
+            Tandai {query ? `${filtered.length} yang difilter` : 'semua'} sebagai:
+          </span>
           {STATUS_OPTIONS.map((opt) => (
             <Button key={opt.value} size="sm" variant="ghost" onClick={() => setBulk(opt.value)} leftIcon={opt.icon}>
               {opt.label}
@@ -100,38 +163,60 @@ export function DosenAbsensiPertemuan() {
             {data.peserta.length === 0 && (
               <tr><td colSpan={4} className="muted center">Belum ada peserta KRS disetujui di kelas ini.</td></tr>
             )}
-            {data.peserta.map((p, i) => (
-              <tr key={p.mahasiswaId}>
-                <td className="num mono">{i + 1}</td>
-                <td className="mono">{p.nim}</td>
-                <td>{p.nama}</td>
-                <td>
-                  <div className="row" style={{ gap: 4 }}>
-                    {STATUS_OPTIONS.map((opt) => {
-                      const active = statuses[p.mahasiswaId] === opt.value;
-                      return (
-                        <Button
-                          key={opt.value}
-                          size="sm"
-                          variant={active ? opt.variant : 'ghost'}
-                          onClick={() => setStatuses((s) => ({ ...s, [p.mahasiswaId]: opt.value }))}
-                          leftIcon={opt.icon}
-                        >
-                          {opt.label}
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {data.peserta.length > 0 && filtered.length === 0 && (
+              <tr><td colSpan={4} className="muted center">Tidak ada peserta cocok dengan kata kunci "{query}".</td></tr>
+            )}
+            {filtered.map((p) => {
+              const idx = data.peserta.findIndex((q) => q.mahasiswaId === p.mahasiswaId);
+              const isDirty = statuses[p.mahasiswaId] !== original[p.mahasiswaId];
+              return (
+                <tr key={p.mahasiswaId}>
+                  <td className="num mono">{idx + 1}</td>
+                  <td className="mono">{p.nim}</td>
+                  <td>
+                    {p.nama}
+                    {isDirty && (
+                      <span className="pill pill--warning" style={{ marginLeft: 6, fontSize: 'var(--text-2xs)' }}>belum disimpan</span>
+                    )}
+                  </td>
+                  <td>
+                    <div className="row" style={{ gap: 4 }}>
+                      {STATUS_OPTIONS.map((opt) => {
+                        const active = statuses[p.mahasiswaId] === opt.value;
+                        return (
+                          <Button
+                            key={opt.value}
+                            size="sm"
+                            variant={active ? opt.variant : 'ghost'}
+                            onClick={() => setStatuses((s) => ({ ...s, [p.mahasiswaId]: opt.value }))}
+                            leftIcon={opt.icon}
+                          >
+                            {opt.label}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      <div className="row" style={{ justifyContent: 'flex-end' }}>
-        <Button variant="primary" leftIcon={<Save size={16} />} disabled={setAbsensi.isPending || data.peserta.length === 0} onClick={save}>
-          {setAbsensi.isPending ? 'Menyimpan…' : 'Simpan presensi'}
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+        <div className="muted" style={{ fontSize: 'var(--text-xs)' }}>
+          Filter pencarian tidak mereset status — simpan sekali untuk semua perubahan.
+        </div>
+        <Button
+          variant="primary"
+          leftIcon={<Save size={16} />}
+          disabled={setAbsensi.isPending || data.peserta.length === 0}
+          onClick={save}
+        >
+          {setAbsensi.isPending
+            ? 'Menyimpan…'
+            : `Simpan Semua${dirtyCount > 0 ? ` (${dirtyCount} perubahan)` : ''}`}
         </Button>
       </div>
     </div>
