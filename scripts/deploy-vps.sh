@@ -19,9 +19,21 @@ echo "▶ git pull"
 git fetch origin
 git reset --hard origin/main
 
-# Build images kalau Dockerfiles atau lockfile berubah
+# Build images kalau Dockerfiles, lockfile, atau source code app berubah.
+# (Runtime image jalan dist/ hasil tsc — perubahan TS tidak ikut tanpa rebuild.)
 NEEDS_BUILD=0
-if ! git diff --quiet HEAD@{1} HEAD -- 'apps/*/Dockerfile' 'apps/*/package.json' 'package.json' 'package-lock.json' 2>/dev/null; then
+if ! git diff --quiet HEAD@{1} HEAD -- \
+    'apps/*/Dockerfile' \
+    'apps/*/package.json' \
+    'apps/api/src/**' \
+    'apps/api/prisma/**' \
+    'apps/web/src/**' \
+    'apps/web/index.html' \
+    'apps/web/vite.config.ts' \
+    'apps/web/nginx.conf' \
+    'package.json' \
+    'package-lock.json' \
+    2>/dev/null; then
   NEEDS_BUILD=1
 fi
 

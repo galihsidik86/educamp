@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { changePasswordSchema, loginSchema, refreshSchema } from './auth.schemas.js';
 import * as service from './auth.service.js';
 import { requireAuth } from '../../middleware/auth.js';
-import { authLimiter } from '../../middleware/rateLimit.js';
+import { authLimiter, refreshLimiter } from '../../middleware/rateLimit.js';
 import { writeAudit } from '../../lib/audit.js';
 
 export const authRouter = Router();
@@ -38,7 +38,7 @@ authRouter.post('/login', authLimiter, async (req, res) => {
   }
 });
 
-authRouter.post('/refresh', authLimiter, async (req, res) => {
+authRouter.post('/refresh', refreshLimiter, async (req, res) => {
   const { refreshToken } = refreshSchema.parse(req.body);
   const tokens = await service.refresh(refreshToken);
   res.json(tokens);

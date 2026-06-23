@@ -7,15 +7,33 @@ import rateLimit from 'express-rate-limit';
 import { env } from '../env.js';
 
 /**
- * Anti brute-force untuk auth endpoints — 8 percobaan / 15 menit / IP.
+ * Anti brute-force untuk /auth/login — 8 percobaan gagal / 15 menit / IP.
+ * Login sukses tidak dihitung (skipSuccessfulRequests) supaya user yang valid
+ * tidak ikut kena limit hanya karena beberapa kali login dari IP yang sama.
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 8,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+  skipSuccessfulRequests: true,
   message: { error: { code: 'TOO_MANY_REQUESTS', message: 'Terlalu banyak percobaan. Coba lagi setelah 15 menit.' } },
   // jangan rate-limit di test biar pengujian cepat
+  skip: () => (env.NODE_ENV as string) === 'test',
+});
+
+/**
+ * Limiter terpisah untuk /auth/refresh — token refresh wajar terjadi sering
+ * (setiap kali access token expire), jadi pakai jendela menit-an dengan kuota
+ * besar. Refresh token sendiri adalah credential, brute-force bukan ancaman
+ * utamanya; limiter ini hanya jaga-jaga dari spam.
+ */
+export const refreshLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: { code: 'TOO_MANY_REQUESTS', message: 'Permintaan refresh token terlalu sering.' } },
   skip: () => (env.NODE_ENV as string) === 'test',
 });
 

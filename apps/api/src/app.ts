@@ -27,6 +27,11 @@ import { institusiPublicRouter } from './modules/akademik/institusi.js';
 export function createApp(): Express {
   const app = express();
 
+  // Di production API jalan di belakang nginx (apps/web/nginx.conf) yang
+  // forward X-Forwarded-For. Tanpa ini req.ip = IP container nginx, sehingga
+  // rate-limit per-IP jadi satu bucket untuk semua user.
+  app.set('trust proxy', 1);
+
   app.use(helmet());
   app.use(
     cors({
