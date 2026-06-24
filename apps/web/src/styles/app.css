@@ -888,6 +888,115 @@ a {
   transform: scale(1.05);
 }
 
+/* ============================================================
+   Sidebar polish — UUPM iterasi
+   ============================================================ */
+
+/* Item: tambah subtle x-translate saat hover untuk affordance */
+.sidebar__item {
+  transition: background var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard),
+              padding var(--dur-fast) var(--ease-standard);
+}
+.sidebar__item:hover:not(.sidebar__item--active) {
+  transform: translateX(2px);
+}
+
+/* Active item gold bar: animated entry — width grow + glow */
+.sidebar__item--active::before {
+  transition: width var(--dur-base) var(--ease-emphasized),
+              box-shadow var(--dur-base) var(--ease-standard);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+/* Icon di item active dapat brand accent — sedikit tint emas */
+.sidebar__item--active > svg,
+.sidebar__item--active > [class*="lucide"] {
+  color: var(--gold-300);
+  filter: drop-shadow(0 0 4px rgba(231, 194, 86, 0.4));
+}
+
+/* Brand mark — soft gold radial glow di dalam, brand-aligned */
+.sidebar__brand-mark {
+  position: relative;
+  overflow: hidden;
+}
+.sidebar__brand-mark::after {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: radial-gradient(circle at center,
+    rgba(231, 194, 86, 0.18) 0%,
+    transparent 60%);
+  pointer-events: none;
+}
+
+/* Group header chevron: smoother + slight scale saat hover */
+.sidebar__group-header:hover .sidebar__group-chevron {
+  transform: scale(1.1);
+}
+.sidebar__group--collapsed .sidebar__group-header:hover .sidebar__group-chevron {
+  transform: rotate(-90deg) scale(1.1);
+}
+
+/* Custom scrollbar di sidebar — slim, brand-tinted */
+.sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-full);
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(231, 194, 86, 0.4);
+}
+
+/* ============================================================
+   Status Pill — UUPM iterasi: pulse opsional + hover micro-scale
+   ============================================================ */
+
+.pill {
+  /* tambah transform ke transition list yang sudah ada di atas */
+  transition: background var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard),
+              border-color var(--dur-fast) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard);
+}
+.pill:hover {
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* Pulse modifier — opt-in. Aman utk a11y karena dimatikan di
+   prefers-reduced-motion oleh aturan global di atas. */
+.pill--pulse {
+  position: relative;
+  animation: pill-pulse 2s var(--ease-in-out) infinite;
+}
+@keyframes pill-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; }
+  50%      { box-shadow: 0 0 0 4px transparent; }
+}
+
+/* Dot indicator: dipakai pill yang berstatus "live" (berjalan, aktif).
+   Di-render lewat ::before di pill yang punya class .pill--dot. */
+.pill--dot::before {
+  content: '';
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+  margin-right: 2px;
+  animation: pill-dot-blink 1.6s var(--ease-in-out) infinite;
+}
+@keyframes pill-dot-blink {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.75); }
+}
+
 @media print {
   .sidebar,
   .sidebar-backdrop,

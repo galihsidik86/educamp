@@ -18,7 +18,16 @@ const VARIANTS: Record<string, Variant> = {
   campuran: 'warning', kosong: 'neutral',
 };
 
+/** Status yang butuh perhatian — pulse animation. */
+const PULSE_STATUSES = new Set(['jatuh_tempo']);
+
+/** Status yang sedang "live"/berjalan — dot indicator berkedip. */
+const DOT_STATUSES = new Set(['berjalan', 'aktif', 'diajukan']);
+
 export function StatusPill({ status, override }: { status: string; override?: Variant }) {
   const v: Variant = override ?? VARIANTS[status] ?? 'neutral';
-  return <span className={`pill pill--${v}`}>{formatStatus(status)}</span>;
+  const cls = ['pill', `pill--${v}`];
+  if (PULSE_STATUSES.has(status)) cls.push('pill--pulse');
+  if (DOT_STATUSES.has(status)) cls.push('pill--dot');
+  return <span className={cls.join(' ')}>{formatStatus(status)}</span>;
 }
