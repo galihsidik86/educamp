@@ -956,6 +956,107 @@ a {
 }
 
 /* ============================================================
+   Dashboard Hero — brand chrome navy + gold radial + geometric
+   Sesuai CLAUDE.md: pattern overlay 5-7%, gold radial glow.
+   ============================================================ */
+
+.dashboard-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--blue-800) 0%, var(--blue-900) 100%);
+  color: white;
+  padding: var(--space-6) var(--space-7);
+  margin-bottom: var(--space-4);
+  box-shadow: 0 4px 24px -4px rgba(15, 24, 58, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.dashboard-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/@ds/assets/pattern-geometric.svg');
+  background-size: 240px;
+  opacity: 0.07;
+  pointer-events: none;
+}
+
+.dashboard-hero::after {
+  content: '';
+  position: absolute;
+  top: -140px;
+  right: -120px;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(231, 194, 86, 0.28) 0%, transparent 65%);
+  pointer-events: none;
+  animation: hero-glow 8s var(--ease-in-out) infinite;
+}
+
+@keyframes hero-glow {
+  0%, 100% { transform: scale(1);    opacity: 0.75; }
+  50%      { transform: scale(1.12); opacity: 1; }
+}
+
+.dashboard-hero__content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 260px;
+}
+
+.dashboard-hero__eyebrow {
+  display: inline-block;
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--gold-300);
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.dashboard-hero__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(var(--text-xl), 3vw, var(--text-3xl));
+  font-weight: var(--fw-semibold);
+  line-height: var(--leading-tight);
+  color: white;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.dashboard-hero__subtitle {
+  margin: var(--space-2) 0 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+.dashboard-hero__right {
+  position: relative;
+  z-index: 1;
+  padding: var(--space-3) var(--space-4);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .dashboard-hero { padding: var(--space-5); }
+  .dashboard-hero::after { width: 240px; height: 240px; top: -80px; right: -80px; }
+}
+
+/* ============================================================
    Status Pill — UUPM iterasi: pulse opsional + hover micro-scale
    ============================================================ */
 

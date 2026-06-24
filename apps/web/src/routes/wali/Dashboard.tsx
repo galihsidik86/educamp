@@ -4,6 +4,7 @@ import { Alert, Card, Select } from '@/ds';
 import { Users, GraduationCap, Wallet, CalendarCheck, ChevronRight, BookOpen } from 'lucide-react';
 import { useWaliProfil, useWaliDashboard } from '@/lib/queries-wali';
 import { PageHead } from '@/components/PageHead';
+import { DashboardHero } from '@/components/DashboardHero';
 import { formatRupiah } from '@/lib/format';
 
 export function WaliDashboard() {
@@ -33,15 +34,15 @@ export function WaliDashboard() {
 
   return (
     <div className="stack">
-      <PageHead
+      <DashboardHero
         eyebrow="WALI MAHASISWA"
         title={anak?.nama ?? 'Dashboard'}
-        subtitle={anak ? `${anak.nim} · ${anak.prodi.nama}` : ''}
+        subtitle={anak ? `${anak.prodi.nama}` : ''}
         right={profil.data.anak.length > 1 ? (
           <Select value={selectedId} onChange={(e) => setSelectedId((e.target as HTMLSelectElement).value)}>
             {profil.data.anak.map((a) => <option key={a.id} value={a.id}>{a.nama} ({a.nim})</option>)}
           </Select>
-        ) : undefined}
+        ) : anak ? <>NIM {anak.nim}</> : undefined}
       />
 
       {dashboard.isLoading && <p className="muted">Memuat dashboard…</p>}

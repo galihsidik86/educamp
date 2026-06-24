@@ -3,7 +3,7 @@ import { GraduationCap, Wallet, ClipboardList, CalendarDays } from 'lucide-react
 import { useAuth } from '@/lib/auth';
 import { useDashboard } from '@/lib/queries';
 import { formatRupiah, formatIp, formatTanggalWaktu, capitalize } from '@/lib/format';
-import { PageHead } from '@/components/PageHead';
+import { DashboardHero } from '@/components/DashboardHero';
 import { PengumumanWidget } from '@/components/PengumumanWidget';
 
 export function MahasiswaDashboard() {
@@ -15,11 +15,11 @@ export function MahasiswaDashboard() {
 
   return (
     <div className="stack">
-      <PageHead
+      <DashboardHero
         eyebrow={data ? `SEMESTER ${data.semester.nama.toUpperCase()}` : 'PORTAL MAHASISWA'}
         title={`Assalamu'alaikum, ${m.nama.split(' ')[0]}`}
-        subtitle={`${m.prodi.nama} · Angkatan ${m.angkatan} · NIM `}
-        right={<span style={{ fontFamily: 'var(--font-mono)' }}>{m.nim}</span>}
+        subtitle={`${m.prodi.nama} · Angkatan ${m.angkatan}`}
+        right={<>NIM {m.nim}</>}
       />
 
       {error && <Alert variant="danger" title="Gagal memuat dashboard">Coba muat ulang halaman.</Alert>}

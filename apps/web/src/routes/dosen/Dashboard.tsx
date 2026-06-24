@@ -2,7 +2,7 @@ import { Card, StatCard, Alert } from '@/ds';
 import { Users, BookOpen, FileText, HeartHandshake, CalendarDays, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useDosenDashboard } from '@/lib/queries-dosen';
-import { PageHead } from '@/components/PageHead';
+import { DashboardHero } from '@/components/DashboardHero';
 import { PengumumanWidget } from '@/components/PengumumanWidget';
 import { capitalize } from '@/lib/format';
 
@@ -15,11 +15,11 @@ export function DosenDashboard() {
 
   return (
     <div className="stack">
-      <PageHead
+      <DashboardHero
         eyebrow={data ? `SEMESTER ${data.semester.nama.toUpperCase()}` : 'PORTAL DOSEN'}
         title={`Selamat datang, ${gelar}`}
-        subtitle={`${d.prodi.nama} · NIDN `}
-        right={<span style={{ fontFamily: 'var(--font-mono)' }}>{d.nidn}</span>}
+        subtitle={d.prodi.nama}
+        right={<>NIDN {d.nidn}</>}
       />
 
       {error && <Alert variant="danger" title="Gagal memuat dashboard">Coba muat ulang.</Alert>}

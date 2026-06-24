@@ -3,7 +3,7 @@ import { GraduationCap, Users, Building2, BookOpen, ClipboardList, Wallet, Alert
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useAkademikDashboard } from '@/lib/queries-akademik';
-import { PageHead } from '@/components/PageHead';
+import { DashboardHero } from '@/components/DashboardHero';
 import { PengumumanWidget } from '@/components/PengumumanWidget';
 import { formatRupiah } from '@/lib/format';
 
@@ -15,10 +15,11 @@ export function AkademikDashboard() {
 
   return (
     <div className="stack">
-      <PageHead
+      <DashboardHero
         eyebrow={data ? `SEMESTER ${data.semester.nama.toUpperCase()}` : 'PORTAL AKADEMIK'}
-        title={a.nama}
-        subtitle={a.jabatan ?? undefined}
+        title={`Selamat datang, ${a.nama}`}
+        subtitle="Sistem Informasi Akademik Tazkia"
+        right={a.jabatan ? <>{a.jabatan}</> : <>Bagian Akademik</>}
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
