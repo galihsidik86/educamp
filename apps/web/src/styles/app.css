@@ -956,6 +956,212 @@ a {
 }
 
 /* ============================================================
+   StatCard polish — UUPM Paket A
+   ============================================================ */
+
+.tz-stat {
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--dur-fast) var(--ease-standard),
+              box-shadow var(--dur-fast) var(--ease-standard),
+              border-color var(--dur-fast) var(--ease-standard);
+}
+
+/* Left accent strip emas — institutional, brand cue */
+.tz-stat::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--space-3);
+  bottom: var(--space-3);
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+  transition: width var(--dur-fast) var(--ease-standard),
+              top var(--dur-fast) var(--ease-standard),
+              bottom var(--dur-fast) var(--ease-standard);
+}
+
+.tz-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-default);
+}
+.tz-stat:hover::before {
+  width: 5px;
+  top: var(--space-2);
+  bottom: var(--space-2);
+}
+
+/* Icon dalam circle dengan gradient brand-soft */
+.tz-stat__icon {
+  background: linear-gradient(135deg, var(--brand-soft) 0%, var(--info-surface) 100%);
+  box-shadow: inset 0 0 0 1px rgba(58, 92, 228, 0.08);
+  transition: transform var(--dur-base) var(--ease-emphasized);
+}
+.tz-stat:hover .tz-stat__icon {
+  transform: scale(1.06) rotate(-3deg);
+}
+
+/* Entrance stagger — KPI grid load animation */
+.kpi-grid > .tz-stat {
+  animation: stat-enter var(--dur-slow) var(--ease-out) backwards;
+}
+.kpi-grid > .tz-stat:nth-child(1) { animation-delay: 0ms; }
+.kpi-grid > .tz-stat:nth-child(2) { animation-delay: 60ms; }
+.kpi-grid > .tz-stat:nth-child(3) { animation-delay: 120ms; }
+.kpi-grid > .tz-stat:nth-child(4) { animation-delay: 180ms; }
+.kpi-grid > .tz-stat:nth-child(5) { animation-delay: 240ms; }
+.kpi-grid > .tz-stat:nth-child(6) { animation-delay: 300ms; }
+.kpi-grid > .tz-stat:nth-child(7) { animation-delay: 360ms; }
+.kpi-grid > .tz-stat:nth-child(8) { animation-delay: 420ms; }
+
+@keyframes stat-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   Button polish — UUPM Paket B
+   ============================================================ */
+
+.tz-btn {
+  position: relative;
+  overflow: hidden;
+  transition: background var(--dur-fast) var(--ease-standard),
+              border-color var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard),
+              box-shadow var(--dur-fast) var(--ease-standard);
+}
+
+/* Primary: subtle gradient + shimmer on hover */
+.tz-btn--primary {
+  background: linear-gradient(135deg, var(--action) 0%, var(--action-hover) 100%);
+}
+.tz-btn--primary:hover {
+  background: linear-gradient(135deg, var(--action-hover) 0%, var(--action-active) 100%);
+  box-shadow: 0 4px 12px -4px rgba(42, 69, 201, 0.4);
+}
+
+/* Shimmer overlay — diagonal sweep saat hover */
+.tz-btn--primary::after,
+.tz-btn--accent::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 60%,
+    transparent 100%);
+  transform: translateX(-100%);
+  pointer-events: none;
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.tz-btn--primary:hover::after,
+.tz-btn--accent:hover::after {
+  transform: translateX(100%);
+}
+
+/* Accent (gold): pakai gradient gold + shimmer juga */
+.tz-btn--accent {
+  background: linear-gradient(135deg, var(--gold-500) 0%, var(--gold-600) 100%);
+}
+.tz-btn--accent:hover {
+  background: linear-gradient(135deg, var(--gold-600) 0%, var(--gold-700) 100%);
+  box-shadow: 0 4px 12px -4px rgba(194, 141, 30, 0.45);
+}
+
+/* Active state: scale 0.97 untuk feedback klik */
+.tz-btn:active {
+  transform: scale(0.97);
+  transition-duration: 60ms;
+}
+
+/* Loading state: opt-in via class — pakai spinner CSS-only */
+.tz-btn--loading {
+  pointer-events: none;
+  color: transparent !important;
+}
+.tz-btn--loading::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 16px; height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: var(--radius-full);
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  color: var(--text-inverse);
+  animation: btn-spin 700ms linear infinite;
+}
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   Empty state & Skeleton — UUPM Paket C
+   ============================================================ */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-7) var(--space-5);
+  gap: var(--space-3);
+}
+.empty-state__icon {
+  display: grid;
+  place-items: center;
+  width: 64px; height: 64px;
+  border-radius: var(--radius-full);
+  background: var(--brand-soft);
+  color: var(--action);
+  margin-bottom: var(--space-2);
+}
+.empty-state__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+.empty-state__desc {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  max-width: 40ch;
+}
+.empty-state__action { margin-top: var(--space-3); }
+
+/* Data fade-in saat load — opsional via class */
+.data-fade-in {
+  animation: data-fade var(--dur-base) var(--ease-out);
+}
+@keyframes data-fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Skeleton sudah ada (sebelumnya). Tambahkan varian shape */
+.skeleton--text {
+  height: 0.9em;
+  border-radius: var(--radius-xs);
+  display: inline-block;
+  width: var(--w, 100%);
+}
+.skeleton--circle {
+  border-radius: var(--radius-full);
+}
+.skeleton--card {
+  border-radius: var(--radius-lg);
+  min-height: 80px;
+}
+
+/* ============================================================
    Dashboard Hero — brand chrome navy + gold radial + geometric
    Sesuai CLAUDE.md: pattern overlay 5-7%, gold radial glow.
    ============================================================ */

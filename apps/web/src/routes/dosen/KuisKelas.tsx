@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, Card, Input } from '@/ds';
-import { Plus, ChevronLeft, ChevronRight, ClipboardList } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ClipboardList, BrainCircuit } from 'lucide-react';
 import { useDosenKuisList, useDosenKuisActions, type DosenKuisItem, type KuisInput } from '@/lib/queries-kuis';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { EmptyState } from '@/components/EmptyState';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -61,7 +62,16 @@ export function DosenKuisKelas() {
 
       {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && (
-        <Alert variant="info" title="Belum ada kuis">Klik "Tambah Kuis" untuk membuat yang pertama.</Alert>
+        <EmptyState
+          icon={<BrainCircuit size={28} />}
+          title="Belum ada kuis"
+          description="Buat kuis pertama untuk kelas ini — bisa di-publish saat sudah punya minimal satu soal."
+          action={
+            <Button variant="primary" leftIcon={<Plus size={14} />} onClick={() => { setForm(EMPTY); setActErr(null); setModalOpen(true); }}>
+              Tambah Kuis
+            </Button>
+          }
+        />
       )}
 
       <div className="stack">

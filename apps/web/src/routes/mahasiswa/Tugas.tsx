@@ -4,6 +4,7 @@ import { ChevronRight, FileText, AlertCircle } from 'lucide-react';
 import { useMahasiswaTugas } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
+import { EmptyState } from '@/components/EmptyState';
 import { formatTanggalWaktu } from '@/lib/format';
 
 export function MahasiswaTugas() {
@@ -21,7 +22,11 @@ export function MahasiswaTugas() {
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
       {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && (
-        <Alert variant="info" title="Tidak ada tugas">Dosen belum memberikan tugas, atau KRS Anda belum disetujui.</Alert>
+        <EmptyState
+          icon={<FileText size={28} />}
+          title="Belum ada pengumpulan"
+          description="Dosen belum memberikan tugas/ujian, atau KRS Anda belum disetujui untuk semester ini."
+        />
       )}
 
       <div className="stack">

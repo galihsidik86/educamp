@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, Card, Input } from '@/ds';
-import { ChevronLeft, Plus, Trash2, Pencil, Users } from 'lucide-react';
+import { ChevronLeft, Plus, Trash2, Pencil, Users, FileText } from 'lucide-react';
 import { useDosenTugas, useDosenTugasActions, useDosenPertemuan, type DosenTugasItem, type DosenTugasInput, type Komponen } from '@/lib/queries-dosen';
 
 const JENIS_LABEL: Record<Komponen, string> = {
@@ -13,6 +13,7 @@ const JENIS_LABEL: Record<Komponen, string> = {
 const JENIS_OPTIONS: Komponen[] = ['tugas', 'uts', 'uas', 'praktikum'];
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { EmptyState } from '@/components/EmptyState';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -47,7 +48,16 @@ export function DosenTugasKelas() {
       />
 
       {data.items.length === 0 && (
-        <Alert variant="info" title="Belum ada item">Klik "Tambah" untuk membuat tugas, UTS, UAS, atau praktikum pertama.</Alert>
+        <EmptyState
+          icon={<FileText size={28} />}
+          title="Belum ada pengumpulan"
+          description="Buat tugas, UTS, UAS, atau praktikum pertama. Nilai dari setiap submission bisa disinkron otomatis ke kolom penilaian."
+          action={
+            <Button variant="primary" leftIcon={<Plus size={14} />} onClick={() => setModal({ mode: 'create' })}>
+              Tambah
+            </Button>
+          }
+        />
       )}
 
       <div className="stack">
