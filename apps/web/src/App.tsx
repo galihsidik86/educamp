@@ -4,6 +4,7 @@ import { Login } from './routes/Login';
 import { AppShell } from './components/AppShell';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ScrollToTop } from './components/ScrollToTop';
+import { ToastProvider } from './components/Toast';
 import { MahasiswaDashboard } from './routes/mahasiswa/Dashboard';
 import { MahasiswaKrs } from './routes/mahasiswa/Krs';
 import { MahasiswaKrsRiwayat } from './routes/mahasiswa/KrsRiwayat';
@@ -185,7 +186,7 @@ export function App() {
   }
 
   return (
-    <>
+    <ToastProvider>
     <ScrollToTop />
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -389,6 +390,6 @@ export function App() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-    </>
+    </ToastProvider>
   );
 }

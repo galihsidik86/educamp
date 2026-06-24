@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { Breadcrumb } from './Breadcrumb';
 import type { Role } from '@/lib/auth';
 
 export function AppShell({ role }: { role: Role }) {
@@ -30,6 +31,7 @@ export function AppShell({ role }: { role: Role }) {
               fade+slide jalan tiap pindah route. Lihat .route-transition
               di app.css. */}
           <div className="route-transition" key={location.pathname}>
+            <Breadcrumb />
             <Outlet />
           </div>
         </main>

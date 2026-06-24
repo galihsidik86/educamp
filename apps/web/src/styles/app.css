@@ -1168,6 +1168,176 @@ textarea.tz-input {
 }
 
 /* ============================================================
+   Toast stack — fixed top-right notification system
+   ============================================================ */
+.toast-stack {
+  position: fixed;
+  top: calc(var(--topbar-h) + var(--space-3));
+  right: var(--space-4);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  pointer-events: none;
+  width: min(380px, calc(100vw - var(--space-6)));
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-left: 4px solid var(--toast-accent, var(--info-solid));
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  animation: toast-in var(--dur-base) var(--ease-emphasized);
+}
+.toast--closing { animation: toast-out var(--dur-fast) var(--ease-standard) forwards; }
+
+.toast--success { --toast-accent: var(--success-solid); }
+.toast--danger  { --toast-accent: var(--danger-solid); }
+.toast--warning { --toast-accent: var(--warning-solid); }
+.toast--info    { --toast-accent: var(--info-solid); }
+
+.toast__icon {
+  display: inline-flex;
+  color: var(--toast-accent);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.toast__body { flex: 1; min-width: 0; }
+.toast__title {
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  font-size: var(--text-sm);
+  margin-bottom: 2px;
+}
+.toast__msg {
+  color: var(--text-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  word-wrap: break-word;
+}
+.toast__close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: background var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard);
+  flex-shrink: 0;
+}
+.toast__close:hover {
+  background: var(--surface-sunken);
+  color: var(--text-strong);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(40px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateX(40px) scale(0.96);
+  }
+}
+
+@media (max-width: 600px) {
+  .toast-stack {
+    top: auto;
+    bottom: var(--space-3);
+    left: var(--space-3);
+    right: var(--space-3);
+    width: auto;
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(40px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  @keyframes toast-out {
+    to {
+      opacity: 0;
+      transform: translateY(40px) scale(0.96);
+    }
+  }
+}
+
+/* ============================================================
+   Breadcrumb navigation
+   ============================================================ */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--space-3);
+}
+.breadcrumb__home {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard);
+}
+.breadcrumb__home:hover {
+  background: var(--surface-sunken);
+  color: var(--action);
+}
+.breadcrumb__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.breadcrumb__sep {
+  color: var(--text-subtle);
+  flex-shrink: 0;
+}
+.breadcrumb__link {
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 2px 4px;
+  border-radius: var(--radius-xs);
+  transition: color var(--dur-fast) var(--ease-standard),
+              background var(--dur-fast) var(--ease-standard);
+}
+.breadcrumb__link:hover {
+  color: var(--action);
+  background: var(--surface-sunken);
+}
+.breadcrumb__current {
+  color: var(--text-strong);
+  font-weight: var(--fw-medium);
+  padding: 2px 4px;
+}
+
+/* Hide breadcrumb on print mode */
+body.print-mode .breadcrumb,
+body.kartu-print-mode .breadcrumb { display: none; }
+
+/* ============================================================
    Route transition — fade + slight slide saat pindah halaman
    ============================================================ */
 
