@@ -26,7 +26,12 @@ export function AppShell({ role }: { role: Role }) {
       <div className="app__main">
         <Topbar onMenuClick={() => setOpen(true)} />
         <main className="app__content">
-          <Outlet />
+          {/* key={location.pathname} → wrapper remount, keyframe animasi
+              fade+slide jalan tiap pindah route. Lihat .route-transition
+              di app.css. */}
+          <div className="route-transition" key={location.pathname}>
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

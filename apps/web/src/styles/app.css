@@ -1038,6 +1038,33 @@ a {
 }
 
 /* ============================================================
+   Route transition — fade + slight slide saat pindah halaman
+   ============================================================ */
+
+.route-transition {
+  animation: route-enter var(--dur-base) var(--ease-out);
+  /* will-change biar GPU compositing, mengurangi flicker */
+  will-change: opacity, transform;
+}
+
+@keyframes route-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Skip animasi saat print mode aktif — supaya cetak tidak terganggu. */
+body.print-mode .route-transition,
+body.kartu-print-mode .route-transition {
+  animation: none;
+}
+
+/* ============================================================
    StatCard polish — UUPM Paket A
    ============================================================ */
 
