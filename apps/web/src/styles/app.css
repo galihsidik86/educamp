@@ -800,6 +800,94 @@ a {
               opacity var(--dur-fast) var(--ease-standard);
 }
 
+/* ----- Card hover lift -----
+   Hanya kartu yang berisi descendant dengan cursor:pointer yang ter-lift.
+   Kartu data statis (KPI, deskripsi) tetap diam.
+   :has() didukung semua browser modern (2023+). */
+.tz-card {
+  transition: border-color var(--dur-fast) var(--ease-standard),
+              box-shadow var(--dur-fast) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard);
+}
+.tz-card:has([style*="cursor: pointer"]),
+.tz-card:has([style*="cursor:pointer"]) {
+  cursor: pointer;
+}
+.tz-card:has([style*="cursor: pointer"]):hover,
+.tz-card:has([style*="cursor:pointer"]):hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--action-soft);
+}
+/* Active state: drop kembali (feedback klik) */
+.tz-card:has([style*="cursor: pointer"]):active,
+.tz-card:has([style*="cursor:pointer"]):active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+  transition-duration: 60ms;
+}
+
+/* ----- Topbar modernization -----
+   Brand-aligned: navy border tipis + soft shadow + accent gold di title.
+   No glassmorphism (sesuai CLAUDE.md). */
+.topbar {
+  /* override border-bottom yang ada di .topbar di atas dengan shadow yang
+     terasa lebih "elevated" tapi tetap kalem. */
+  box-shadow:
+    0 1px 0 var(--border-subtle),
+    0 4px 16px -8px rgba(23, 38, 87, 0.08);
+  /* mempertahankan border-bottom: 1px solid var(--border-subtle) — masih oke
+     karena box-shadow di-stack di bawahnya. Untuk hindari double line, kita
+     boleh keep keduanya: border kelihatan hairline, shadow kasih depth. */
+}
+
+/* Title kanan: small gold accent line — eyebrow brand */
+.topbar__title {
+  position: relative;
+  padding-left: var(--space-3);
+}
+.topbar__title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 60%;
+  background: var(--accent);
+  border-radius: var(--radius-full);
+  transform: translateY(-50%);
+}
+
+/* User area: vertical divider sebelum logout */
+.topbar__logout {
+  position: relative;
+}
+.topbar__logout::before {
+  content: '';
+  position: absolute;
+  left: calc(-1 * var(--space-3) / 2);
+  top: 25%;
+  height: 50%;
+  width: 1px;
+  background: var(--border-default);
+}
+
+/* Avatar dapat subtle brand ring saat hover area */
+.topbar__user:hover .tz-avatar {
+  box-shadow: 0 0 0 2px var(--brand-soft);
+  transition: box-shadow var(--dur-fast) var(--ease-standard);
+}
+
+/* Notification bell — polish hover state */
+.notif-bell {
+  transition: background var(--dur-fast) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard);
+}
+.notif-bell:hover {
+  background: var(--surface-sunken);
+  transform: scale(1.05);
+}
+
 @media print {
   .sidebar,
   .sidebar-backdrop,

@@ -52,6 +52,7 @@ export function NotificationBell() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Notifikasi"
+        className="notif-bell"
         style={{
           position: 'relative', background: 'transparent', border: 'none', cursor: 'pointer',
           padding: 6, borderRadius: 'var(--radius-md)', color: 'var(--text-body)',
