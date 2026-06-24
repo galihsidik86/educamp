@@ -376,7 +376,12 @@ html, body, #root {
   color: var(--text-body);
   vertical-align: middle;
 }
-.tz-table tbody tr:hover { background: var(--surface-sunken); }
+.tz-table tbody tr {
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+.tz-table tbody tr:hover {
+  background: var(--action-soft);
+}
 .tz-table tfoot td {
   padding: var(--space-3) var(--space-4);
   font-weight: var(--fw-semibold);
@@ -598,7 +603,12 @@ html, body, #root {
 
 /* ----- Table row hover (SPMI tables) ----- */
 .tz-table tbody tr { transition: background-color .12s ease; }
-.tz-table tbody tr:hover { background: var(--surface-sunken); }
+.tz-table tbody tr {
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+.tz-table tbody tr:hover {
+  background: var(--action-soft);
+}
 
 /* ----- Print ----- */
 /* Sembunyikan chrome aplikasi; biarkan area konten tercetak rapi. */
@@ -710,6 +720,84 @@ html, body, #root {
   body.print-mode .app__content { background: white; padding: 0 !important; }
   body.print-mode .krs-cetak__sheet { border: none; padding: 0; }
   .no-print { display: none !important; }
+}
+
+/* ============================================================
+   UI/UX POLISH — UUPM Tazkia SIAKAD refresh (Option B)
+   Tidak menyentuh komponen DS .jsx; hanya selector aplikasi.
+   ============================================================ */
+
+/* Reduced-motion: hormati setting OS user (a11y critical) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Pill: micro-transition untuk filter aktif/non-aktif */
+.pill {
+  transition: background var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard),
+              border-color var(--dur-fast) var(--ease-standard);
+}
+
+/* Empty state — polish utk muted text di tabel
+   yang fungsinya menjelaskan keadaan kosong (data-density UX). */
+.tz-table td.muted.center {
+  padding: var(--space-6) var(--space-4);
+  font-style: italic;
+}
+
+/* Skeleton loader utility — opsional dipakai komponen baru */
+.skeleton {
+  background:
+    linear-gradient(90deg,
+      var(--surface-sunken) 0%,
+      var(--surface-card) 50%,
+      var(--surface-sunken) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s var(--ease-in-out) infinite;
+  border-radius: var(--radius-sm);
+  color: transparent;
+  pointer-events: none;
+}
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Focus-visible: pastikan ring konsisten untuk semua interactive
+   element yang dirender di app, bukan hanya yg dari DS */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-sm);
+}
+
+/* Interactive cursor — element yang punya onclick handler
+   atau secara visual terlihat tappable. */
+button,
+[role="button"],
+summary,
+.pill,
+label[for],
+.tablist > button { cursor: pointer; }
+
+/* Smooth interactive state untuk link */
+a {
+  transition: color var(--dur-fast) var(--ease-standard),
+              opacity var(--dur-fast) var(--ease-standard);
 }
 
 @media print {
