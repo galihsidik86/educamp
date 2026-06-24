@@ -8,6 +8,7 @@ import {
 } from '@/lib/queries-kuis';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { useConfirm } from '@/components/ConfirmDialog';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -17,6 +18,7 @@ export function DosenKuisDetail() {
   const { kelasId, kuisId } = useParams<{ kelasId: string; kuisId: string }>();
   const { data, isLoading, error } = useDosenKuisDetail(kuisId);
   const actions = useDosenKuisActions(kelasId, kuisId);
+  const confirm = useConfirm();
 
   const [tab, setTab] = useState<'soal' | 'hasil'>('soal');
   const [soalModalOpen, setSoalModalOpen] = useState(false);
@@ -53,7 +55,13 @@ export function DosenKuisDetail() {
   };
 
   const removeSoal = async (id: string) => {
-    if (!confirm('Hapus soal ini?')) return;
+    const ok = await confirm({
+      title: 'Hapus soal?',
+      message: 'Soal akan dihilangkan dari kuis. Mahasiswa yang sudah attempt tetap punya skor lama.',
+      variant: 'danger',
+      confirmLabel: 'Hapus',
+    });
+    if (!ok) return;
     setActErr(null);
     try { await actions.removeSoal.mutateAsync(id); }
     catch (e) { setActErr(e instanceof ApiError ? e.message : 'Gagal'); }

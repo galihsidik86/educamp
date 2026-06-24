@@ -10,6 +10,7 @@ import {
 } from '@/lib/queries-dosen';
 import { ExcelImportModal } from '@/components/ExcelImportModal';
 import { Modal } from '@/components/Modal';
+import { useConfirm } from '@/components/ConfirmDialog';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { capitalize, formatTanggal } from '@/lib/format';
@@ -56,6 +57,7 @@ export function DosenInputNilaiDetail() {
   const updateBobot = useUpdateBobotNilai(kelasId);
   const nilaiSumber = useDosenKelasNilaiSumber(kelasId);
   const sinkronNilai = useSinkronNilai(kelasId);
+  const confirm = useConfirm();
   const [batchMsg, setBatchMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [bobotOpen, setBobotOpen] = useState(false);
@@ -63,7 +65,13 @@ export function DosenInputNilaiDetail() {
   const bobotConfigured = data?.kelas.bobotNilai != null;
 
   const handleFinalizeAll = async () => {
-    if (!confirm('Finalisasi semua nilai yang sudah lengkap di kelas ini? Mahasiswa akan menerima notifikasi.')) return;
+    const ok = await confirm({
+      title: 'Finalisasi semua nilai?',
+      message: 'Semua nilai yang sudah lengkap di kelas ini akan difinalisasi. Mahasiswa akan menerima notifikasi.',
+      variant: 'warning',
+      confirmLabel: 'Finalisasi',
+    });
+    if (!ok) return;
     setBatchMsg(null);
     try {
       const r = await finalizeAll.mutateAsync();
@@ -74,7 +82,18 @@ export function DosenInputNilaiDetail() {
   };
 
   const handleSinkronAll = async () => {
-    if (!confirm('Sinkron semua nilai komponen (Tugas/UTS/UAS/Praktikum) dari modul Pengumpulan ke seluruh mahasiswa? Mahasiswa dengan nilai finalized akan di-skip; nilaiAngka & huruf tidak disentuh.')) return;
+    const ok = await confirm({
+      title: 'Sinkron nilai semua mahasiswa?',
+      message: (
+        <>
+          Isi kolom <strong>Tugas / UTS / UAS / Praktikum</strong> dari rerata submission modul Pengumpulan untuk seluruh mahasiswa.
+          Mahasiswa dengan nilai <strong>finalized</strong> akan di-skip. nilaiAngka, huruf, dan bobot tidak disentuh.
+        </>
+      ),
+      variant: 'primary',
+      confirmLabel: 'Sinkron',
+    });
+    if (!ok) return;
     setBatchMsg(null);
     try {
       const r = await sinkronNilai.mutateAsync();

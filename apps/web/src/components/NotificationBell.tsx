@@ -4,6 +4,7 @@ import { Bell, Check, CheckCheck, ClipboardList, GraduationCap, Wallet, Receipt,
 import { useAuth } from '@/lib/auth';
 import { useNotifikasi, useNotifikasiActions, useUnreadCount, type Notifikasi } from '@/lib/queries-notifikasi';
 import { roleHomePath } from '@/lib/routing';
+import { Tooltip } from './Tooltip';
 
 const ICON: Record<string, React.ReactNode> = {
   krs: <ClipboardList size={16} />,
@@ -49,6 +50,7 @@ export function NotificationBell() {
 
   return (
     <div ref={wrapRef} style={{ position: 'relative' }}>
+      <Tooltip label={open ? null : `Notifikasi${unreadCount > 0 ? ` (${unreadCount} belum dibaca)` : ''}`} placement="bottom">
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Notifikasi"
@@ -75,6 +77,7 @@ export function NotificationBell() {
           </span>
         )}
       </button>
+      </Tooltip>
 
       {open && (
         <div

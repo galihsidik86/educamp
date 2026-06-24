@@ -4,6 +4,7 @@ import { Alert, Button, Card, Input, Select } from '@/ds';
 import { ChevronLeft, Plus, Trash2, ChevronRight, Printer, CalendarClock, CheckCircle2, Circle, CircleDashed } from 'lucide-react';
 import { useDosenPertemuan, useDosenAbsensiActions, useDosenKehadiranRekap, useDosenRuangan, type PertemuanItem } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
+import { useConfirm } from '@/components/ConfirmDialog';
 import { Modal } from '@/components/Modal';
 import { formatTanggalWaktu, formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
@@ -24,6 +25,7 @@ export function DosenAbsensiKelas() {
   const { data, isLoading } = useDosenPertemuan(kelasId);
   const rekap = useDosenKehadiranRekap(kelasId);
   const { createPertemuan, deletePertemuan, reschedulePertemuan } = useDosenAbsensiActions(kelasId);
+  const confirm = useConfirm();
 
   const [tab, setTab] = useState<Tab>('pertemuan');
   const [showForm, setShowForm] = useState(false);
@@ -71,7 +73,13 @@ export function DosenAbsensiKelas() {
   };
 
   const onDelete = async (id: string, ke: number) => {
-    if (!confirm(`Hapus pertemuan ke-${ke}? Semua data presensi pada pertemuan ini akan hilang.`)) return;
+    const ok = await confirm({
+      title: `Hapus pertemuan ke-${ke}?`,
+      message: 'Semua data presensi pada pertemuan ini akan hilang dan tidak bisa dipulihkan.',
+      variant: 'danger',
+      confirmLabel: 'Hapus',
+    });
+    if (!ok) return;
     setActErr(null);
     try { await deletePertemuan.mutateAsync(id); }
     catch (e) { setActErr(e instanceof ApiError ? e.message : 'Gagal'); }

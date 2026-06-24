@@ -5,6 +5,7 @@ import { AppShell } from './components/AppShell';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ScrollToTop } from './components/ScrollToTop';
 import { ToastProvider } from './components/Toast';
+import { ConfirmProvider } from './components/ConfirmDialog';
 import { MahasiswaDashboard } from './routes/mahasiswa/Dashboard';
 import { MahasiswaKrs } from './routes/mahasiswa/Krs';
 import { MahasiswaKrsRiwayat } from './routes/mahasiswa/KrsRiwayat';
@@ -187,6 +188,7 @@ export function App() {
 
   return (
     <ToastProvider>
+    <ConfirmProvider>
     <ScrollToTop />
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -390,6 +392,7 @@ export function App() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </ConfirmProvider>
     </ToastProvider>
   );
 }

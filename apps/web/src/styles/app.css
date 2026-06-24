@@ -1168,6 +1168,170 @@ textarea.tz-input {
 }
 
 /* ============================================================
+   ConfirmDialog — branded modal pengganti window.confirm()
+   ============================================================ */
+.confirm-dialog {
+  padding: var(--space-5) var(--space-5) var(--space-4);
+}
+.confirm-dialog__head {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  margin-bottom: var(--space-3);
+}
+.confirm-dialog__icon {
+  width: 44px; height: 44px;
+  border-radius: var(--radius-full);
+  display: grid; place-items: center;
+  background: var(--info-surface);
+  color: var(--info-fg);
+  flex-shrink: 0;
+}
+.confirm-dialog--danger .confirm-dialog__icon {
+  background: var(--danger-surface);
+  color: var(--danger-fg);
+}
+.confirm-dialog--warning .confirm-dialog__icon {
+  background: var(--warning-surface);
+  color: var(--warning-fg);
+}
+.confirm-dialog__title {
+  margin: 0;
+  padding-top: 8px;
+  font-size: var(--text-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  letter-spacing: -0.01em;
+}
+.confirm-dialog__msg {
+  color: var(--text-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  padding-left: calc(44px + var(--space-3));
+  margin-bottom: var(--space-4);
+}
+.confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+  margin-top: var(--space-2);
+  padding-top: var(--space-3);
+}
+
+@media (max-width: 600px) {
+  .confirm-dialog__msg {
+    padding-left: 0;
+  }
+}
+
+/* ============================================================
+   Tooltip — CSS-only via data-tip attribute
+   ============================================================ */
+.tz-tip {
+  position: relative;
+  display: inline-flex;
+}
+.tz-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  z-index: var(--z-toast);
+  background: var(--neutral-900);
+  color: white;
+  font-size: var(--text-xs);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  opacity: 0;
+  transform-origin: center;
+  transition: opacity var(--dur-fast) var(--ease-standard) 100ms,
+              transform var(--dur-fast) var(--ease-standard) 100ms;
+  /* Default: top placement */
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px) scale(0.95);
+  box-shadow: var(--shadow-md);
+}
+.tz-tip::before {
+  content: '';
+  position: absolute;
+  width: 6px; height: 6px;
+  background: var(--neutral-900);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-standard) 100ms;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+}
+.tz-tip:hover::after,
+.tz-tip:focus-within::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+.tz-tip:hover::before,
+.tz-tip:focus-within::before {
+  opacity: 1;
+}
+
+/* Placement: bottom */
+.tz-tip[data-tip-placement="bottom"]::after {
+  bottom: auto;
+  top: calc(100% + 6px);
+  transform: translateX(-50%) translateY(-4px) scale(0.95);
+}
+.tz-tip[data-tip-placement="bottom"]::before {
+  bottom: auto;
+  top: calc(100% + 3px);
+}
+.tz-tip[data-tip-placement="bottom"]:hover::after,
+.tz-tip[data-tip-placement="bottom"]:focus-within::after {
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* Placement: right */
+.tz-tip[data-tip-placement="right"]::after {
+  bottom: 50%;
+  left: calc(100% + 6px);
+  transform: translateY(50%) translateX(-4px) scale(0.95);
+}
+.tz-tip[data-tip-placement="right"]::before {
+  bottom: 50%;
+  left: calc(100% + 3px);
+  transform: translateY(50%) rotate(45deg);
+}
+.tz-tip[data-tip-placement="right"]:hover::after,
+.tz-tip[data-tip-placement="right"]:focus-within::after {
+  transform: translateY(50%) translateX(0) scale(1);
+}
+
+/* Placement: left */
+.tz-tip[data-tip-placement="left"]::after {
+  bottom: 50%;
+  left: auto;
+  right: calc(100% + 6px);
+  transform: translateY(50%) translateX(4px) scale(0.95);
+}
+.tz-tip[data-tip-placement="left"]::before {
+  bottom: 50%;
+  left: auto;
+  right: calc(100% + 3px);
+  transform: translateY(50%) rotate(45deg);
+}
+.tz-tip[data-tip-placement="left"]:hover::after,
+.tz-tip[data-tip-placement="left"]:focus-within::after {
+  transform: translateY(50%) translateX(0) scale(1);
+}
+
+/* Sembunyikan di mobile touch — pakai title fallback dari aria-label */
+@media (hover: none) {
+  .tz-tip::after, .tz-tip::before { display: none; }
+}
+
+/* ============================================================
    Toast stack — fixed top-right notification system
    ============================================================ */
 .toast-stack {

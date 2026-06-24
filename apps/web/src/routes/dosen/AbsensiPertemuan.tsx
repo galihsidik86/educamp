@@ -5,6 +5,7 @@ import { ChevronLeft, Save, Check, X, Stethoscope, FileWarning, QrCode, KeyRound
 import { QRCodeSVG } from 'qrcode.react';
 import { useDosenAbsensiPertemuan, useDosenAbsensiActions, useDosenPinStatus, type AbsensiStatus } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
+import { useConfirm } from '@/components/ConfirmDialog';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -227,6 +228,7 @@ function PinPanel({ pertemuanId }: { pertemuanId: string }) {
   const { generatePin, clearPin } = useDosenAbsensiActions(undefined, pertemuanId);
   // Poll setiap 5 detik untuk lihat siapa yang sudah check-in
   const status = useDosenPinStatus(pertemuanId, { refetchInterval: 5000 });
+  const confirm = useConfirm();
   const [err, setErr] = useState<string | null>(null);
   const [durasi, setDurasi] = useState(15);
   const [showQr, setShowQr] = useState(true);
@@ -247,7 +249,13 @@ function PinPanel({ pertemuanId }: { pertemuanId: string }) {
     catch (e) { setErr(e instanceof ApiError ? e.message : 'Gagal'); }
   };
   const clear = async () => {
-    if (!confirm('Hentikan self check-in untuk pertemuan ini?')) return;
+    const ok = await confirm({
+      title: 'Hentikan self check-in?',
+      message: 'PIN/QR akan dinonaktifkan. Mahasiswa yang belum check-in harus dinilai manual.',
+      variant: 'warning',
+      confirmLabel: 'Hentikan',
+    });
+    if (!ok) return;
     setErr(null);
     try { await clearPin.mutateAsync(pertemuanId); status.refetch(); }
     catch (e) { setErr(e instanceof ApiError ? e.message : 'Gagal'); }

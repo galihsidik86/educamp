@@ -14,6 +14,7 @@ const JENIS_OPTIONS: Komponen[] = ['tugas', 'uts', 'uas', 'praktikum'];
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { EmptyState } from '@/components/EmptyState';
+import { useConfirm } from '@/components/ConfirmDialog';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -23,10 +24,17 @@ export function DosenTugasKelas() {
   const { data, isLoading } = useDosenTugas(kelasId);
   const pertemuan = useDosenPertemuan(kelasId);
   const { create, update, remove } = useDosenTugasActions(kelasId);
+  const confirm = useConfirm();
   const [modal, setModal] = useState<{ mode: 'create' } | { mode: 'edit'; item: DosenTugasItem } | null>(null);
 
   const onDelete = async (t: DosenTugasItem) => {
-    if (!confirm(`Hapus tugas "${t.judul}"? Semua submission akan terhapus.`)) return;
+    const ok = await confirm({
+      title: `Hapus "${t.judul}"?`,
+      message: 'Semua submission mahasiswa terkait akan ikut terhapus dan tidak bisa dipulihkan.',
+      variant: 'danger',
+      confirmLabel: 'Hapus',
+    });
+    if (!ok) return;
     try { await remove.mutateAsync(t.id); }
     catch (e) { alert(e instanceof ApiError ? e.message : 'Gagal'); }
   };

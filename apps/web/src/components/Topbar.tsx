@@ -2,6 +2,7 @@ import { LogOut, Menu } from 'lucide-react';
 import { Avatar, Button } from '@/ds';
 import { useAuth } from '@/lib/auth';
 import { NotificationBell } from './NotificationBell';
+import { Tooltip } from './Tooltip';
 
 const titleByRole = {
   mahasiswa: 'Portal Mahasiswa',
@@ -22,14 +23,16 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
   return (
     <header className="topbar">
-      <button
-        type="button"
-        className="topbar__menu"
-        aria-label="Buka menu"
-        onClick={onMenuClick}
-      >
-        <Menu size={20} />
-      </button>
+      <Tooltip label="Buka menu" placement="bottom">
+        <button
+          type="button"
+          className="topbar__menu"
+          aria-label="Buka menu"
+          onClick={onMenuClick}
+        >
+          <Menu size={20} />
+        </button>
+      </Tooltip>
       <div className="topbar__title">{titleByRole[u.role]}</div>
       <div className="topbar__spacer" />
       <div className="topbar__user">
