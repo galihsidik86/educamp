@@ -1038,6 +1038,136 @@ a {
 }
 
 /* ============================================================
+   Input focus polish — UUPM iterasi
+   Animasi via app.css, tidak menyentuh DS .jsx.
+   ============================================================ */
+
+.tz-field {
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+
+/* Label shift warna ke brand saat input focused */
+.tz-field:focus-within .tz-field__label {
+  color: var(--action);
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+
+/* Input/select focus: ring lebih lebar + brief pulse saat awal focus */
+.tz-input:focus,
+.tz-select:focus {
+  border-color: var(--action);
+  box-shadow:
+    0 0 0 3px var(--focus-ring),
+    0 1px 3px rgba(58, 92, 228, 0.12);
+  animation: input-focus-pulse 380ms var(--ease-out);
+}
+
+@keyframes input-focus-pulse {
+  0%   { box-shadow: 0 0 0 0 var(--focus-ring), 0 0 0 transparent; }
+  60%  { box-shadow: 0 0 0 5px var(--focus-ring), 0 1px 3px rgba(58, 92, 228, 0.12); }
+  100% { box-shadow: 0 0 0 3px var(--focus-ring), 0 1px 3px rgba(58, 92, 228, 0.12); }
+}
+
+/* Hover input — tetap subtle, tapi sekarang dengan transisi background */
+.tz-input:hover:not(:focus):not(:disabled),
+.tz-select:hover:not(:focus):not(:disabled) {
+  background: color-mix(in oklch, var(--surface-card) 96%, var(--brand-soft));
+}
+
+/* Textarea — sama treatment dengan input */
+textarea.tz-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* ============================================================
+   Bar chart — progress bar dengan animasi entrance
+   ============================================================ */
+
+.tz-bar {
+  flex: 1 1 200px;
+}
+.tz-bar__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.tz-bar__label {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.tz-bar__value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-strong);
+  font-weight: var(--fw-semibold);
+}
+.tz-bar__pct {
+  color: var(--text-muted);
+  font-weight: var(--fw-regular);
+  margin-left: 4px;
+}
+.tz-bar__track {
+  margin-top: 6px;
+  height: 10px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 2px rgba(23, 38, 87, 0.04);
+}
+.tz-bar__fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--dur-slower) var(--ease-emphasized);
+  background: linear-gradient(90deg,
+    var(--bar-color, var(--action)) 0%,
+    color-mix(in oklch, var(--bar-color, var(--action)) 80%, white) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shimmer overlay bar — sweep ringan tiap 2.5s utk "alive" feel */
+.tz-bar__fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.28) 50%,
+    transparent 60%,
+    transparent 100%);
+  transform: translateX(-100%);
+  animation: bar-shimmer 2.5s var(--ease-in-out) infinite;
+  animation-delay: 600ms; /* setelah width animation selesai */
+}
+@keyframes bar-shimmer {
+  0%   { transform: translateX(-100%); }
+  50%  { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Variants: pakai semantic warna sebagai --bar-color */
+.tz-bar--success .tz-bar__fill { --bar-color: var(--success-solid); }
+.tz-bar--info    .tz-bar__fill { --bar-color: var(--info-solid); }
+.tz-bar--warning .tz-bar__fill { --bar-color: var(--warning-solid); }
+.tz-bar--danger  .tz-bar__fill { --bar-color: var(--danger-solid); }
+.tz-bar--neutral .tz-bar__fill {
+  --bar-color: var(--neutral-400);
+}
+.tz-bar--neutral .tz-bar__fill::after { display: none; } /* skip shimmer utk neutral */
+
+/* Entrance — bar width tumbuh dari 0 ke pct saat first render */
+.tz-bar__fill[data-pct] {
+  animation: bar-fill-in 600ms var(--ease-out) backwards;
+}
+@keyframes bar-fill-in {
+  from { width: 0% !important; }
+}
+
+/* ============================================================
    Route transition — fade + slight slide saat pindah halaman
    ============================================================ */
 

@@ -61,15 +61,14 @@ export function AkademikDashboard() {
 
 function Bar({ label, value, max, variant }: { label: string; value: number; max: number; variant: 'success' | 'neutral' | 'info' }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
-  const color = variant === 'success' ? 'var(--success-solid)' : variant === 'info' ? 'var(--info-solid)' : 'var(--neutral-400)';
   return (
-    <div style={{ flex: '1 1 200px' }}>
-      <div className="row" style={{ justifyContent: 'space-between' }}>
-        <span className="muted" style={{ fontSize: 'var(--text-sm)' }}>{label}</span>
-        <strong style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-strong)' }}>{value} ({pct}%)</strong>
+    <div className={`tz-bar tz-bar--${variant}`}>
+      <div className="tz-bar__head">
+        <span className="tz-bar__label">{label}</span>
+        <span className="tz-bar__value">{value}<span className="tz-bar__pct">({pct}%)</span></span>
       </div>
-      <div style={{ marginTop: 4, height: 8, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: color }} />
+      <div className="tz-bar__track">
+        <div className="tz-bar__fill" data-pct={pct} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
