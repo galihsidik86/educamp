@@ -1,8 +1,30 @@
-import { type ReactNode, useEffect } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 
 type Props = { open: boolean; onClose: () => void; title: string; children: ReactNode; width?: number };
 
+/** Durasi exit harus sesuai dgn keyframe modal-card-out di app.css. */
+const EXIT_MS = 180;
+
 export function Modal({ open, onClose, title, children, width = 560 }: Props) {
+  const [render, setRender] = useState(open);
+  const [closing, setClosing] = useState(false);
+
+  // Sinkronisasi mount/unmount dgn animasi exit
+  useEffect(() => {
+    if (open) {
+      setRender(true);
+      setClosing(false);
+    } else if (render) {
+      setClosing(true);
+      const t = setTimeout(() => {
+        setRender(false);
+        setClosing(false);
+      }, EXIT_MS);
+      return () => clearTimeout(t);
+    }
+  }, [open, render]);
+
+  // Escape key — hanya saat open, sebelum proses closing
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -10,12 +32,15 @@ export function Modal({ open, onClose, title, children, width = 560 }: Props) {
     return () => document.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!render) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div
+      className={`modal-overlay${closing ? ' modal-overlay--closing' : ''}`}
+      onClick={onClose}
+    >
       <div
-        className="modal-card"
+        className={`modal-card${closing ? ' modal-card--closing' : ''}`}
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: width }}
       >
