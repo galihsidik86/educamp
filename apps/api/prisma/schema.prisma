@@ -822,6 +822,31 @@ model Nilai {
 }
 
 // ============================================================
+// KONFIGURASI SKALA NILAI
+// Single-row config — admin akademik atur threshold huruf + bobot.
+// Default = standar Kemendikbud (A≥85, AB≥75, B≥70, BC≥65, C≥56, D≥40).
+// ============================================================
+model KonfigurasiSkalaNilai {
+  id        String   @id @default(uuid())
+  minA      Float    @default(85)
+  minAB     Float    @default(75)
+  minB      Float    @default(70)
+  minBC     Float    @default(65)
+  minC      Float    @default(56)
+  minD      Float    @default(40)
+  // minE implicit = 0
+  bobotA    Float    @default(4.0)
+  bobotAB   Float    @default(3.5)
+  bobotB    Float    @default(3.0)
+  bobotBC   Float    @default(2.5)
+  bobotC    Float    @default(2.0)
+  bobotD    Float    @default(1.0)
+  bobotE    Float    @default(0.0)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+// ============================================================
 // KEUANGAN
 // ============================================================
 

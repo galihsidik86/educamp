@@ -252,6 +252,7 @@ const itemsByRole: Record<Role, NavGroup[]> = {
       groupIcon: <Settings size={14} />,
       items: [
         { to: '/akademik/institusi',      label: 'Identitas Kampus', icon: <Building2 size={18} /> },
+        { to: '/akademik/skala-nilai',    label: 'Skala Nilai',    icon: <GraduationCap size={18} /> },
         { to: '/akademik/feeder',         label: 'Sinkron Feeder', icon: <Cable size={18} /> },
         { to: '/akademik/users',          label: 'Kelola Akun',   icon: <KeyRound size={18} /> },
         { to: '/akademik/audit',          label: 'Riwayat Audit', icon: <ShieldCheck size={18} /> },

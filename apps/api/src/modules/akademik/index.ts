@@ -44,6 +44,7 @@ import { kategoriUktRouter } from './kategori-ukt.js';
 import { heregistrasiAdminRouter } from './heregistrasi.js';
 import { ewsRouter } from './ews.js';
 import { auditRouter } from './audit.js';
+import { skalaNilaiRouter } from './skala-nilai.js';
 
 export const akademikRouter = Router();
 
@@ -96,3 +97,4 @@ akademikRouter.use(kategoriUktRouter);
 akademikRouter.use(heregistrasiAdminRouter);
 akademikRouter.use(ewsRouter);
 akademikRouter.use(auditRouter);
+akademikRouter.use(skalaNilaiRouter);

@@ -434,6 +434,39 @@ export const useAdminSurat = (filters: { status?: string; jenis?: string; q?: st
   return useApi<{ items: AdminSuratItem[] }>(['admin-surat', qs.toString()], `/akademik/surat?${qs}`);
 };
 
+// ============================================================
+// Skala Nilai — konfigurasi global threshold + bobot huruf
+// ============================================================
+export type SkalaRow = {
+  huruf: 'A' | 'AB' | 'B' | 'BC' | 'C' | 'D' | 'E';
+  minNilai: number;
+  bobot: number;
+};
+export type SkalaNilaiResp = { skala: SkalaRow[] };
+export type SkalaNilaiBody = {
+  minA: number; minAB: number; minB: number; minBC: number; minC: number; minD: number;
+  bobotA: number; bobotAB: number; bobotB: number; bobotBC: number; bobotC: number; bobotD: number; bobotE: number;
+};
+
+export const useAdminSkalaNilai = () =>
+  useApi<SkalaNilaiResp>(['admin-skala-nilai'], '/akademik/skala-nilai');
+
+export function useAdminSkalaNilaiActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['admin-skala-nilai'] });
+  return {
+    save: useMutation({
+      mutationFn: (body: SkalaNilaiBody) =>
+        api('/akademik/skala-nilai', { method: 'PUT', body: JSON.stringify(body) }),
+      onSuccess: inv,
+    }),
+    reset: useMutation({
+      mutationFn: () => apiPost<SkalaNilaiResp>('/akademik/skala-nilai/reset', {}),
+      onSuccess: inv,
+    }),
+  };
+}
+
 export type AdminSuratDetail = {
   id: string;
   jenis: string;

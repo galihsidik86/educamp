@@ -148,6 +148,7 @@ import { AdminSuratPage } from './routes/akademik/Surat';
 import { AdminSuratCetak } from './routes/akademik/SuratCetak';
 import { AdminMahasiswaPage } from './routes/akademik/Mahasiswa';
 import { AdminDosenPage } from './routes/akademik/Dosen';
+import { AdminSkalaNilai } from './routes/akademik/SkalaNilai';
 import { AdminProdi } from './routes/akademik/Prodi';
 import { AdminFakultas } from './routes/akademik/Fakultas';
 import { AdminMataKuliah } from './routes/akademik/MataKuliah';
@@ -367,6 +368,7 @@ export function App() {
         <Route path="beasiswa/:id/pendaftar" element={<AdminBeasiswaPendaftar />} />
         <Route path="surat"               element={<AdminSuratPage />} />
         <Route path="surat/:id/cetak"     element={<AdminSuratCetak />} />
+        <Route path="skala-nilai"         element={<AdminSkalaNilai />} />
         <Route path="audit"         element={<AdminAuditLog />} />
         <Route path="notifikasi"    element={<NotifikasiPage />} />
         <Route path="profil"        element={<AkademikProfil />} />
