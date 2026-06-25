@@ -32,10 +32,18 @@ if ! docker compose -f docker-compose.prod.yml build; then
 fi
 
 # Apply schema kalau berubah
+SCHEMA_CHANGED=0
 if ! git diff --quiet HEAD@{1} HEAD -- apps/api/prisma/schema.prisma 2>/dev/null; then
   echo "▶ schema berubah → prisma db push"
   docker compose -f docker-compose.prod.yml run --rm api npx prisma db push --skip-generate
+  SCHEMA_CHANGED=1
 fi
+
+# Seed selalu jalan — seed.ts pakai upsert by-unique sehingga idempotent.
+# Lebih sederhana dan tahan terhadap bash-buffer footgun pada self-modify.
+# Kalau seed gagal, log warning tapi lanjut deploy supaya API tetap up.
+echo "▶ prisma db seed"
+docker compose -f docker-compose.prod.yml run --rm api npx prisma db seed || echo "⚠ seed gagal (lanjut deploy)"
 
 # Restart stack (recreate services if image baru)
 echo "▶ up -d"
