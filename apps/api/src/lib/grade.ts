@@ -1,30 +1,38 @@
 // ============================================================
 // Konversi nilai akademik — default skala 4 Kemendikbud,
 // bisa di-override lewat KonfigurasiSkalaNilai (admin akademik).
+// Admin bisa custom: threshold, bobot, dan LABEL huruf per slot.
 // ============================================================
 
 import { prisma } from '../db.js';
 
-export const NILAI_HURUF = ['A', 'AB', 'B', 'BC', 'C', 'D', 'E'] as const;
-export type NilaiHuruf = (typeof NILAI_HURUF)[number];
+/** Slot internal stabil — jangan diubah karena dipakai di logic. */
+export const SLOT_KEYS = ['A', 'AB', 'B', 'BC', 'C', 'D', 'E'] as const;
+export type SlotKey = (typeof SLOT_KEYS)[number];
 
-export type SkalaRow = { huruf: NilaiHuruf; minNilai: number; bobot: number };
+/** SkalaRow: kunci internal + label tampilan + threshold + bobot. */
+export type SkalaRow = {
+  slot: SlotKey;
+  huruf: string;     // label tampilan (default = slot key, bisa di-custom)
+  minNilai: number;
+  bobot: number;
+};
 
-/** Default Kemendikbud — dipakai kalau row config belum ada di DB. */
+/** Default Kemendikbud. Dipakai kalau row config belum ada di DB. */
 export const SKALA_DEFAULT: SkalaRow[] = [
-  { huruf: 'A',  minNilai: 85, bobot: 4.0 },
-  { huruf: 'AB', minNilai: 75, bobot: 3.5 },
-  { huruf: 'B',  minNilai: 70, bobot: 3.0 },
-  { huruf: 'BC', minNilai: 65, bobot: 2.5 },
-  { huruf: 'C',  minNilai: 56, bobot: 2.0 },
-  { huruf: 'D',  minNilai: 40, bobot: 1.0 },
-  { huruf: 'E',  minNilai: 0,  bobot: 0.0 },
+  { slot: 'A',  huruf: 'A',  minNilai: 85, bobot: 4.0 },
+  { slot: 'AB', huruf: 'AB', minNilai: 75, bobot: 3.5 },
+  { slot: 'B',  huruf: 'B',  minNilai: 70, bobot: 3.0 },
+  { slot: 'BC', huruf: 'BC', minNilai: 65, bobot: 2.5 },
+  { slot: 'C',  huruf: 'C',  minNilai: 56, bobot: 2.0 },
+  { slot: 'D',  huruf: 'D',  minNilai: 40, bobot: 1.0 },
+  { slot: 'E',  huruf: 'E',  minNilai: 0,  bobot: 0.0 },
 ];
 
 /** Cache module-level. Sync API tetap, refresh dari DB via refreshSkalaNilai(). */
 let currentSkala: SkalaRow[] = SKALA_DEFAULT;
 
-/** Ambil snapshot skala saat ini (untuk endpoint GET). */
+/** Snapshot skala saat ini. */
 export function getCurrentSkala(): SkalaRow[] {
   return currentSkala;
 }
@@ -38,13 +46,13 @@ export async function refreshSkalaNilai(): Promise<void> {
       return;
     }
     currentSkala = [
-      { huruf: 'A',  minNilai: row.minA,  bobot: row.bobotA  },
-      { huruf: 'AB', minNilai: row.minAB, bobot: row.bobotAB },
-      { huruf: 'B',  minNilai: row.minB,  bobot: row.bobotB  },
-      { huruf: 'BC', minNilai: row.minBC, bobot: row.bobotBC },
-      { huruf: 'C',  minNilai: row.minC,  bobot: row.bobotC  },
-      { huruf: 'D',  minNilai: row.minD,  bobot: row.bobotD  },
-      { huruf: 'E',  minNilai: 0,         bobot: row.bobotE  },
+      { slot: 'A',  huruf: row.hurufA,  minNilai: row.minA,  bobot: row.bobotA  },
+      { slot: 'AB', huruf: row.hurufAB, minNilai: row.minAB, bobot: row.bobotAB },
+      { slot: 'B',  huruf: row.hurufB,  minNilai: row.minB,  bobot: row.bobotB  },
+      { slot: 'BC', huruf: row.hurufBC, minNilai: row.minBC, bobot: row.bobotBC },
+      { slot: 'C',  huruf: row.hurufC,  minNilai: row.minC,  bobot: row.bobotC  },
+      { slot: 'D',  huruf: row.hurufD,  minNilai: row.minD,  bobot: row.bobotD  },
+      { slot: 'E',  huruf: row.hurufE,  minNilai: 0,         bobot: row.bobotE  },
     ];
   } catch (e) {
     console.error('[grade] gagal load skala dari DB, pakai default:', e);
@@ -52,15 +60,15 @@ export async function refreshSkalaNilai(): Promise<void> {
   }
 }
 
-/** Konversi nilai angka (0-100) → huruf, pakai skala terkini. */
-export function angkaToHuruf(n: number): NilaiHuruf {
+/** Konversi nilai angka (0-100) → label huruf (custom-aware). */
+export function angkaToHuruf(n: number): string {
   for (const r of currentSkala) {
     if (n >= r.minNilai) return r.huruf;
   }
-  return 'E';
+  return currentSkala[currentSkala.length - 1]?.huruf ?? 'E';
 }
 
-/** Konversi huruf → bobot skala 4 (atau skema custom). */
+/** Konversi label huruf → bobot. Cocokkan terhadap label saat ini. */
 export function hurufToBobot(h: string): number {
   return currentSkala.find((r) => r.huruf === h)?.bobot ?? 0;
 }

@@ -437,8 +437,10 @@ export const useAdminSurat = (filters: { status?: string; jenis?: string; q?: st
 // ============================================================
 // Skala Nilai — konfigurasi global threshold + bobot huruf
 // ============================================================
+export type SlotKey = 'A' | 'AB' | 'B' | 'BC' | 'C' | 'D' | 'E';
 export type SkalaRow = {
-  huruf: 'A' | 'AB' | 'B' | 'BC' | 'C' | 'D' | 'E';
+  slot: SlotKey;
+  huruf: string;     // display label, default = slot key
   minNilai: number;
   bobot: number;
 };
@@ -446,7 +448,9 @@ export type SkalaNilaiResp = { skala: SkalaRow[] };
 export type SkalaNilaiBody = {
   minA: number; minAB: number; minB: number; minBC: number; minC: number; minD: number;
   bobotA: number; bobotAB: number; bobotB: number; bobotBC: number; bobotC: number; bobotD: number; bobotE: number;
+  hurufA?: string; hurufAB?: string; hurufB?: string; hurufBC?: string; hurufC?: string; hurufD?: string; hurufE?: string;
 };
+export type RecomputeResult = { scanned: number; changed: number; message: string };
 
 export const useAdminSkalaNilai = () =>
   useApi<SkalaNilaiResp>(['admin-skala-nilai'], '/akademik/skala-nilai');
@@ -463,6 +467,10 @@ export function useAdminSkalaNilaiActions() {
     reset: useMutation({
       mutationFn: () => apiPost<SkalaNilaiResp>('/akademik/skala-nilai/reset', {}),
       onSuccess: inv,
+    }),
+    recompute: useMutation({
+      mutationFn: (status: 'all' | 'finalized' | 'draft' | 'belum' = 'all') =>
+        apiPost<RecomputeResult>('/akademik/skala-nilai/recompute', { status }),
     }),
   };
 }

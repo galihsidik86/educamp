@@ -828,13 +828,14 @@ model Nilai {
 // ============================================================
 model KonfigurasiSkalaNilai {
   id        String   @id @default(uuid())
+  // Threshold nilai minimum per slot (E selalu implicit 0)
   minA      Float    @default(85)
   minAB     Float    @default(75)
   minB      Float    @default(70)
   minBC     Float    @default(65)
   minC      Float    @default(56)
   minD      Float    @default(40)
-  // minE implicit = 0
+  // Bobot skala 4 per slot
   bobotA    Float    @default(4.0)
   bobotAB   Float    @default(3.5)
   bobotB    Float    @default(3.0)
@@ -842,6 +843,15 @@ model KonfigurasiSkalaNilai {
   bobotC    Float    @default(2.0)
   bobotD    Float    @default(1.0)
   bobotE    Float    @default(0.0)
+  // Label huruf yang ditampilkan — bisa di-customize (mis. "B+" alih AB).
+  // Slot internal tetap A/AB/B/BC/C/D/E utk logika, label utk display.
+  hurufA    String   @default("A")
+  hurufAB   String   @default("AB")
+  hurufB    String   @default("B")
+  hurufBC   String   @default("BC")
+  hurufC    String   @default("C")
+  hurufD    String   @default("D")
+  hurufE    String   @default("E")
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
 }
