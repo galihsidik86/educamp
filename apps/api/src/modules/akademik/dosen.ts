@@ -2,8 +2,9 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { hashPassword } from '../../lib/password.js';
-import { BadRequest, Conflict, NotFound } from '../../lib/errors.js';
+import { BadRequest, Conflict, Forbidden, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
+import { getProdiScope } from '../../lib/context.js';
 
 export const dosenRouter = Router();
 
@@ -28,7 +29,8 @@ const updateSchema = createSchema.omit({ nidn: true, email: true, password: true
 
 dosenRouter.get('/dosen', async (req, res) => {
   const search = (req.query.q as string | undefined)?.trim();
-  const prodiId = req.query.prodiId as string | undefined;
+  const scopeId = await getProdiScope(req.user!.sub);
+  const prodiId = scopeId ?? (req.query.prodiId as string | undefined);
 
   const items = await prisma.dosen.findMany({
     where: {
@@ -46,6 +48,7 @@ dosenRouter.get('/dosen', async (req, res) => {
 });
 
 dosenRouter.get('/dosen/:id', async (req, res) => {
+  const scopeId = await getProdiScope(req.user!.sub);
   const d = await prisma.dosen.findUnique({
     where: { id: req.params.id },
     include: {
@@ -54,6 +57,7 @@ dosenRouter.get('/dosen/:id', async (req, res) => {
     },
   });
   if (!d) throw NotFound();
+  if (scopeId && d.prodiId !== scopeId) throw Forbidden('Dosen di luar scope prodi Anda');
   res.json(d);
 });
 
@@ -138,6 +142,10 @@ dosenRouter.post('/dosen/import', async (req, res) => {
 
 dosenRouter.post('/dosen', async (req, res) => {
   const body = createSchema.parse(req.body);
+  const scopeId = await getProdiScope(req.user!.sub);
+  if (scopeId && body.prodiId !== scopeId) {
+    throw Forbidden('Admin prodi hanya boleh tambah dosen di prodi-nya');
+  }
   if (await prisma.user.findUnique({ where: { email: body.email } })) throw Conflict('Email sudah dipakai');
   if (await prisma.dosen.findUnique({ where: { nidn: body.nidn } })) throw Conflict('NIDN sudah dipakai');
 
@@ -174,6 +182,11 @@ dosenRouter.patch('/dosen/:id', async (req, res) => {
   const body = updateSchema.parse(req.body);
   const d = await prisma.dosen.findUnique({ where: { id: req.params.id }, include: { user: true } });
   if (!d) throw NotFound();
+  const scopeId = await getProdiScope(req.user!.sub);
+  if (scopeId && d.prodiId !== scopeId) throw Forbidden('Dosen di luar scope prodi Anda');
+  if (scopeId && body.prodiId && body.prodiId !== scopeId) {
+    throw Forbidden('Admin prodi tidak boleh memindah dosen ke prodi lain');
+  }
 
   if (body.email && body.email !== d.user.email) {
     if (await prisma.user.findUnique({ where: { email: body.email } })) throw Conflict('Email sudah dipakai');
@@ -198,6 +211,8 @@ dosenRouter.patch('/dosen/:id', async (req, res) => {
 dosenRouter.delete('/dosen/:id', async (req, res) => {
   const d = await prisma.dosen.findUnique({ where: { id: req.params.id } });
   if (!d) throw NotFound();
+  const scopeId = await getProdiScope(req.user!.sub);
+  if (scopeId && d.prodiId !== scopeId) throw Forbidden('Dosen di luar scope prodi Anda');
   await prisma.user.delete({ where: { id: d.userId } });
   void writeAudit(req, {
     action: 'dosen.delete',

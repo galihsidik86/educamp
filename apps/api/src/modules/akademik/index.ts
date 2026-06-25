@@ -68,10 +68,12 @@ akademikRouter.use(pengumumanRouter);
 akademikRouter.use(kalenderRouter);
 akademikRouter.use(tiketRouter);
 
-// Akademik core — administrasi mahasiswa, dosen, kurikulum, kelas
-akademikRouter.use(requireAkademikSubRole('akademik'), mahasiswaRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), dosenRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), kurikulumRouter);
+// Akademik core — administrasi mahasiswa, dosen, kurikulum, kelas.
+// 'prodi' boleh akses modul yang punya scope filter (auto-filter
+// per prodi-nya).
+akademikRouter.use(requireAkademikSubRole('akademik', 'prodi'), mahasiswaRouter);
+akademikRouter.use(requireAkademikSubRole('akademik', 'prodi'), dosenRouter);
+akademikRouter.use(requireAkademikSubRole('akademik', 'prodi'), kurikulumRouter);
 akademikRouter.use(requireAkademikSubRole('akademik'), periodeRouter);
 akademikRouter.use(requireAkademikSubRole('akademik'), krsRouter);
 akademikRouter.use(requireAkademikSubRole('akademik'), suratRouter);

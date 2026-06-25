@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../../db.js';
-import { BadRequest, Conflict, NotFound } from '../../lib/errors.js';
+import { BadRequest, Conflict, Forbidden, NotFound } from '../../lib/errors.js';
+import { getProdiScope } from '../../lib/context.js';
 
 export const kurikulumRouter = Router();
 
@@ -123,7 +124,8 @@ const mkSchema = z.object({
 
 kurikulumRouter.get('/mata-kuliah', async (req, res) => {
   const search = (req.query.q as string | undefined)?.trim();
-  const prodiId = req.query.prodiId as string | undefined;
+  const scopeId = await getProdiScope(req.user!.sub);
+  const prodiId = scopeId ?? (req.query.prodiId as string | undefined);
   const items = await prisma.mataKuliah.findMany({
     where: {
       ...(search && { OR: [{ kode: { contains: search } }, { nama: { contains: search } }] }),
@@ -137,6 +139,10 @@ kurikulumRouter.get('/mata-kuliah', async (req, res) => {
 
 kurikulumRouter.post('/mata-kuliah', async (req, res) => {
   const body = mkSchema.parse(req.body);
+  const scopeId = await getProdiScope(req.user!.sub);
+  if (scopeId && body.prodiId !== scopeId) {
+    throw Forbidden('Admin prodi hanya boleh tambah mata kuliah di prodi-nya');
+  }
   if (await prisma.mataKuliah.findUnique({ where: { kode: body.kode } })) throw Conflict('Kode MK sudah dipakai');
   res.status(201).json(await prisma.mataKuliah.create({ data: body }));
 });
@@ -220,10 +226,21 @@ kurikulumRouter.post('/mata-kuliah/import', async (req, res) => {
 
 kurikulumRouter.patch('/mata-kuliah/:id', async (req, res) => {
   const body = mkSchema.partial().parse(req.body);
+  const mk = await prisma.mataKuliah.findUnique({ where: { id: req.params.id }, select: { prodiId: true } });
+  if (!mk) throw NotFound();
+  const scopeId = await getProdiScope(req.user!.sub);
+  if (scopeId && mk.prodiId !== scopeId) throw Forbidden('Mata kuliah di luar scope prodi Anda');
+  if (scopeId && body.prodiId && body.prodiId !== scopeId) {
+    throw Forbidden('Admin prodi tidak boleh memindah mata kuliah ke prodi lain');
+  }
   res.json(await prisma.mataKuliah.update({ where: { id: req.params.id }, data: body }));
 });
 
 kurikulumRouter.delete('/mata-kuliah/:id', async (req, res) => {
+  const mk = await prisma.mataKuliah.findUnique({ where: { id: req.params.id }, select: { prodiId: true } });
+  if (!mk) throw NotFound();
+  const scopeId = await getProdiScope(req.user!.sub);
+  if (scopeId && mk.prodiId !== scopeId) throw Forbidden('Mata kuliah di luar scope prodi Anda');
   const usage = await prisma.kelas.count({ where: { mataKuliahId: req.params.id } });
   if (usage > 0) throw Conflict(`Mata kuliah dipakai di ${usage} kelas — hapus kelas terlebih dahulu`);
   await prisma.mataKuliah.delete({ where: { id: req.params.id } });
@@ -291,10 +308,12 @@ const kelasSchema = z.object({
 kurikulumRouter.get('/kelas', async (req, res) => {
   const semesterId = req.query.semesterId as string | undefined;
   const dosenId = req.query.dosenId as string | undefined;
+  const scopeId = await getProdiScope(req.user!.sub);
   const items = await prisma.kelas.findMany({
     where: {
       ...(semesterId && { semesterId }),
       ...(dosenId && { dosenId }),
+      ...(scopeId && { mataKuliah: { prodiId: scopeId } }),
     },
     include: {
       mataKuliah: { select: { kode: true, nama: true, sks: true } },

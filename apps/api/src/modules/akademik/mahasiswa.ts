@@ -2,11 +2,11 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { hashPassword } from '../../lib/password.js';
-import { BadRequest, Conflict, NotFound } from '../../lib/errors.js';
+import { BadRequest, Conflict, Forbidden, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
 import { ensureUangPangkal } from '../../lib/tagihan-ukt.js';
 import { calculateIp } from '../../lib/grade.js';
-import { getActiveSemester } from '../../lib/context.js';
+import { getActiveSemester, getProdiScope } from '../../lib/context.js';
 
 export const mahasiswaRouter = Router();
 
@@ -36,7 +36,8 @@ const updateSchema = createSchema.omit({ nim: true, email: true, password: true 
 
 mahasiswaRouter.get('/mahasiswa', async (req, res) => {
   const search = (req.query.q as string | undefined)?.trim();
-  const prodiId = req.query.prodiId as string | undefined;
+  const scopeId = await getProdiScope(req.user!.sub);
+  const prodiId = scopeId ?? (req.query.prodiId as string | undefined);
   const angkatan = req.query.angkatan ? Number(req.query.angkatan) : undefined;
   const status = req.query.status as string | undefined;
 
@@ -62,6 +63,7 @@ mahasiswaRouter.get('/mahasiswa', async (req, res) => {
 });
 
 mahasiswaRouter.get('/mahasiswa/:id', async (req, res) => {
+  const scopeId = await getProdiScope(req.user!.sub);
   const m = await prisma.mahasiswa.findUnique({
     where: { id: req.params.id },
     include: {
@@ -72,6 +74,7 @@ mahasiswaRouter.get('/mahasiswa/:id', async (req, res) => {
     },
   });
   if (!m) throw NotFound();
+  if (scopeId && m.prodiId !== scopeId) throw Forbidden('Mahasiswa di luar scope prodi Anda');
   res.json(m);
 });
 
@@ -196,6 +199,10 @@ mahasiswaRouter.post('/mahasiswa/import', async (req, res) => {
 
 mahasiswaRouter.post('/mahasiswa', async (req, res) => {
   const body = createSchema.parse(req.body);
+  const scopeId = await getProdiScope(req.user!.sub);
+  if (scopeId && body.prodiId !== scopeId) {
+    throw Forbidden('Admin prodi hanya boleh tambah mahasiswa di prodi-nya');
+  }
 
   // pre-check duplikat
   const existsEmail = await prisma.user.findUnique({ where: { email: body.email } });
@@ -246,6 +253,13 @@ mahasiswaRouter.patch('/mahasiswa/:id', async (req, res) => {
   const body = updateSchema.parse(req.body);
   const m = await prisma.mahasiswa.findUnique({ where: { id: req.params.id }, include: { user: true } });
   if (!m) throw NotFound();
+  const scopeId = await getProdiScope(req.user!.sub);
+  if (scopeId && m.prodiId !== scopeId) {
+    throw Forbidden('Mahasiswa di luar scope prodi Anda');
+  }
+  if (scopeId && body.prodiId && body.prodiId !== scopeId) {
+    throw Forbidden('Admin prodi tidak boleh memindah mahasiswa ke prodi lain');
+  }
 
   if (body.email && body.email !== m.user.email) {
     const exists = await prisma.user.findUnique({ where: { email: body.email } });
@@ -276,6 +290,10 @@ mahasiswaRouter.patch('/mahasiswa/:id', async (req, res) => {
 mahasiswaRouter.delete('/mahasiswa/:id', async (req, res) => {
   const m = await prisma.mahasiswa.findUnique({ where: { id: req.params.id } });
   if (!m) throw NotFound();
+  const scopeId = await getProdiScope(req.user!.sub);
+  if (scopeId && m.prodiId !== scopeId) {
+    throw Forbidden('Mahasiswa di luar scope prodi Anda');
+  }
   // delete user cascades mahasiswa
   await prisma.user.delete({ where: { id: m.userId } });
   void writeAudit(req, {
