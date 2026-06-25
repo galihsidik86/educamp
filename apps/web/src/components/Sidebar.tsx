@@ -7,11 +7,27 @@ import {
   ShieldCheck, Layers, Bell, History, CalendarCheck, Megaphone, ClipboardCheck, ScrollText, Award, Gift, Mail, MessageSquare, BrainCircuit, LifeBuoy, FileBadge, UserCog, BarChart3, KeyRound, Library, Cable, BookCheck, Target, TrendingUp, ChevronDown,
   Home, Settings, FlaskConical, Info, CheckCircle2, Banknote, AlertTriangle,
 } from 'lucide-react';
-import type { Role } from '@/lib/auth';
+import type { Role, AkademikSubRole } from '@/lib/auth';
+import { useAuth } from '@/lib/auth';
 import { useInstitusiPublic } from '@/lib/queries-institusi';
 
-type NavItem = { to: string; label: string; icon: ReactNode; end?: boolean };
-type NavGroup = { id: string; group: string; groupIcon: ReactNode; items: NavItem[] };
+type NavItem = {
+  to: string;
+  label: string;
+  icon: ReactNode;
+  end?: boolean;
+  /** Sub-peran akademik yang boleh lihat. Omit = semua, [] = super_admin only. */
+  subRoles?: AkademikSubRole[];
+};
+type NavGroup = {
+  id: string;
+  group: string;
+  groupIcon: ReactNode;
+  items: NavItem[];
+  /** Sub-peran akademik yang boleh lihat group ini. Default: visible kalau ada
+   *  item yang visible. */
+  subRoles?: AkademikSubRole[];
+};
 
 const itemsByRole: Record<Role, NavGroup[]> = {
   mahasiswa: [
@@ -175,15 +191,15 @@ const itemsByRole: Record<Role, NavGroup[]> = {
       group: 'Master Data',
       groupIcon: <Layers size={14} />,
       items: [
-        { to: '/akademik/mahasiswa',      label: 'Mahasiswa',     icon: <GraduationCap size={18} /> },
-        { to: '/akademik/dosen',          label: 'Dosen',         icon: <Users size={18} /> },
-        { to: '/akademik/fakultas',       label: 'Fakultas',      icon: <Building2 size={18} /> },
-        { to: '/akademik/prodi',          label: 'Program Studi', icon: <Building2 size={18} /> },
-        { to: '/akademik/mata-kuliah',    label: 'Mata Kuliah',   icon: <BookOpen size={18} /> },
-        { to: '/akademik/kelas',          label: 'Kelas',         icon: <Layers size={18} /> },
-        { to: '/akademik/ruangan',        label: 'Ruangan',       icon: <MapPin size={18} /> },
-        { to: '/akademik/periode',        label: 'Periode KRS',   icon: <CalendarDays size={18} /> },
-        { to: '/akademik/periode-wisuda', label: 'Periode Wisuda',icon: <CalendarDays size={18} /> },
+        { to: '/akademik/mahasiswa',      label: 'Mahasiswa',     icon: <GraduationCap size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/dosen',          label: 'Dosen',         icon: <Users size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/fakultas',       label: 'Fakultas',      icon: <Building2 size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/prodi',          label: 'Program Studi', icon: <Building2 size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/mata-kuliah',    label: 'Mata Kuliah',   icon: <BookOpen size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/kelas',          label: 'Kelas',         icon: <Layers size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/ruangan',        label: 'Ruangan',       icon: <MapPin size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/periode',        label: 'Periode KRS',   icon: <CalendarDays size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/periode-wisuda', label: 'Periode Wisuda',icon: <CalendarDays size={18} />, subRoles: ['akademik'] },
       ],
     },
     {
@@ -191,15 +207,15 @@ const itemsByRole: Record<Role, NavGroup[]> = {
       group: 'Akademik',
       groupIcon: <BookOpen size={14} />,
       items: [
-        { to: '/akademik/krs',            label: 'Validasi KRS',  icon: <ClipboardList size={18} /> },
-        { to: '/akademik/kkn',            label: 'Kelola KKN',    icon: <MapPin size={18} /> },
-        { to: '/akademik/mbkm',           label: 'Kelola MBKM',   icon: <Briefcase size={18} /> },
-        { to: '/akademik/edom',           label: 'Kelola EDOM',   icon: <ClipboardCheck size={18} /> },
-        { to: '/akademik/skripsi',        label: 'Kelola Skripsi',icon: <ScrollText size={18} /> },
-        { to: '/akademik/yudisium',       label: 'Kelola Yudisium', icon: <Award size={18} /> },
-        { to: '/akademik/skpi',           label: 'Verifikasi SKPI', icon: <FileBadge size={18} /> },
-        { to: '/akademik/prestasi',       label: 'Verifikasi Prestasi', icon: <Award size={18} /> },
-        { to: '/akademik/sertifikasi',    label: 'Verifikasi Sertifikasi', icon: <FileBadge size={18} /> },
+        { to: '/akademik/krs',            label: 'Validasi KRS',  icon: <ClipboardList size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/kkn',            label: 'Kelola KKN',    icon: <MapPin size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/mbkm',           label: 'Kelola MBKM',   icon: <Briefcase size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/edom',           label: 'Kelola EDOM',   icon: <ClipboardCheck size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/skripsi',        label: 'Kelola Skripsi',icon: <ScrollText size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/yudisium',       label: 'Kelola Yudisium', icon: <Award size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/skpi',           label: 'Verifikasi SKPI', icon: <FileBadge size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/prestasi',       label: 'Verifikasi Prestasi', icon: <Award size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/sertifikasi',    label: 'Verifikasi Sertifikasi', icon: <FileBadge size={18} />, subRoles: ['akademik'] },
       ],
     },
     {
@@ -207,11 +223,11 @@ const itemsByRole: Record<Role, NavGroup[]> = {
       group: 'Penjaminan Mutu',
       groupIcon: <ShieldCheck size={14} />,
       items: [
-        { to: '/akademik/spmi',              label: 'SPMI (Mutu Internal)', icon: <ShieldCheck size={18} />, end: true },
-        { to: '/akademik/akreditasi',        label: 'Dashboard Akreditasi', icon: <BarChart3 size={18} /> },
-        { to: '/akademik/obe',               label: 'OBE (CPL/CPMK)',    icon: <Target size={18} /> },
-        { to: '/akademik/bkd',               label: 'Verifikasi BKD',    icon: <BookCheck size={18} /> },
-        { to: '/akademik/laporan/obe',       label: 'Laporan OBE',       icon: <TrendingUp size={18} /> },
+        { to: '/akademik/spmi',              label: 'SPMI (Mutu Internal)', icon: <ShieldCheck size={18} />, end: true, subRoles: ['spmi'] },
+        { to: '/akademik/akreditasi',        label: 'Dashboard Akreditasi', icon: <BarChart3 size={18} />, subRoles: ['akademik', 'prodi'] },
+        { to: '/akademik/obe',               label: 'OBE (CPL/CPMK)',    icon: <Target size={18} />, subRoles: ['akademik', 'prodi'] },
+        { to: '/akademik/bkd',               label: 'Verifikasi BKD',    icon: <BookCheck size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/laporan/obe',       label: 'Laporan OBE',       icon: <TrendingUp size={18} />, subRoles: ['akademik', 'prodi'] },
       ],
     },
     {
@@ -219,14 +235,14 @@ const itemsByRole: Record<Role, NavGroup[]> = {
       group: 'Layanan',
       groupIcon: <HeartHandshake size={14} />,
       items: [
-        { to: '/akademik/beasiswa',       label: 'Kelola Beasiswa', icon: <Gift size={18} /> },
-        { to: '/akademik/surat',          label: 'Surat Keterangan',icon: <Mail size={18} /> },
+        { to: '/akademik/beasiswa',       label: 'Kelola Beasiswa', icon: <Gift size={18} />, subRoles: ['keuangan'] },
+        { to: '/akademik/surat',          label: 'Surat Keterangan',icon: <Mail size={18} />, subRoles: ['akademik'] },
         { to: '/akademik/sertifikat',     label: 'Sertifikat Digital', icon: <Award size={18} /> },
         { to: '/akademik/tiket',          label: 'Helpdesk Tiket',    icon: <LifeBuoy size={18} /> },
-        { to: '/akademik/mutasi',         label: 'Mutasi Mahasiswa',  icon: <UserCog size={18} /> },
-        { to: '/akademik/heregistrasi',   label: 'Heregistrasi & Cuti', icon: <FileBadge size={18} /> },
-        { to: '/akademik/ews',            label: 'Peringatan Dini (EWS)', icon: <AlertTriangle size={18} /> },
-        { to: '/akademik/wali',           label: 'Wali Mahasiswa',    icon: <Users size={18} /> },
+        { to: '/akademik/mutasi',         label: 'Mutasi Mahasiswa',  icon: <UserCog size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/heregistrasi',   label: 'Heregistrasi & Cuti', icon: <FileBadge size={18} />, subRoles: ['keuangan'] },
+        { to: '/akademik/ews',            label: 'Peringatan Dini (EWS)', icon: <AlertTriangle size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/wali',           label: 'Wali Mahasiswa',    icon: <Users size={18} />, subRoles: ['akademik'] },
         { to: '/akademik/pengumuman',     label: 'Pengumuman',        icon: <Megaphone size={18} /> },
         { to: '/akademik/kalender',       label: 'Kalender Akademik', icon: <CalendarDays size={18} /> },
         { to: '/akademik/dokumen',        label: 'Pusat Dokumen',     icon: <Library size={18} /> },
@@ -237,13 +253,13 @@ const itemsByRole: Record<Role, NavGroup[]> = {
       group: 'Keuangan & Laporan',
       groupIcon: <BarChart3 size={14} />,
       items: [
-        { to: '/akademik/keuangan',             label: 'Keuangan',      icon: <Wallet size={18} />, end: true },
-        { to: '/akademik/keuangan/verifikasi',  label: 'Verifikasi Pembayaran', icon: <CheckCircle2 size={18} /> },
-        { to: '/akademik/keuangan/rekonsiliasi', label: 'Rekonsiliasi Bank', icon: <Banknote size={18} /> },
-        { to: '/akademik/tarif-ukt',            label: 'Tarif UKT',     icon: <Wallet size={18} /> },
-        { to: '/akademik/laporan',           label: 'Laporan',           icon: <Briefcase size={18} />, end: true },
-        { to: '/akademik/laporan/kehadiran', label: 'Laporan Kehadiran', icon: <CalendarCheck size={18} /> },
-        { to: '/akademik/laporan/honor-dosen', label: 'Honor Mengajar Dosen', icon: <Wallet size={18} /> },
+        { to: '/akademik/keuangan',             label: 'Keuangan',      icon: <Wallet size={18} />, end: true, subRoles: ['keuangan'] },
+        { to: '/akademik/keuangan/verifikasi',  label: 'Verifikasi Pembayaran', icon: <CheckCircle2 size={18} />, subRoles: ['keuangan'] },
+        { to: '/akademik/keuangan/rekonsiliasi', label: 'Rekonsiliasi Bank', icon: <Banknote size={18} />, subRoles: ['keuangan'] },
+        { to: '/akademik/tarif-ukt',            label: 'Tarif UKT',     icon: <Wallet size={18} />, subRoles: ['keuangan'] },
+        { to: '/akademik/laporan',           label: 'Laporan',           icon: <Briefcase size={18} />, end: true, subRoles: ['akademik'] },
+        { to: '/akademik/laporan/kehadiran', label: 'Laporan Kehadiran', icon: <CalendarCheck size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/laporan/honor-dosen', label: 'Honor Mengajar Dosen', icon: <Wallet size={18} />, subRoles: ['akademik'] },
       ],
     },
     {
@@ -251,12 +267,13 @@ const itemsByRole: Record<Role, NavGroup[]> = {
       group: 'Sistem',
       groupIcon: <Settings size={14} />,
       items: [
-        { to: '/akademik/institusi',      label: 'Identitas Kampus', icon: <Building2 size={18} /> },
-        { to: '/akademik/skala-nilai',    label: 'Skala Nilai',    icon: <GraduationCap size={18} /> },
-        { to: '/akademik/feeder',         label: 'Sinkron Feeder', icon: <Cable size={18} /> },
-        { to: '/akademik/users',          label: 'Kelola Akun',   icon: <KeyRound size={18} /> },
-        { to: '/akademik/audit',          label: 'Riwayat Audit', icon: <ShieldCheck size={18} /> },
-        { to: '/akademik/oversight',      label: 'Aktivitas Dosen', icon: <FlaskConical size={18} /> },
+        // Master config & administrasi sistem — super_admin only ([] = subRoles kosong)
+        { to: '/akademik/institusi',      label: 'Identitas Kampus', icon: <Building2 size={18} />, subRoles: [] },
+        { to: '/akademik/skala-nilai',    label: 'Skala Nilai',    icon: <GraduationCap size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/feeder',         label: 'Sinkron Feeder', icon: <Cable size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/users',          label: 'Kelola Akun',   icon: <KeyRound size={18} />, subRoles: [] },
+        { to: '/akademik/audit',          label: 'Riwayat Audit', icon: <ShieldCheck size={18} />, subRoles: [] },
+        { to: '/akademik/oversight',      label: 'Aktivitas Dosen', icon: <FlaskConical size={18} />, subRoles: [] },
         { to: '/akademik/notifikasi',     label: 'Notifikasi',    icon: <Bell size={18} /> },
         { to: '/akademik/profil',         label: 'Profil',        icon: <UserRound size={18} /> },
       ],
@@ -276,8 +293,32 @@ const itemsByRole: Record<Role, NavGroup[]> = {
 
 const STORAGE_KEY = 'siakad.sidebar-collapsed';
 
+/** Filter item akademik berdasarkan sub-role user.
+ *  - subRoles undefined → visible utk semua sub-role
+ *  - subRoles = [] → super_admin only
+ *  - subRoles = ['x', 'y'] → visible utk super_admin + x + y */
+function filterBySubRole(rawGroups: NavGroup[], subRole: AkademikSubRole | undefined): NavGroup[] {
+  if (!subRole || subRole === 'super_admin') return rawGroups;
+  const out: NavGroup[] = [];
+  for (const g of rawGroups) {
+    const items = g.items.filter((it) => {
+      if (it.subRoles === undefined) return true;
+      return it.subRoles.includes(subRole);
+    });
+    if (items.length > 0) out.push({ ...g, items });
+  }
+  return out;
+}
+
 export function Sidebar({ role, mobileOpen = false, onNavigate }: { role: Role; mobileOpen?: boolean; onNavigate?: () => void }) {
-  const groups = itemsByRole[role];
+  const auth = useAuth();
+  const subRole = role === 'akademik' && auth.state.status === 'authenticated'
+    ? auth.state.user.akademik?.subRole
+    : undefined;
+  const groups = useMemo(
+    () => (role === 'akademik' ? filterBySubRole(itemsByRole[role], subRole) : itemsByRole[role]),
+    [role, subRole],
+  );
   const location = useLocation();
   const inst = useInstitusiPublic();
   const brandPendek = inst.data?.namaPendek || inst.data?.nama || 'STMIK Tazkia';

@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { apiGet, apiPost, tokenStore, ApiError } from './api';
 
 export type Role = 'mahasiswa' | 'dosen' | 'akademik' | 'wali';
+export type AkademikSubRole = 'super_admin' | 'akademik' | 'keuangan' | 'prodi' | 'spmi';
 
 export type AuthUser = {
   id: string;
@@ -12,7 +13,12 @@ export type AuthUser = {
   // profile details from /auth/me
   mahasiswa?: { nim: string; nama: string; angkatan: number; prodi: { kode: string; nama: string; fakultas: { nama: string } } } | null;
   dosen?: { nidn: string; nama: string; gelarDepan?: string | null; gelarBelakang?: string | null; prodi: { kode: string; nama: string } } | null;
-  akademik?: { nama: string; jabatan?: string | null } | null;
+  akademik?: {
+    nama: string;
+    jabatan?: string | null;
+    subRole?: AkademikSubRole;
+    prodiId?: string | null;
+  } | null;
   wali?: { nama: string; telepon: string | null } | null;
 };
 

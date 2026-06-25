@@ -26,6 +26,20 @@ enum Role {
   wali
 }
 
+/// Sub-peran untuk user dengan role 'akademik' — membagi akses BAAK.
+/// super_admin: akses semua, override sub-role lain.
+/// akademik: akses fitur akademik core (mahasiswa, dosen, kurikulum, KRS, dst.).
+/// keuangan: akses fitur keuangan (tagihan, pembayaran, UKT, heregistrasi).
+/// prodi: akses fitur per-prodi (akreditasi, OBE, laporan prodi).
+/// spmi: akses fitur penjaminan mutu (SPMI standar, AMI, RTM, survei).
+enum AkademikSubRole {
+  super_admin
+  akademik
+  keuangan
+  prodi
+  spmi
+}
+
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
@@ -144,6 +158,7 @@ model Prodi {
   mutasiAsal   MutasiMahasiswa[] @relation("MutasiProdiAsal")
   mutasiTujuan MutasiMahasiswa[] @relation("MutasiProdiTujuan")
   lingkupAmi   LingkupAmi[]
+  akademikAdmins Akademik[]
   standarMutu  StandarMutu[]
 
   createdAt  DateTime @default(now())
@@ -302,15 +317,24 @@ model Dosen {
 }
 
 model Akademik {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  nip       String?  @unique
+  id        String          @id @default(uuid())
+  userId    String          @unique
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nip       String?         @unique
   nama      String
   jabatan   String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  /// Sub-peran — menentukan menu & endpoint yang bisa diakses.
+  /// Default super_admin supaya akun lama tetap punya akses penuh.
+  subRole   AkademikSubRole @default(super_admin)
+
+  /// Untuk admin prodi — scope opsional ke 1 prodi tertentu.
+  /// Implementasi scope filtering Phase 2; saat ini hanya menentukan menu.
+  prodiId   String?
+  prodi     Prodi?          @relation(fields: [prodiId], references: [id])
+
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 }
 
 // ============================================================

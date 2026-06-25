@@ -84,15 +84,81 @@ async function main() {
     create: { kode: 'LAB-1', nama: 'Laboratorium Komputer 1', gedung: 'B', lantai: 1, kapasitas: 30 },
   });
 
-  console.log('▶ Seed: akun akademik');
+  console.log('▶ Seed: akun akademik (5 sub-peran)');
+  // Existing — backward compat. Mark sebagai super_admin.
   const userAkademik = await prisma.user.upsert({
     where: { email: 'akademik@tazkia.ac.id' },
-    update: {},
+    update: {
+      akademik: {
+        update: { subRole: 'super_admin', jabatan: 'Super Admin (Kepala BAAK)' },
+      },
+    },
     create: {
       email: 'akademik@tazkia.ac.id',
       passwordHash: PW_HASH,
       role: Role.akademik,
-      akademik: { create: { nama: 'Bagian Akademik', nip: '198001012010011001', jabatan: 'Kepala BAAK' } },
+      akademik: {
+        create: { nama: 'Bagian Akademik', nip: '198001012010011001', jabatan: 'Super Admin (Kepala BAAK)', subRole: 'super_admin' },
+      },
+    },
+  });
+
+  // Admin akademik core (mahasiswa/dosen/kurikulum/krs)
+  await prisma.user.upsert({
+    where: { email: 'admin.akademik@tazkia.ac.id' },
+    update: { akademik: { update: { subRole: 'akademik' } } },
+    create: {
+      email: 'admin.akademik@tazkia.ac.id',
+      passwordHash: PW_HASH,
+      role: Role.akademik,
+      akademik: { create: { nama: 'Admin Akademik', nip: '198101012011011001', jabatan: 'Staf Akademik', subRole: 'akademik' } },
+    },
+  });
+
+  // Admin keuangan
+  await prisma.user.upsert({
+    where: { email: 'admin.keuangan@tazkia.ac.id' },
+    update: { akademik: { update: { subRole: 'keuangan' } } },
+    create: {
+      email: 'admin.keuangan@tazkia.ac.id',
+      passwordHash: PW_HASH,
+      role: Role.akademik,
+      akademik: { create: { nama: 'Admin Keuangan', nip: '198201012012011001', jabatan: 'Staf Keuangan & UKT', subRole: 'keuangan' } },
+    },
+  });
+
+  // Admin prodi — link ke prodi pertama yang di-seed (kalau ada), kalau tidak biarkan null.
+  const prodiPertama = await prisma.prodi.findFirst({ select: { id: true, nama: true } });
+  await prisma.user.upsert({
+    where: { email: 'admin.prodi@tazkia.ac.id' },
+    update: {
+      akademik: { update: { subRole: 'prodi', prodiId: prodiPertama?.id ?? null } },
+    },
+    create: {
+      email: 'admin.prodi@tazkia.ac.id',
+      passwordHash: PW_HASH,
+      role: Role.akademik,
+      akademik: {
+        create: {
+          nama: 'Admin Prodi',
+          nip: '198301012013011001',
+          jabatan: prodiPertama ? `Ka. Prodi ${prodiPertama.nama}` : 'Staf Prodi',
+          subRole: 'prodi',
+          prodiId: prodiPertama?.id ?? null,
+        },
+      },
+    },
+  });
+
+  // Admin SPMI
+  await prisma.user.upsert({
+    where: { email: 'admin.spmi@tazkia.ac.id' },
+    update: { akademik: { update: { subRole: 'spmi' } } },
+    create: {
+      email: 'admin.spmi@tazkia.ac.id',
+      passwordHash: PW_HASH,
+      role: Role.akademik,
+      akademik: { create: { nama: 'Admin SPMI', nip: '198401012014011001', jabatan: 'LPM / SPMI', subRole: 'spmi' } },
     },
   });
 
