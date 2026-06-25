@@ -316,8 +316,8 @@ kurikulumRouter.get('/kelas', async (req, res) => {
       ...(scopeId && { mataKuliah: { prodiId: scopeId } }),
     },
     include: {
-      mataKuliah: { select: { kode: true, nama: true, sks: true } },
-      dosen: { select: { nidn: true, nama: true, gelarDepan: true, gelarBelakang: true } },
+      mataKuliah: { select: { kode: true, nama: true, sks: true, prodi: { select: { kode: true, nama: true } } } },
+      dosen: { select: { nidn: true, nama: true, gelarDepan: true, gelarBelakang: true, prodi: { select: { kode: true, nama: true } } } },
       ruangan: { select: { kode: true } },
       semester: { include: { tahunAjaran: true } },
       _count: { select: { krs: true } },
@@ -511,7 +511,14 @@ kurikulumRouter.get('/kelas/:id/dosen', async (req, res) => {
   if (!k) throw NotFound('Kelas tidak ditemukan');
   const team = await prisma.kelasDosen.findMany({
     where: { kelasId: k.id },
-    include: { dosen: { select: { id: true, nidn: true, nama: true, gelarDepan: true, gelarBelakang: true } } },
+    include: {
+      dosen: {
+        select: {
+          id: true, nidn: true, nama: true, gelarDepan: true, gelarBelakang: true,
+          prodi: { select: { kode: true, nama: true } },
+        },
+      },
+    },
     orderBy: [{ peran: 'asc' }, { createdAt: 'asc' }],
   });
   res.json({
@@ -522,6 +529,7 @@ kurikulumRouter.get('/kelas/:id/dosen', async (req, res) => {
       nama: t.dosen.nama,
       gelarDepan: t.dosen.gelarDepan,
       gelarBelakang: t.dosen.gelarBelakang,
+      prodi: t.dosen.prodi,
       peran: t.peran,
     })),
   });

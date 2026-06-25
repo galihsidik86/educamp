@@ -169,6 +169,9 @@ function TeamModal({ kelas, onClose }: { kelas: Kelas; onClose: () => void }) {
 
   const existingIds = new Set(team.data?.items.map((t) => t.dosenId) ?? []);
   const dosenAvailable = dosen.data?.items.filter((d) => !existingIds.has(d.id)) ?? [];
+  const mkProdiKode = kelas.mataKuliah.prodi?.kode;
+  const selectedDosen = dosen.data?.items.find((d) => d.id === addDosenId);
+  const isCrossProdi = selectedDosen && mkProdiKode && selectedDosen.prodi.kode !== mkProdiKode;
 
   return (
     <Modal open onClose={onClose} title={`Team Dosen — ${kelas.mataKuliah.kode} ${kelas.kodeKelas}`} width={700}>
@@ -178,27 +181,36 @@ function TeamModal({ kelas, onClose }: { kelas: Kelas; onClose: () => void }) {
         <div className="tz-table-wrap">
           <table className="tz-table">
             <thead>
-              <tr><th>NIDN</th><th>Nama</th><th>Peran</th><th></th></tr>
+              <tr><th>NIDN</th><th>Nama</th><th>Prodi</th><th>Peran</th><th></th></tr>
             </thead>
             <tbody>
-              {team.isLoading && <tr><td colSpan={4} className="muted center">Memuat…</td></tr>}
-              {team.data?.items.length === 0 && <tr><td colSpan={4} className="muted center">Belum ada anggota team.</td></tr>}
-              {team.data?.items.map((t) => (
-                <tr key={t.dosenId}>
-                  <td className="mono">{t.nidn}</td>
-                  <td>{[t.gelarDepan, t.nama, t.gelarBelakang].filter(Boolean).join(' ')}</td>
-                  <td>
-                    <Select value={t.peran} onChange={(e) => onChangePeran(t.dosenId, (e.target as HTMLSelectElement).value as KelasTeamItem['peran'])}>
-                      <option value="lead">Lead</option>
-                      <option value="anggota">Anggota</option>
-                      <option value="asisten">Asisten</option>
-                    </Select>
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <Button size="sm" variant="ghost" leftIcon={<Trash2 size={12} />} disabled={t.peran === 'lead'} onClick={() => onRemove(t.dosenId, t.nama)}>Hapus</Button>
-                  </td>
-                </tr>
-              ))}
+              {team.isLoading && <tr><td colSpan={5} className="muted center">Memuat…</td></tr>}
+              {team.data?.items.length === 0 && <tr><td colSpan={5} className="muted center">Belum ada anggota team.</td></tr>}
+              {team.data?.items.map((t) => {
+                const cross = t.prodi && mkProdiKode && t.prodi.kode !== mkProdiKode;
+                return (
+                  <tr key={t.dosenId}>
+                    <td className="mono">{t.nidn}</td>
+                    <td>{[t.gelarDepan, t.nama, t.gelarBelakang].filter(Boolean).join(' ')}</td>
+                    <td>
+                      <span className={`pill ${cross ? 'pill--warning' : 'pill--neutral'}`} title={t.prodi?.nama ?? ''}>
+                        {t.prodi?.kode ?? '—'}
+                        {cross ? ' · lintas' : ''}
+                      </span>
+                    </td>
+                    <td>
+                      <Select value={t.peran} onChange={(e) => onChangePeran(t.dosenId, (e.target as HTMLSelectElement).value as KelasTeamItem['peran'])}>
+                        <option value="lead">Lead</option>
+                        <option value="anggota">Anggota</option>
+                        <option value="asisten">Asisten</option>
+                      </Select>
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <Button size="sm" variant="ghost" leftIcon={<Trash2 size={12} />} disabled={t.peran === 'lead'} onClick={() => onRemove(t.dosenId, t.nama)}>Hapus</Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -207,9 +219,15 @@ function TeamModal({ kelas, onClose }: { kelas: Kelas; onClose: () => void }) {
           <div style={{ flex: 2 }}>
             <Select label="Tambah dosen" value={addDosenId} onChange={(e) => setAddDosenId((e.target as HTMLSelectElement).value)}>
               <option value="">— pilih dosen —</option>
-              {dosenAvailable.map((d) => (
-                <option key={d.id} value={d.id}>{[d.gelarDepan, d.nama, d.gelarBelakang].filter(Boolean).join(' ')} ({d.nidn})</option>
-              ))}
+              {dosenAvailable.map((d) => {
+                const cross = mkProdiKode && d.prodi.kode !== mkProdiKode;
+                return (
+                  <option key={d.id} value={d.id}>
+                    {[d.gelarDepan, d.nama, d.gelarBelakang].filter(Boolean).join(' ')} ({d.nidn})
+                    {cross ? ` · ⚠ ${d.prodi.kode}` : ''}
+                  </option>
+                );
+              })}
             </Select>
           </div>
           <div style={{ flex: 1 }}>
@@ -221,6 +239,13 @@ function TeamModal({ kelas, onClose }: { kelas: Kelas; onClose: () => void }) {
           </div>
           <Button variant="primary" leftIcon={<Plus size={14} />} disabled={actions.add.isPending} onClick={onAdd}>Tambah</Button>
         </div>
+
+        {isCrossProdi && selectedDosen && (
+          <Alert variant="warning" title="Assignment lintas prodi">
+            Dosen <strong>{selectedDosen.nama}</strong> dari prodi <strong className="mono">{selectedDosen.prodi.kode}</strong>
+            {' '}berbeda dengan prodi MK <strong className="mono">{mkProdiKode}</strong>. Tetap boleh — umum untuk MKDU/service course.
+          </Alert>
+        )}
 
         <div className="row" style={{ justifyContent: 'flex-end' }}>
           <Button variant="ghost" onClick={onClose}>Tutup</Button>
@@ -294,10 +319,31 @@ function KelasModal({ mode, initial, defaultSemesterId, onClose, onSubmit }: {
 
         <Select label="Dosen Pengampu" required value={form.dosenId ?? ''} onChange={(e) => setForm({ ...form, dosenId: (e.target as HTMLSelectElement).value })}>
           <option value="">— pilih dosen —</option>
-          {dosen.data?.items.map((d) => (
-            <option key={d.id} value={d.id}>{[d.gelarDepan, d.nama, d.gelarBelakang].filter(Boolean).join(' ')} ({d.nidn})</option>
-          ))}
+          {dosen.data?.items.map((d) => {
+            const selectedMk = mk.data?.items.find((m) => m.id === form.mataKuliahId);
+            const cross = selectedMk && d.prodi.kode !== selectedMk.prodi.kode;
+            return (
+              <option key={d.id} value={d.id}>
+                {[d.gelarDepan, d.nama, d.gelarBelakang].filter(Boolean).join(' ')} ({d.nidn})
+                {cross ? ` · ⚠ ${d.prodi.kode}` : ''}
+              </option>
+            );
+          })}
         </Select>
+        {/* Warning lintas prodi: dosen prodi ≠ MK prodi */}
+        {(() => {
+          const selMk = mk.data?.items.find((m) => m.id === form.mataKuliahId);
+          const selDosen = dosen.data?.items.find((d) => d.id === form.dosenId);
+          if (!selMk || !selDosen) return null;
+          if (selMk.prodi.kode === selDosen.prodi.kode) return null;
+          return (
+            <Alert variant="warning" title="Assignment lintas prodi">
+              Dosen <strong>{selDosen.nama}</strong> dari prodi <strong className="mono">{selDosen.prodi.kode}</strong> ({selDosen.prodi.nama})
+              {' '}— berbeda dengan prodi MK <strong className="mono">{selMk.prodi.kode}</strong> ({selMk.prodi.nama}).
+              Pastikan ini sengaja (mis. dosen MKDU/service course).
+            </Alert>
+          );
+        })()}
 
         <div className="row" style={{ gap: 'var(--space-3)' }}>
           <div style={{ flex: 2 }}>

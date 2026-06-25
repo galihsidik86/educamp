@@ -325,8 +325,8 @@ export type Kelas = {
   hari: string | null;
   jamMulai: string | null;
   jamSelesai: string | null;
-  mataKuliah: { kode: string; nama: string; sks: number };
-  dosen: { nidn: string; nama: string; gelarDepan: string | null; gelarBelakang: string | null };
+  mataKuliah: { kode: string; nama: string; sks: number; prodi: { kode: string; nama: string } };
+  dosen: { nidn: string; nama: string; gelarDepan: string | null; gelarBelakang: string | null; prodi: { kode: string; nama: string } };
   ruangan: { kode: string } | null;
   semester: { kode: string; jenis: string; tahunAjaran: { kode: string } };
   _count: { krs: number };
@@ -377,6 +377,7 @@ export type KelasTeamItem = {
   nama: string;
   gelarDepan: string | null;
   gelarBelakang: string | null;
+  prodi?: { kode: string; nama: string };
   peran: 'lead' | 'anggota' | 'asisten';
 };
 
