@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { Alert, Button, Card, Input, Select } from '@/ds';
-import { ShieldOff, ShieldCheck, KeyRound, MonitorSmartphone, Search, Copy, AlertTriangle } from 'lucide-react';
+import { ShieldOff, ShieldCheck, KeyRound, MonitorSmartphone, Search, Copy, AlertTriangle, UserCog } from 'lucide-react';
 import {
   useAdminUsers, useAdminUserActions, useAdminUserSessions,
-  type AdminUser, type Role,
+  type AdminUser, type Role, type AkademikSubRole,
 } from '@/lib/queries-users';
+import { useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { useToast } from '@/components/Toast';
+import { useConfirm } from '@/components/ConfirmDialog';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -14,6 +17,14 @@ const ROLE_LABEL: Record<Role, string> = {
   mahasiswa: 'Mahasiswa',
   dosen: 'Dosen',
   akademik: 'Akademik',
+};
+
+const SUB_ROLE_LABEL: Record<AkademikSubRole, string> = {
+  super_admin: 'Super Admin',
+  akademik: 'Admin Akademik',
+  keuangan: 'Admin Keuangan',
+  prodi: 'Admin Prodi',
+  spmi: 'Admin SPMI',
 };
 
 export function AkademikUsers() {
@@ -31,6 +42,9 @@ export function AkademikUsers() {
   const [selected, setSelected] = useState<AdminUser | null>(null);
   const [actErr, setActErr] = useState<string | null>(null);
   const [resetResult, setResetResult] = useState<{ user: AdminUser; password: string } | null>(null);
+  const [subRoleTarget, setSubRoleTarget] = useState<AdminUser | null>(null);
+  const toast = useToast();
+  const confirmDialog = useConfirm();
 
   const onResetPassword = async (u: AdminUser) => {
     if (!confirm(`Reset password untuk ${u.email}? Sistem akan generate password sementara dan paksa user ganti password saat login berikutnya.`)) return;
@@ -116,7 +130,21 @@ export function AkademikUsers() {
                         {idn && ` · ${idn}`}
                       </div>
                     </td>
-                    <td><span className="pill pill--neutral">{ROLE_LABEL[u.role]}</span></td>
+                    <td>
+                      <span className="pill pill--neutral">{ROLE_LABEL[u.role]}</span>
+                      {u.role === 'akademik' && u.akademik?.subRole && (
+                        <>
+                          <span className={`pill ${u.akademik.subRole === 'super_admin' ? 'pill--info' : 'pill--success'}`} style={{ marginLeft: 4 }}>
+                            {SUB_ROLE_LABEL[u.akademik.subRole]}
+                          </span>
+                          {u.akademik.prodi && (
+                            <span className="pill pill--warning" style={{ marginLeft: 4 }} title={u.akademik.prodi.nama}>
+                              {u.akademik.prodi.kode}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </td>
                     <td>
                       {u.isActive ? <span className="pill pill--success">Aktif</span> : <span className="pill pill--danger">Nonaktif</span>}
                       {u.passwordMustChange && <span className="pill pill--warning" style={{ marginLeft: 4 }}>Wajib ganti pw</span>}
@@ -125,6 +153,9 @@ export function AkademikUsers() {
                     <td className="mono" style={{ fontSize: 'var(--text-xs)' }}>{u.lastLoginAt ? formatTanggalWaktu(u.lastLoginAt) : '—'}</td>
                     <td>
                       <div className="row" style={{ gap: 4, justifyContent: 'flex-end' }}>
+                        {u.role === 'akademik' && (
+                          <Button size="sm" variant="ghost" leftIcon={<UserCog size={12} />} onClick={() => setSubRoleTarget(u)}>Sub-peran</Button>
+                        )}
                         <Button size="sm" variant="ghost" leftIcon={<MonitorSmartphone size={12} />} onClick={() => setSelected(u)}>Sesi</Button>
                         <Button size="sm" variant="ghost" leftIcon={<KeyRound size={12} />} onClick={() => onResetPassword(u)}>Reset pw</Button>
                         {u.isActive ? (
@@ -144,6 +175,23 @@ export function AkademikUsers() {
 
       {selected && (
         <SessionsModal user={selected} onClose={() => setSelected(null)} />
+      )}
+
+      {subRoleTarget && (
+        <SubRoleModal
+          user={subRoleTarget}
+          onClose={() => setSubRoleTarget(null)}
+          onSave={async (subRole, prodiId) => {
+            try {
+              await actions.updateSubRole.mutateAsync({ id: subRoleTarget.id, subRole, prodiId });
+              toast.success('Sub-peran tersimpan. User akan diminta login ulang.');
+              setSubRoleTarget(null);
+            } catch (e) {
+              toast.danger(e instanceof ApiError ? e.message : 'Gagal');
+            }
+          }}
+          confirm={confirmDialog}
+        />
       )}
 
       {resetResult && (
@@ -235,6 +283,82 @@ function SessionsModal({ user, onClose }: { user: AdminUser; onClose: () => void
             <Button size="sm" variant="ghost" onClick={revokeAll}>Revoke semua sesi</Button>
           )}
           <Button variant="primary" size="sm" onClick={onClose}>Tutup</Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+
+function SubRoleModal({ user, onClose, onSave, confirm }: {
+  user: AdminUser;
+  onClose: () => void;
+  onSave: (subRole: AkademikSubRole, prodiId: string | null) => Promise<void> | void;
+  confirm: ReturnType<typeof useConfirm>;
+}) {
+  const prodi = useProdi();
+  const [subRole, setSubRole] = useState<AkademikSubRole>(user.akademik?.subRole ?? 'super_admin');
+  const [prodiId, setProdiId] = useState<string>(user.akademik?.prodi?.id ?? '');
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async () => {
+    setErr(null);
+    if (subRole === 'prodi' && !prodiId) {
+      setErr('Pilih prodi terlebih dahulu untuk admin prodi');
+      return;
+    }
+    // Konfirmasi kalau demote super_admin
+    if (user.akademik?.subRole === 'super_admin' && subRole !== 'super_admin') {
+      const ok = await confirm({
+        title: 'Demote Super Admin?',
+        message: 'User ini akan kehilangan akses super admin. Pastikan masih ada super admin lain. Semua sesi user akan diputus.',
+        variant: 'warning',
+        confirmLabel: 'Demote',
+      });
+      if (!ok) return;
+    }
+    try {
+      await onSave(subRole, subRole === 'prodi' ? prodiId : null);
+    } catch (e) {
+      setErr(e instanceof ApiError ? e.message : 'Gagal menyimpan');
+    }
+  };
+
+  return (
+    <Modal open onClose={onClose} title={`Sub-peran — ${user.akademik?.nama ?? user.email}`} width={520}>
+      <div className="stack" style={{ padding: 'var(--space-4)' }}>
+        {err && <Alert variant="danger" title="Gagal">{err}</Alert>}
+
+        <Alert variant="info" title="Catatan">
+          Mengubah sub-peran akan memutus semua sesi aktif user supaya login berikutnya pakai peran baru.
+        </Alert>
+
+        <Select
+          label="Sub-peran"
+          value={subRole}
+          onChange={(e) => setSubRole((e.target as HTMLSelectElement).value as AkademikSubRole)}
+        >
+          {(Object.keys(SUB_ROLE_LABEL) as AkademikSubRole[]).map((k) => (
+            <option key={k} value={k}>{SUB_ROLE_LABEL[k]}</option>
+          ))}
+        </Select>
+
+        {subRole === 'prodi' && (
+          <Select
+            label="Prodi scope (wajib)"
+            value={prodiId}
+            onChange={(e) => setProdiId((e.target as HTMLSelectElement).value)}
+          >
+            <option value="">— Pilih prodi —</option>
+            {prodi.data?.items.map((p) => (
+              <option key={p.id} value={p.id}>{p.kode} — {p.nama}</option>
+            ))}
+          </Select>
+        )}
+
+        <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}>
+          <Button variant="ghost" size="sm" onClick={onClose}>Batal</Button>
+          <Button variant="primary" size="sm" onClick={submit}>Simpan</Button>
         </div>
       </div>
     </Modal>

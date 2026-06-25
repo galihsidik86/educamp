@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../../db.js';
-import { BadRequest, Conflict, NotFound } from '../../lib/errors.js';
+import { BadRequest, Conflict, Forbidden, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
+import { getProdiScope } from '../../lib/context.js';
 
 export const obeRouter = Router();
 
@@ -22,7 +23,8 @@ const cplSchema = z.object({
 });
 
 obeRouter.get('/cpl', async (req, res) => {
-  const prodiId = req.query.prodiId as string | undefined;
+  const scopeId = await getProdiScope(req.user!.sub);
+  const prodiId = scopeId ?? (req.query.prodiId as string | undefined);
   const aspek = req.query.aspek as string | undefined;
   const items = await prisma.cpl.findMany({
     where: {
@@ -40,6 +42,10 @@ obeRouter.get('/cpl', async (req, res) => {
 
 obeRouter.post('/cpl', async (req, res) => {
   const body = cplSchema.parse(req.body);
+  const scopeId = await getProdiScope(req.user!.sub);
+  if (scopeId && body.prodiId !== scopeId) {
+    throw Forbidden('Admin prodi hanya boleh kelola CPL untuk prodi-nya sendiri');
+  }
   try {
     const created = await prisma.cpl.create({
       data: {
@@ -204,7 +210,8 @@ obeRouter.delete('/cpmk/:cpmkId/cpl/:cplId', async (req, res) => {
  * Filter: ?prodiId=<id>&angkatan=<tahun>
  */
 obeRouter.get('/obe/laporan', async (req, res) => {
-  const prodiId = req.query.prodiId as string | undefined;
+  const scopeId = await getProdiScope(req.user!.sub);
+  const prodiId = scopeId ?? (req.query.prodiId as string | undefined);
   const angkatanQuery = req.query.angkatan as string | undefined;
   if (!prodiId) throw BadRequest('prodiId wajib');
 

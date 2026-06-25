@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../../db.js';
+import { getProdiScope } from '../../lib/context.js';
 
 export const akreditasiRouter = Router();
 
@@ -12,7 +13,10 @@ export const akreditasiRouter = Router();
  * Query optional: ?prodiId=<id> untuk filter ke satu prodi.
  */
 akreditasiRouter.get('/akreditasi', async (req, res) => {
-  const prodiId = req.query.prodiId as string | undefined;
+  // Admin prodi: scope dipaksa ke prodi-nya, override query.
+  // Super_admin / akademik / lainnya: bebas pakai query atau lihat semua.
+  const scopeId = await getProdiScope(req.user!.sub);
+  const prodiId = scopeId ?? (req.query.prodiId as string | undefined);
   const prodiFilter = prodiId ? { prodiId } : undefined;
 
   const [prodiList, mahasiswaCount, mahasiswaByStatus, dosenCountByProdi, nilaiFinalized, yudisiumList, edomResponses] = await Promise.all([

@@ -8,6 +8,21 @@ export async function getAkademikForUser(userId: string) {
   return a;
 }
 
+/**
+ * Scope prodi yang membatasi akses user — null jika tidak dibatasi.
+ * Dipakai akademik 'prodi' yang hanya boleh akses 1 prodi.
+ * super_admin / akademik / keuangan / spmi tidak dibatasi (return null).
+ */
+export async function getProdiScope(userId: string): Promise<string | null> {
+  const a = await prisma.akademik.findUnique({
+    where: { userId },
+    select: { subRole: true, prodiId: true },
+  });
+  if (!a) return null;
+  if (a.subRole === 'prodi' && a.prodiId) return a.prodiId;
+  return null;
+}
+
 /** Pastikan user adalah dosen & return record Dosen-nya. */
 export async function getDosenForUser(userId: string) {
   const d = await prisma.dosen.findUnique({

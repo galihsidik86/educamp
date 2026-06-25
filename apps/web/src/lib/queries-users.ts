@@ -3,6 +3,7 @@ import { api, apiPost } from './api';
 import { useApi } from './queries';
 
 export type Role = 'mahasiswa' | 'dosen' | 'akademik';
+export type AkademikSubRole = 'super_admin' | 'akademik' | 'keuangan' | 'prodi' | 'spmi';
 
 export type AdminUser = {
   id: string;
@@ -14,7 +15,13 @@ export type AdminUser = {
   createdAt: string;
   mahasiswa?: { id: string; nim: string; nama: string; prodi: { kode: string; nama: string } } | null;
   dosen?: { id: string; nidn: string; nama: string; prodi: { kode: string; nama: string } } | null;
-  akademik?: { id: string; nama: string; jabatan: string | null } | null;
+  akademik?: {
+    id: string;
+    nama: string;
+    jabatan: string | null;
+    subRole?: AkademikSubRole;
+    prodi?: { id: string; kode: string; nama: string } | null;
+  } | null;
   _count?: { refreshTokens: number };
 };
 
@@ -60,6 +67,14 @@ export function useAdminUserActions(userId?: string) {
     }),
     revokeAllSessions: useMutation({
       mutationFn: (id: string) => api(`/akademik/users/${id}/sessions`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+    updateSubRole: useMutation({
+      mutationFn: ({ id, subRole, prodiId }: { id: string; subRole: AkademikSubRole; prodiId?: string | null }) =>
+        api(`/akademik/users/${id}/akademik-sub-role`, {
+          method: 'PATCH',
+          body: JSON.stringify({ subRole, prodiId: prodiId ?? null }),
+        }),
       onSuccess: inv,
     }),
   };
