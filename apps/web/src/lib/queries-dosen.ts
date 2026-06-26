@@ -667,3 +667,74 @@ export type DosenEwsList = {
 export const useDosenEws = () => useApi<DosenEwsList>(['dosen-ews'], '/dosen/ews/bimbingan');
 export const useDosenEwsMahasiswa = (mahasiswaId: string | undefined) =>
   useApi<DosenEwsMahasiswa>(['dosen-ews-mhs', mahasiswaId], `/dosen/ews/${mahasiswaId}`, { enabled: !!mahasiswaId });
+
+// ============================================================
+// Komponen Evaluasi Kelas — IKU 7 / NeoFeeder 2.3+
+// ============================================================
+export type KomponenJenis =
+  | 'tugas' | 'uts' | 'uas' | 'quiz' | 'praktikum' | 'kehadiran'
+  | 'proyek' | 'presentasi' | 'laporan' | 'case_method' | 'team_based_project' | 'lainnya';
+
+export type KomponenEvaluasi = {
+  id: string; kelasId: string;
+  nama: string; jenis: KomponenJenis;
+  bobotPersen: number;
+  deskripsi: string | null;
+  metodeCaseMethod: boolean;
+  metodeTeamBased: boolean;
+  urutan: number;
+  feederId: string | null;
+};
+
+export const useKomponenEvaluasi = (kelasId: string | undefined) =>
+  useApi<{ items: KomponenEvaluasi[] }>(['komponen-eval', kelasId ?? ''], `/dosen/kelas/${kelasId}/komponen-evaluasi`, { enabled: !!kelasId });
+
+export type KomponenInput = Partial<Omit<KomponenEvaluasi, 'id' | 'kelasId' | 'feederId'>>;
+
+export function useKomponenActions(kelasId?: string) {
+  const qc = useQueryClient();
+  const inv = () => {
+    qc.invalidateQueries({ queryKey: ['komponen-eval', kelasId ?? ''] });
+    qc.invalidateQueries({ queryKey: ['nilai-komponen', kelasId ?? ''] });
+  };
+  return {
+    create: useMutation({
+      mutationFn: (body: KomponenInput) => apiPost(`/dosen/kelas/${kelasId}/komponen-evaluasi`, body),
+      onSuccess: inv,
+    }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: KomponenInput }) =>
+        api(`/dosen/komponen-evaluasi/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => api(`/dosen/komponen-evaluasi/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// Nilai per komponen — matrix mhs × komponen
+export type NilaiKomponenRow = {
+  krsId: string;
+  mahasiswa: { id: string; nim: string; nama: string };
+  nilai: Record<string, number | null>;
+};
+export type NilaiKomponenMatrix = {
+  komponen: KomponenEvaluasi[];
+  rows: NilaiKomponenRow[];
+};
+
+export const useNilaiKomponen = (kelasId: string | undefined) =>
+  useApi<NilaiKomponenMatrix>(['nilai-komponen', kelasId ?? ''], `/dosen/kelas/${kelasId}/nilai-komponen`, { enabled: !!kelasId });
+
+export function useNilaiKomponenActions(kelasId?: string) {
+  const qc = useQueryClient();
+  return {
+    save: useMutation({
+      mutationFn: (items: Array<{ krsId: string; komponenEvaluasiId: string; nilai: number | null }>) =>
+        api(`/dosen/kelas/${kelasId}/nilai-komponen`, { method: 'PUT', body: JSON.stringify({ items }) }),
+      onSuccess: () => qc.invalidateQueries({ queryKey: ['nilai-komponen', kelasId ?? ''] }),
+    }),
+  };
+}

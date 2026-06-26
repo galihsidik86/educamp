@@ -19,6 +19,7 @@ import { dpaDashboardRouter } from './dpa-dashboard.js';
 import { bkdRouter } from './bkd.js';
 import { cpmkRouter } from './cpmk.js';
 import { ewsRouter as dosenEwsRouter } from './ews.js';
+import { komponenEvaluasiRouter } from './komponen-evaluasi.js';
 
 export const dosenRouter = Router();
 
@@ -45,3 +46,4 @@ dosenRouter.use(dpaDashboardRouter);
 dosenRouter.use(bkdRouter);
 dosenRouter.use(cpmkRouter);
 dosenRouter.use(dosenEwsRouter);
+dosenRouter.use(komponenEvaluasiRouter);

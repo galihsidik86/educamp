@@ -45,6 +45,9 @@ import { heregistrasiAdminRouter } from './heregistrasi.js';
 import { ewsRouter } from './ews.js';
 import { auditRouter } from './audit.js';
 import { skalaNilaiRouter } from './skala-nilai.js';
+import { akmRouter } from './akm.js';
+import { aktivitasMhsRouter } from './aktivitas-mhs.js';
+import { dayaTampungRouter } from './daya-tampung.js';
 
 export const akademikRouter = Router();
 
@@ -92,6 +95,10 @@ akademikRouter.use(requireAkademikSubRole('akademik'), sertifikasiAdminRouter);
 akademikRouter.use(requireAkademikSubRole('akademik'), feederRouter);
 akademikRouter.use(requireAkademikSubRole('akademik'), skalaNilaiRouter);
 akademikRouter.use(requireAkademikSubRole('akademik'), laporanRouter);
+// Phase 2 PDDikti
+akademikRouter.use(requireAkademikSubRole('akademik', 'prodi'), akmRouter);
+akademikRouter.use(requireAkademikSubRole('akademik'), aktivitasMhsRouter);
+akademikRouter.use(requireAkademikSubRole('akademik', 'prodi'), dayaTampungRouter);
 
 // Keuangan — tagihan, pembayaran, UKT, heregistrasi, beasiswa
 akademikRouter.use(requireAkademikSubRole('keuangan'), keuanganRouter);

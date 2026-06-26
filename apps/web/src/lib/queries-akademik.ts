@@ -1589,3 +1589,181 @@ export const useAdminAbsensi = (mahasiswaId: string | undefined, semesterId?: st
     { enabled: !!mahasiswaId },
   );
 };
+
+// ============================================================
+// Phase 2 PDDikti — AKM, Aktivitas Mahasiswa, Daya Tampung
+// ============================================================
+
+// AKM (Aktivitas Kuliah Mahasiswa) per semester
+export type AkmItem = {
+  id: string;
+  mahasiswaId: string;
+  semesterId: string;
+  status: 'aktif' | 'cuti' | 'non_aktif' | 'kampus_merdeka' | 'mengundurkan_diri' | 'lulus' | 'drop_out';
+  ips: number | null;
+  ipk: number | null;
+  sksSemester: number | null;
+  sksTotal: number | null;
+  biayaKuliah: number | null;
+  feederId: string | null;
+  lastSyncedAt: string | null;
+  mahasiswa: { id: string; nim: string; nama: string; status: string; prodi: { id: string; kode: string; nama: string } };
+  semester: { kode: string; jenis: string; tahunAjaran: { kode: string } };
+};
+export const useAkm = (filters: { semesterId?: string; prodiId?: string; status?: string; q?: string } = {}) => {
+  const qs = new URLSearchParams();
+  if (filters.semesterId) qs.set('semesterId', filters.semesterId);
+  if (filters.prodiId) qs.set('prodiId', filters.prodiId);
+  if (filters.status) qs.set('status', filters.status);
+  if (filters.q) qs.set('q', filters.q);
+  return useApi<{ items: AkmItem[] }>(['akm', qs.toString()], `/akademik/akm?${qs}`);
+};
+
+export type AkmInput = Partial<{
+  mahasiswaId: string; semesterId: string; status: AkmItem['status'];
+  ips: number | null; ipk: number | null;
+  sksSemester: number | null; sksTotal: number | null;
+  biayaKuliah: number | null;
+}>;
+
+export function useAkmActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['akm'] });
+  return {
+    create: useMutation({ mutationFn: (body: AkmInput) => apiPost('/akademik/akm', body), onSuccess: inv }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: AkmInput }) =>
+        api(`/akademik/akm/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({ mutationFn: (id: string) => api(`/akademik/akm/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+    generate: useMutation({
+      mutationFn: (body: { semesterId: string; prodiId?: string }) =>
+        apiPost<{ semester: string; processed: number; created: number; updated: number }>(
+          '/akademik/akm/generate', body,
+        ),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// Aktivitas Mahasiswa (MBKM, Pertukaran, Magang, Riset, dll)
+export type AktivitasMhsJenis =
+  | 'pertukaran_pelajar' | 'magang' | 'asistensi_mengajar' | 'riset'
+  | 'pengabdian_masyarakat' | 'kewirausahaan' | 'proyek_independen'
+  | 'proyek_kemanusiaan' | 'bela_negara' | 'kkn_tematik' | 'kerja_praktek'
+  | 'studi_independen' | 'ppl' | 'lainnya';
+
+export type AktivitasMhsStatus = 'diajukan' | 'berjalan' | 'selesai' | 'dibatalkan';
+
+export type AktivitasMhsListItem = {
+  id: string;
+  jenis: AktivitasMhsJenis;
+  nama: string;
+  deskripsi: string | null;
+  semesterId: string;
+  lokasi: string | null;
+  mitra: string | null;
+  isMbkm: boolean;
+  isFlagship: boolean;
+  isEksternal: boolean;
+  linkProposal: string | null;
+  linkLaporan: string | null;
+  linkSertifikat: string | null;
+  tanggalMulai: string | null;
+  tanggalSelesai: string | null;
+  status: AktivitasMhsStatus;
+  catatan: string | null;
+  feederId: string | null;
+  semester: { kode: string; jenis: string };
+  peserta: Array<{
+    id: string; mahasiswaId: string; peran: string | null; konversiSks: number | null;
+    mahasiswa: { id: string; nim: string; nama: string; prodi: { kode: string } };
+  }>;
+  pembimbing: Array<{
+    id: string; dosenId: string; peran: string | null;
+    dosen: { id: string; nidn: string; nama: string };
+  }>;
+};
+export const useAktivitasMhs = (filters: { semesterId?: string; jenis?: string; status?: string; isMbkm?: boolean } = {}) => {
+  const qs = new URLSearchParams();
+  if (filters.semesterId) qs.set('semesterId', filters.semesterId);
+  if (filters.jenis) qs.set('jenis', filters.jenis);
+  if (filters.status) qs.set('status', filters.status);
+  if (filters.isMbkm) qs.set('isMbkm', 'true');
+  return useApi<{ items: AktivitasMhsListItem[] }>(
+    ['aktivitas-mhs', qs.toString()],
+    `/akademik/aktivitas-mahasiswa?${qs}`,
+  );
+};
+
+export const useAktivitasMhsDetail = (id?: string) =>
+  useApi<AktivitasMhsListItem>(['aktivitas-mhs', id ?? ''], `/akademik/aktivitas-mahasiswa/${id}`, { enabled: Boolean(id) });
+
+export type AktivitasMhsInput = Partial<Omit<AktivitasMhsListItem, 'id' | 'feederId' | 'semester' | 'peserta' | 'pembimbing'>>;
+
+export function useAktivitasMhsActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['aktivitas-mhs'] });
+  return {
+    create: useMutation({ mutationFn: (body: AktivitasMhsInput) => apiPost('/akademik/aktivitas-mahasiswa', body), onSuccess: inv }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: AktivitasMhsInput }) =>
+        api(`/akademik/aktivitas-mahasiswa/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({ mutationFn: (id: string) => api(`/akademik/aktivitas-mahasiswa/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+    setPeserta: useMutation({
+      mutationFn: ({ id, items }: { id: string; items: Array<{ mahasiswaId: string; peran?: string | null; konversiSks?: number | null }> }) =>
+        api(`/akademik/aktivitas-mahasiswa/${id}/peserta`, { method: 'PUT', body: JSON.stringify({ items }) }),
+      onSuccess: inv,
+    }),
+    setPembimbing: useMutation({
+      mutationFn: ({ id, items }: { id: string; items: Array<{ dosenId: string; peran?: string | null }> }) =>
+        api(`/akademik/aktivitas-mahasiswa/${id}/pembimbing`, { method: 'PUT', body: JSON.stringify({ items }) }),
+      onSuccess: inv,
+    }),
+  };
+}
+
+// Daya Tampung
+export type DayaTampungItem = {
+  id: string;
+  prodiId: string;
+  semesterId: string;
+  dayaTampung: number;
+  jumlahDaftar: number | null;
+  jumlahLulusSeleksi: number | null;
+  jumlahRegistrasi: number | null;
+  feederId: string | null;
+  prodi: { id: string; kode: string; nama: string; jenjang: string };
+  semester: { kode: string; jenis: string; tahunAjaran: { kode: string } };
+};
+export const useDayaTampung = (filters: { prodiId?: string; semesterId?: string } = {}) => {
+  const qs = new URLSearchParams();
+  if (filters.prodiId) qs.set('prodiId', filters.prodiId);
+  if (filters.semesterId) qs.set('semesterId', filters.semesterId);
+  return useApi<{ items: DayaTampungItem[] }>(['daya-tampung', qs.toString()], `/akademik/daya-tampung?${qs}`);
+};
+
+export type DayaTampungInput = {
+  prodiId: string; semesterId: string;
+  dayaTampung: number;
+  jumlahDaftar?: number | null;
+  jumlahLulusSeleksi?: number | null;
+  jumlahRegistrasi?: number | null;
+};
+
+export function useDayaTampungActions() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['daya-tampung'] });
+  return {
+    create: useMutation({ mutationFn: (body: DayaTampungInput) => apiPost('/akademik/daya-tampung', body), onSuccess: inv }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: Partial<DayaTampungInput> }) =>
+        api(`/akademik/daya-tampung/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+      onSuccess: inv,
+    }),
+    remove: useMutation({ mutationFn: (id: string) => api(`/akademik/daya-tampung/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+  };
+}

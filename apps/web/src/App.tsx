@@ -149,6 +149,10 @@ import { AdminSuratCetak } from './routes/akademik/SuratCetak';
 import { AdminMahasiswaPage } from './routes/akademik/Mahasiswa';
 import { AdminDosenPage } from './routes/akademik/Dosen';
 import { AdminSkalaNilai } from './routes/akademik/SkalaNilai';
+import { AkmPage } from './routes/akademik/Akm';
+import { AktivitasMhsPage } from './routes/akademik/AktivitasMhs';
+import { DayaTampungPage } from './routes/akademik/DayaTampung';
+import { KomponenEvaluasiPage } from './routes/dosen/KomponenEvaluasi';
 import { AdminProdi } from './routes/akademik/Prodi';
 import { AdminFakultas } from './routes/akademik/Fakultas';
 import { AdminMataKuliah } from './routes/akademik/MataKuliah';
@@ -264,6 +268,7 @@ export function App() {
         <Route path="nilai"              element={<DosenInputNilaiList />} />
         <Route path="nilai/:kelasId"     element={<DosenInputNilaiDetail />} />
         <Route path="nilai/:kelasId/cpmk" element={<DosenNilaiCpmk />} />
+        <Route path="nilai/:kelasId/komponen-evaluasi" element={<KomponenEvaluasiPage />} />
         <Route path="absensi"                              element={<DosenAbsensiList />} />
         <Route path="absensi/:kelasId"                     element={<DosenAbsensiKelas />} />
         <Route path="absensi/:kelasId/:pertemuanId"        element={<DosenAbsensiPertemuan />} />
@@ -333,6 +338,9 @@ export function App() {
         <Route path="tarif-ukt"             element={<AkademikTarifUkt />} />
         <Route path="dokumen"             element={<AkademikDokumen />} />
         <Route path="feeder"              element={<AkademikFeeder />} />
+        <Route path="akm"                 element={<AkmPage />} />
+        <Route path="aktivitas-mahasiswa" element={<AktivitasMhsPage />} />
+        <Route path="daya-tampung"        element={<DayaTampungPage />} />
         <Route path="bkd"                 element={<AkademikBkd />} />
         <Route path="bkd/:id"             element={<AkademikBkdDetail />} />
         <Route path="heregistrasi"        element={<AdminHeregistrasi />} />

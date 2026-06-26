@@ -169,6 +169,9 @@ export function DosenInputNilaiDetail() {
             <Link to={`/dosen/nilai/${k.id}/cpmk`}>
               <Button variant="ghost" size="sm">Input Nilai CPMK</Button>
             </Link>
+            <Link to={`/dosen/nilai/${k.id}/komponen-evaluasi`}>
+              <Button variant="ghost" size="sm">Komponen Evaluasi (IKU 7)</Button>
+            </Link>
             <Button variant="ghost" size="sm" leftIcon={<Upload size={14} />} disabled={!periodeAktif} onClick={() => setImportOpen(true)}>
               Import Excel
             </Button>

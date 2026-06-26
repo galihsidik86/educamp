@@ -263,6 +263,17 @@ const itemsByRole: Record<Role, NavGroup[]> = {
       ],
     },
     {
+      id: 'pddikti',
+      group: 'PDDikti',
+      groupIcon: <Cable size={14} />,
+      items: [
+        { to: '/akademik/daya-tampung',      label: 'Daya Tampung',     icon: <Layers size={18} />, subRoles: ['akademik', 'prodi'] },
+        { to: '/akademik/akm',               label: 'Aktivitas Kuliah', icon: <ClipboardCheck size={18} />, subRoles: ['akademik', 'prodi'] },
+        { to: '/akademik/aktivitas-mahasiswa', label: 'Aktivitas MBKM',   icon: <Briefcase size={18} />, subRoles: ['akademik'] },
+        { to: '/akademik/feeder',            label: 'Sinkron Feeder',   icon: <Cable size={18} />, subRoles: ['akademik'] },
+      ],
+    },
+    {
       id: 'sistem',
       group: 'Sistem',
       groupIcon: <Settings size={14} />,
@@ -270,7 +281,6 @@ const itemsByRole: Record<Role, NavGroup[]> = {
         // Master config & administrasi sistem — super_admin only ([] = subRoles kosong)
         { to: '/akademik/institusi',      label: 'Identitas Kampus', icon: <Building2 size={18} />, subRoles: [] },
         { to: '/akademik/skala-nilai',    label: 'Skala Nilai',    icon: <GraduationCap size={18} />, subRoles: ['akademik'] },
-        { to: '/akademik/feeder',         label: 'Sinkron Feeder', icon: <Cable size={18} />, subRoles: ['akademik'] },
         { to: '/akademik/users',          label: 'Kelola Akun',   icon: <KeyRound size={18} />, subRoles: [] },
         { to: '/akademik/audit',          label: 'Riwayat Audit', icon: <ShieldCheck size={18} />, subRoles: [] },
         { to: '/akademik/oversight',      label: 'Aktivitas Dosen', icon: <FlaskConical size={18} />, subRoles: [] },
