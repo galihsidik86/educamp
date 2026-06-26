@@ -31,17 +31,16 @@ if ! docker compose -f docker-compose.prod.yml build; then
   docker compose -f docker-compose.prod.yml build --no-cache
 fi
 
-# Apply schema kalau berubah
-SCHEMA_CHANGED=0
-if ! git diff --quiet HEAD@{1} HEAD -- apps/api/prisma/schema.prisma 2>/dev/null; then
-  echo "▶ schema berubah → prisma db push"
-  # --accept-data-loss: aman untuk additive schema changes (kolom baru
-  # nullable, unique constraint pada kolom baru). Prisma konservatif —
-  # MySQL mengizinkan banyak NULL pada unique constraint sehingga tidak
-  # ada data loss aktual.
-  docker compose -f docker-compose.prod.yml run --rm api npx prisma db push --skip-generate --accept-data-loss
-  SCHEMA_CHANGED=1
-fi
+# Selalu jalankan schema push — idempotent, no-op kalau DB sudah sync.
+# Diff check sebelumnya rentan terhadap bash-buffer footgun saat
+# script update dirinya sendiri di pull (skip schema padahal harusnya
+# migrate). Always-run aman karena prisma db push mendeteksi state.
+# --accept-data-loss: aman untuk additive schema changes (kolom baru
+# nullable, unique constraint pada kolom baru). Prisma konservatif —
+# MySQL mengizinkan banyak NULL pada unique constraint sehingga tidak
+# ada data loss aktual.
+echo "▶ prisma db push"
+docker compose -f docker-compose.prod.yml run --rm api npx prisma db push --skip-generate --accept-data-loss
 
 # Seed selalu jalan — seed.ts pakai upsert by-unique sehingga idempotent.
 # Lebih sederhana dan tahan terhadap bash-buffer footgun pada self-modify.
