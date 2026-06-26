@@ -992,26 +992,23 @@ html, body, #root {
 }
 
 /* ============================================================
-   Modal — full-width responsive
-   Strategi scroll: OVERLAY yang scroll (bukan card).
-   Penyebab bug "form item pertama tertutup":
-     `display: grid; place-items: center` + child `max-height:
-     90vh; overflow: auto` → kalau natural content > 90vh, card
-     ter-clip dan PART OF IT ada di atas viewport (di luar area
-     scroll), nyembunyiin field pertama. Klasik flex/grid center +
-     overflow gotcha.
-   Fix: pakai `place-items: start center` + `margin: auto` di card.
-     Modal pendek → margin auto rata-rata jadi vertical-centered.
-     Modal panjang → card stick ke atas (start), overlay yang scroll.
+   Modal — auto-size menyesuaikan viewport.
+   Strategi:
+   - Overlay = grid centered, padding tipis biar modal bisa lebar.
+   - Card = flex column dgn min-height substansial + max-height
+     se-tinggi viewport. Head flex-shrink: 0 supaya selalu tampil;
+     body (children) flex: 1 + overflow-y: auto supaya scroll di
+     dalam body, bukan di card root. Dengan begitu place-items:
+     center aman (card height fix < viewport), gak ada clipping
+     atas seperti versi sebelumnya.
    ============================================================ */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(15, 24, 58, 0.45);
   z-index: var(--z-modal);
   display: grid;
-  place-items: start center;
-  padding: var(--space-6) var(--space-4);
-  overflow-y: auto;
+  place-items: center;
+  padding: var(--space-4);
   /* Entrance: fade backdrop */
   animation: modal-overlay-in var(--dur-base) var(--ease-out);
 }
@@ -1019,14 +1016,29 @@ html, body, #root {
   background: var(--surface-card);
   border-radius: var(--radius-lg);
   width: 100%;
+  /* Substansial di layar besar tanpa mengganggu confirm dialogs */
+  min-height: min(55vh, 460px);
+  /* Always fit viewport — fallback ke vh untuk browser tua */
+  max-height: calc(100vh - var(--space-8));
+  max-height: calc(100dvh - var(--space-8));
+  /* Flex column: head tetap, body yang scroll */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: var(--shadow-xl);
   padding: var(--pad-card);
-  /* Auto margin → vertical center when there's spare space,
-     stuck-to-top when taller than overlay. Crucial bit. */
-  margin: auto;
   /* Entrance: scale up + fade in dengan slight slide-up */
   animation: modal-card-in var(--dur-base) var(--ease-emphasized);
-  transform-origin: center top;
+  transform-origin: center;
+}
+.modal-card__head {
+  flex-shrink: 0;
+}
+/* Whatever children renders (form/div) jadi body yang scroll */
+.modal-card > :not(.modal-card__head) {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 .modal-card__head {
   justify-content: space-between;
@@ -1090,14 +1102,14 @@ html, body, #root {
   .modal-overlay {
     padding: 0;
     place-items: end stretch;
-    overflow-y: hidden;  /* di mobile, card internal-scroll */
   }
   .modal-card {
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    /* Mobile: jangan paksa min-height (layar kecil) */
+    min-height: 0;
     max-height: 92vh;
-    overflow-y: auto;
+    max-height: 92dvh;
     padding: var(--space-4);
-    margin: 0;
     /* Sheet pattern di mobile: slide dari bawah */
     animation: modal-card-sheet-in var(--dur-base) var(--ease-emphasized);
     transform-origin: center bottom;
