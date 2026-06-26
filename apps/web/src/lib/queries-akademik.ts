@@ -52,12 +52,30 @@ export const useLaporan = () => useApi<Laporan>(['laporan'], '/akademik/laporan'
 export type AdminMahasiswa = {
   id: string; nim: string; nama: string;
   jenisKelamin: 'L' | 'P';
+  tempatLahir: string | null; tanggalLahir: string | null;
+  alamat: string | null; telepon: string | null;
   angkatan: number; status: string;
   user: { email: string; isActive: boolean };
   prodi: { kode: string; nama: string };
   dpa: { id: string; nama: string } | null;
   kategoriUkt: { id: string; kode: string; nama: string; nominalSemester: number } | null;
   defaultCicilanUkt: number;
+  // PDDikti biodata (Phase 1)
+  nik: string | null;
+  nisn: string | null;
+  npsn: string | null;
+  namaSekolahAsal: string | null;
+  jenisSekolahAsal: string | null;
+  tahunLulusSekolah: number | null;
+  kewarganegaraan: string | null;
+  kodeWilayahAlamat: string | null;
+  pembiayaan: string | null;
+  kebutuhanKhusus: string | null;
+  semesterAwal: string | null;
+  agamaKode: number | null;
+  jenisTinggalKode: number | null;
+  alatTransportasiKode: number | null;
+  jalurMasukKode: string | null;
 };
 export const useAdminMahasiswa = (filters: { q?: string; prodiId?: string; angkatan?: number; status?: string } = {}) => {
   const qs = new URLSearchParams();
@@ -76,7 +94,75 @@ export type CreateMahasiswaInput = {
   kategoriUktId?: string | null;
   defaultCicilanUkt?: number;
   status?: string;
+  // PDDikti biodata (Phase 1)
+  nik?: string | null;
+  nisn?: string | null;
+  npsn?: string | null;
+  namaSekolahAsal?: string | null;
+  jenisSekolahAsal?: string | null;
+  tahunLulusSekolah?: number | null;
+  kewarganegaraan?: string | null;
+  kodeWilayahAlamat?: string | null;
+  pembiayaan?: string | null;
+  kebutuhanKhusus?: string | null;
+  semesterAwal?: string | null;
+  agamaKode?: number | null;
+  jenisTinggalKode?: number | null;
+  alatTransportasiKode?: number | null;
+  jalurMasukKode?: string | null;
 };
+
+// PDDikti reference tables (agama, jenis tinggal, alat transportasi, jalur masuk).
+export type PddiktiRefs = {
+  agama: Array<{ kode: number; nama: string }>;
+  jenisTinggal: Array<{ kode: number; nama: string }>;
+  alatTransportasi: Array<{ kode: number; nama: string }>;
+  jalurMasuk: Array<{ kode: string; nama: string }>;
+};
+export const usePddiktiRefs = () =>
+  useApi<PddiktiRefs>(['pddikti-refs'], '/akademik/pddikti/refs');
+
+// Orang tua / wali mahasiswa.
+export type OrangTuaJenis = 'ayah' | 'ibu' | 'wali';
+export type OrangTuaItem = {
+  id: string; mahasiswaId: string;
+  jenis: OrangTuaJenis;
+  nama: string;
+  nik: string | null;
+  tahunLahir: number | null;
+  pendidikan: string | null;
+  pekerjaan: string | null;
+  penghasilan: number | null;
+};
+export type OrangTuaInput = {
+  jenis: OrangTuaJenis;
+  nama: string;
+  nik?: string | null;
+  tahunLahir?: number | null;
+  pendidikan?: string | null;
+  pekerjaan?: string | null;
+  penghasilan?: number | null;
+};
+export const useMahasiswaOrangTua = (mahasiswaId?: string) =>
+  useApi<{ items: OrangTuaItem[] }>(
+    ['mhs-orang-tua', mahasiswaId ?? ''],
+    `/akademik/mahasiswa/${mahasiswaId}/orang-tua`,
+    { enabled: Boolean(mahasiswaId) },
+  );
+
+export function useOrangTuaActions(mahasiswaId?: string) {
+  const qc = useQueryClient();
+  return {
+    save: useMutation({
+      mutationFn: (items: OrangTuaInput[]) =>
+        api(`/akademik/mahasiswa/${mahasiswaId}/orang-tua`, {
+          method: 'PUT',
+          body: JSON.stringify({ items }),
+        }),
+      onSuccess: () => qc.invalidateQueries({ queryKey: ['mhs-orang-tua', mahasiswaId ?? ''] }),
+    }),
+  };
+}
 
 export function useMahasiswaActions() {
   const qc = useQueryClient();

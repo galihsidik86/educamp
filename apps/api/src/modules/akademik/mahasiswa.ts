@@ -28,6 +28,22 @@ const createSchema = z.object({
   kategoriUktId: z.string().uuid().optional().nullable(),
   defaultCicilanUkt: z.number().int().min(1).max(12).optional(),
   status: z.enum(STATUS).default('aktif'),
+  // PDDikti biodata (Phase 1)
+  nik: z.string().regex(/^\d{16}$/).optional().nullable(),
+  nisn: z.string().regex(/^\d{10}$/).optional().nullable(),
+  npsn: z.string().regex(/^\d{8,10}$/).optional().nullable(),
+  namaSekolahAsal: z.string().max(120).optional().nullable(),
+  jenisSekolahAsal: z.string().max(40).optional().nullable(),
+  tahunLulusSekolah: z.number().int().min(1990).max(2100).optional().nullable(),
+  kewarganegaraan: z.string().max(60).optional().nullable(),
+  kodeWilayahAlamat: z.string().max(8).optional().nullable(),
+  pembiayaan: z.string().max(60).optional().nullable(),
+  kebutuhanKhusus: z.string().max(40).optional().nullable(),
+  semesterAwal: z.string().regex(/^\d{5}$/).optional().nullable(),
+  agamaKode: z.number().int().optional().nullable(),
+  jenisTinggalKode: z.number().int().optional().nullable(),
+  alatTransportasiKode: z.number().int().optional().nullable(),
+  jalurMasukKode: z.string().max(20).optional().nullable(),
 });
 
 const updateSchema = createSchema.omit({ nim: true, email: true, password: true }).partial().extend({
@@ -232,6 +248,22 @@ mahasiswaRouter.post('/mahasiswa', async (req, res) => {
           kategoriUktId: body.kategoriUktId ?? null,
           defaultCicilanUkt: body.defaultCicilanUkt ?? 1,
           status: body.status,
+          // PDDikti biodata
+          nik: body.nik ?? null,
+          nisn: body.nisn ?? null,
+          npsn: body.npsn ?? null,
+          namaSekolahAsal: body.namaSekolahAsal ?? null,
+          jenisSekolahAsal: body.jenisSekolahAsal ?? null,
+          tahunLulusSekolah: body.tahunLulusSekolah ?? null,
+          kewarganegaraan: body.kewarganegaraan ?? null,
+          kodeWilayahAlamat: body.kodeWilayahAlamat ?? null,
+          pembiayaan: body.pembiayaan ?? null,
+          kebutuhanKhusus: body.kebutuhanKhusus ?? null,
+          semesterAwal: body.semesterAwal ?? null,
+          agamaKode: body.agamaKode ?? null,
+          jenisTinggalKode: body.jenisTinggalKode ?? null,
+          alatTransportasiKode: body.alatTransportasiKode ?? null,
+          jalurMasukKode: body.jalurMasukKode ?? null,
         },
       },
     },
@@ -282,6 +314,22 @@ mahasiswaRouter.patch('/mahasiswa/:id', async (req, res) => {
       ...(body.kategoriUktId !== undefined && { kategoriUktId: body.kategoriUktId }),
       ...(body.defaultCicilanUkt !== undefined && { defaultCicilanUkt: body.defaultCicilanUkt }),
       ...(body.status !== undefined && { status: body.status }),
+      // PDDikti biodata
+      ...(body.nik !== undefined && { nik: body.nik }),
+      ...(body.nisn !== undefined && { nisn: body.nisn }),
+      ...(body.npsn !== undefined && { npsn: body.npsn }),
+      ...(body.namaSekolahAsal !== undefined && { namaSekolahAsal: body.namaSekolahAsal }),
+      ...(body.jenisSekolahAsal !== undefined && { jenisSekolahAsal: body.jenisSekolahAsal }),
+      ...(body.tahunLulusSekolah !== undefined && { tahunLulusSekolah: body.tahunLulusSekolah }),
+      ...(body.kewarganegaraan !== undefined && { kewarganegaraan: body.kewarganegaraan }),
+      ...(body.kodeWilayahAlamat !== undefined && { kodeWilayahAlamat: body.kodeWilayahAlamat }),
+      ...(body.pembiayaan !== undefined && { pembiayaan: body.pembiayaan }),
+      ...(body.kebutuhanKhusus !== undefined && { kebutuhanKhusus: body.kebutuhanKhusus }),
+      ...(body.semesterAwal !== undefined && { semesterAwal: body.semesterAwal }),
+      ...(body.agamaKode !== undefined && { agamaKode: body.agamaKode }),
+      ...(body.jenisTinggalKode !== undefined && { jenisTinggalKode: body.jenisTinggalKode }),
+      ...(body.alatTransportasiKode !== undefined && { alatTransportasiKode: body.alatTransportasiKode }),
+      ...(body.jalurMasukKode !== undefined && { jalurMasukKode: body.jalurMasukKode }),
     },
   });
   res.json(updated);
@@ -429,4 +477,94 @@ mahasiswaRouter.get('/mahasiswa/:id/absensi', async (req, res) => {
     semester: { id: semester.id, kode: semester.kode, jenis: semester.jenis, tahunAjaran: { kode: semester.tahunAjaran.kode } },
     items,
   });
+});
+
+// ============================================================
+// Reference data PDDikti — read-only lookup utk dropdown
+// ============================================================
+mahasiswaRouter.get('/pddikti/refs', async (_req, res) => {
+  const [agama, jenisTinggal, alatTransportasi, jalurMasuk] = await Promise.all([
+    prisma.kodeAgama.findMany({ orderBy: { kode: 'asc' } }),
+    prisma.kodeJenisTinggal.findMany({ orderBy: { kode: 'asc' } }),
+    prisma.kodeAlatTransportasi.findMany({ orderBy: { kode: 'asc' } }),
+    prisma.kodeJalurMasuk.findMany({ orderBy: { kode: 'asc' } }),
+  ]);
+  res.json({ agama, jenisTinggal, alatTransportasi, jalurMasuk });
+});
+
+// ============================================================
+// Orang tua / wali mahasiswa — CRUD
+// ============================================================
+const orangTuaSchema = z.object({
+  jenis: z.enum(['ayah', 'ibu', 'wali']),
+  nama: z.string().min(1).max(120),
+  nik: z.string().regex(/^\d{16}$/).optional().nullable(),
+  tahunLahir: z.number().int().min(1900).max(2100).optional().nullable(),
+  pendidikan: z.string().max(40).optional().nullable(),
+  pekerjaan: z.string().max(80).optional().nullable(),
+  penghasilan: z.number().optional().nullable(),
+});
+
+mahasiswaRouter.get('/mahasiswa/:id/orang-tua', async (req, res) => {
+  const scopeId = await getProdiScope(req.user!.sub);
+  const m = await prisma.mahasiswa.findUnique({ where: { id: req.params.id }, select: { prodiId: true } });
+  if (!m) throw NotFound();
+  if (scopeId && m.prodiId !== scopeId) throw Forbidden('Mahasiswa di luar scope prodi Anda');
+  const items = await prisma.orangTuaMahasiswa.findMany({
+    where: { mahasiswaId: req.params.id },
+    orderBy: { jenis: 'asc' },
+  });
+  res.json({ items });
+});
+
+mahasiswaRouter.put('/mahasiswa/:id/orang-tua', async (req, res) => {
+  const scopeId = await getProdiScope(req.user!.sub);
+  const m = await prisma.mahasiswa.findUnique({ where: { id: req.params.id }, select: { prodiId: true } });
+  if (!m) throw NotFound();
+  if (scopeId && m.prodiId !== scopeId) throw Forbidden('Mahasiswa di luar scope prodi Anda');
+
+  const body = z.object({ items: z.array(orangTuaSchema).max(3) }).parse(req.body);
+  // Upsert by jenis. Hapus row yang tidak ada di payload.
+  const jenisDiKirim = new Set(body.items.map((i) => i.jenis));
+  await prisma.$transaction(async (tx) => {
+    await tx.orangTuaMahasiswa.deleteMany({
+      where: { mahasiswaId: req.params.id, jenis: { notIn: Array.from(jenisDiKirim) as any } },
+    });
+    for (const item of body.items) {
+      await tx.orangTuaMahasiswa.upsert({
+        where: { mahasiswaId_jenis: { mahasiswaId: req.params.id, jenis: item.jenis } },
+        create: {
+          mahasiswaId: req.params.id,
+          jenis: item.jenis,
+          nama: item.nama,
+          nik: item.nik ?? null,
+          tahunLahir: item.tahunLahir ?? null,
+          pendidikan: item.pendidikan ?? null,
+          pekerjaan: item.pekerjaan ?? null,
+          penghasilan: item.penghasilan ?? null,
+        },
+        update: {
+          nama: item.nama,
+          nik: item.nik ?? null,
+          tahunLahir: item.tahunLahir ?? null,
+          pendidikan: item.pendidikan ?? null,
+          pekerjaan: item.pekerjaan ?? null,
+          penghasilan: item.penghasilan ?? null,
+        },
+      });
+    }
+  });
+
+  void writeAudit(req, {
+    action: 'mahasiswa.orang_tua.update',
+    entity: 'mahasiswa',
+    entityId: req.params.id,
+    metadata: { count: body.items.length },
+  });
+
+  const items = await prisma.orangTuaMahasiswa.findMany({
+    where: { mahasiswaId: req.params.id },
+    orderBy: { jenis: 'asc' },
+  });
+  res.json({ items });
 });

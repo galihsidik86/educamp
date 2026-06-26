@@ -498,6 +498,48 @@ html, body, #root {
   border-radius: var(--radius-full);
 }
 
+/* Modal tabs — segmented pill di kepala form besar (mis. mahasiswa
+   PDDikti) supaya konten tidak menjulur. Buttonless ghost row, bukan
+   real router tab. */
+.modal-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
+}
+.modal-tabs__btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.modal-tabs__btn:hover:not(:disabled) {
+  color: var(--text-body);
+  background: var(--surface-elev);
+}
+.modal-tabs__btn--active {
+  background: var(--surface-card);
+  color: var(--brand);
+  font-weight: var(--fw-bold);
+  box-shadow: var(--shadow-1);
+}
+.modal-tabs__btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
 /* Required indicator: dari merah ke gold accent — tetap kelihatan
    tapi tidak alarming. Asterisk dgn vertical align fine-tune. */
 .tz-req {
