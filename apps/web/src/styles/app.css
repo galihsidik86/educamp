@@ -421,6 +421,67 @@ html, body, #root {
   border-radius: var(--radius-full);
 }
 
+/* Heading dalam Card — konsistensi spacing & weight.
+   Tidak menyentuh markup; hanya targeting h2/h3/h4 di dalam .tz-card. */
+.tz-card > h2:first-child,
+.tz-card > h3:first-child,
+.tz-card > h4:first-child {
+  margin: 0 0 var(--space-3);
+}
+.tz-card > h2,
+.tz-card > h3 {
+  font-size: var(--text-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  letter-spacing: -0.01em;
+  line-height: var(--leading-tight);
+}
+.tz-card > h4 {
+  font-size: var(--text-base);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+/* Paragraf langsung setelah heading di card — close gap supaya menyatu */
+.tz-card > h2 + p,
+.tz-card > h3 + p,
+.tz-card > h4 + p {
+  margin-top: 0;
+}
+
+/* Breadcrumb — spacing dgn PageHead supaya tidak menempel */
+.breadcrumb {
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+}
+
+/* Alert — sedikit refinement padding utk lebih napas */
+.tz-alert {
+  padding: var(--space-3) var(--space-4);
+}
+
+/* Mobile responsive: konten lebih dekat ke edge supaya layout tidak
+   terlalu sempit di phone, tablist scroll horizontal kalau perlu. */
+@media (max-width: 640px) {
+  .app__content {
+    padding: var(--space-4) var(--space-3) var(--space-6);
+  }
+  .stack {
+    gap: var(--space-4);
+  }
+  .tablist {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tablist button {
+    white-space: nowrap;
+    padding: var(--space-2) var(--space-3);
+  }
+  .page-head__title {
+    font-size: var(--text-xl);
+  }
+}
+
 /* ============================================================
    Tabel data
    ============================================================ */
@@ -600,11 +661,12 @@ html, body, #root {
    ============================================================ */
 .tablist {
   display: flex;
-  gap: var(--space-1);
+  gap: 2px;
   border-bottom: 1px solid var(--border-default);
   margin-bottom: var(--space-4);
 }
 .tablist button {
+  position: relative;
   background: transparent; border: none;
   padding: var(--space-3) var(--space-4);
   font-size: var(--text-sm);
@@ -613,9 +675,17 @@ html, body, #root {
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   font-family: inherit;
+  font-weight: var(--fw-medium);
+  transition: color var(--dur-fast) var(--ease-standard),
+              background var(--dur-fast) var(--ease-standard);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.tablist button:hover:not([aria-selected="true"]) {
+  color: var(--text-strong);
+  background: var(--surface-sunken);
 }
 .tablist button[aria-selected="true"] {
-  color: var(--text-strong);
+  color: var(--action);
   border-bottom-color: var(--action);
   font-weight: var(--fw-semibold);
 }
