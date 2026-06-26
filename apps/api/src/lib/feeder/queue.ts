@@ -9,6 +9,10 @@ import { prisma } from '../../db.js';
 import {
   mapKrsToFeeder, mapMahasiswaToFeeder, mapNilaiToFeeder,
   mapDosenToFeeder, mapMataKuliahToFeeder, mapKelasToFeeder, mapYudisiumToFeeder,
+  // Phase 2 mappers
+  mapAkmToFeeder, mapKomponenEvaluasiToFeeder, mapNilaiKomponenToFeeder,
+  mapAktivitasToFeeder, mapDayaTampungToFeeder, mapMahasiswaInboundToFeeder,
+  mapNilaiTransferToFeeder,
 } from './mapping.js';
 import { getFeederClient } from './client.js';
 import type { FeederEntity, FeederOperation } from '@prisma/client';
@@ -109,6 +113,78 @@ export async function buildFeederPayload(entity: FeederEntity, entityId: string)
         include: { mahasiswa: { select: { feederId: true, nim: true } } },
       });
       return y ? mapYudisiumToFeeder(y) : null;
+    }
+    case 'akm': {
+      const a = await prisma.aktivitasKuliahMahasiswa.findUnique({
+        where: { id: entityId },
+        include: {
+          mahasiswa: { select: { feederId: true, nim: true } },
+          semester: { select: { kode: true } },
+        },
+      });
+      return a ? mapAkmToFeeder(a) : null;
+    }
+    case 'komponen_evaluasi': {
+      const k = await prisma.komponenEvaluasiKelas.findUnique({
+        where: { id: entityId },
+        include: { kelas: { select: { feederId: true } } },
+      });
+      return k ? mapKomponenEvaluasiToFeeder(k) : null;
+    }
+    case 'nilai_komponen': {
+      const n = await prisma.nilaiKomponenEvaluasi.findUnique({
+        where: { id: entityId },
+        include: {
+          komponenEvaluasi: { select: { feederId: true } },
+          krs: { select: { feederId: true } },
+        },
+      });
+      return n ? mapNilaiKomponenToFeeder(n) : null;
+    }
+    case 'aktivitas': {
+      const a = await prisma.aktivitasMahasiswa.findUnique({
+        where: { id: entityId },
+        include: {
+          semester: { select: { kode: true } },
+          peserta: {
+            include: { mahasiswa: { select: { feederId: true, nim: true } } },
+          },
+          pembimbing: {
+            include: { dosen: { select: { feederId: true, nidn: true } } },
+          },
+        },
+      });
+      return a ? mapAktivitasToFeeder(a) : null;
+    }
+    case 'daya_tampung': {
+      const d = await prisma.dayaTampungProdi.findUnique({
+        where: { id: entityId },
+        include: {
+          prodi: { select: { kode: true } },
+          semester: { select: { kode: true } },
+        },
+      });
+      return d ? mapDayaTampungToFeeder(d) : null;
+    }
+    case 'mahasiswa_inbound': {
+      const m = await prisma.mahasiswaInbound.findUnique({
+        where: { id: entityId },
+        include: {
+          prodiTujuan: { select: { kode: true } },
+          semester: { select: { kode: true } },
+        },
+      });
+      return m ? mapMahasiswaInboundToFeeder(m) : null;
+    }
+    case 'nilai_transfer': {
+      const n = await prisma.nilaiTransfer.findUnique({
+        where: { id: entityId },
+        include: {
+          mahasiswa: { select: { feederId: true, nim: true } },
+          mataKuliah: { select: { feederId: true, kode: true } },
+        },
+      });
+      return n ? mapNilaiTransferToFeeder(n) : null;
     }
     default:
       return null;
@@ -232,13 +308,21 @@ export async function processFeederQueue(opts: { take?: number } = {}): Promise<
 function updateEntityFeederId(entity: FeederEntity, entityId: string, feederId: string) {
   const data = { feederId, lastSyncedAt: new Date() };
   switch (entity) {
-    case 'mahasiswa':  return prisma.mahasiswa.update({ where: { id: entityId }, data });
-    case 'dosen':      return prisma.dosen.update({ where: { id: entityId }, data });
-    case 'mata_kuliah':return prisma.mataKuliah.update({ where: { id: entityId }, data });
-    case 'kelas':      return prisma.kelas.update({ where: { id: entityId }, data });
-    case 'krs':        return prisma.krs.update({ where: { id: entityId }, data });
-    case 'nilai':      return prisma.nilai.update({ where: { id: entityId }, data });
-    case 'yudisium':   return prisma.yudisium.update({ where: { id: entityId }, data });
-    default:           return prisma.feederQueue.findFirst(); // noop
+    case 'mahasiswa':         return prisma.mahasiswa.update({ where: { id: entityId }, data });
+    case 'dosen':             return prisma.dosen.update({ where: { id: entityId }, data });
+    case 'mata_kuliah':       return prisma.mataKuliah.update({ where: { id: entityId }, data });
+    case 'kelas':             return prisma.kelas.update({ where: { id: entityId }, data });
+    case 'krs':               return prisma.krs.update({ where: { id: entityId }, data });
+    case 'nilai':             return prisma.nilai.update({ where: { id: entityId }, data });
+    case 'yudisium':          return prisma.yudisium.update({ where: { id: entityId }, data });
+    // Phase 2 entities
+    case 'akm':               return prisma.aktivitasKuliahMahasiswa.update({ where: { id: entityId }, data });
+    case 'komponen_evaluasi': return prisma.komponenEvaluasiKelas.update({ where: { id: entityId }, data });
+    case 'nilai_komponen':    return prisma.nilaiKomponenEvaluasi.update({ where: { id: entityId }, data });
+    case 'aktivitas':         return prisma.aktivitasMahasiswa.update({ where: { id: entityId }, data });
+    case 'daya_tampung':      return prisma.dayaTampungProdi.update({ where: { id: entityId }, data });
+    case 'mahasiswa_inbound': return prisma.mahasiswaInbound.update({ where: { id: entityId }, data });
+    case 'nilai_transfer':    return prisma.nilaiTransfer.update({ where: { id: entityId }, data });
+    default:                  return prisma.feederQueue.findFirst(); // noop
   }
 }

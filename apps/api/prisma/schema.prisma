@@ -133,6 +133,23 @@ enum Jenjang {
   s2
   s3
   profesi
+  ppg     // Pendidikan Profesi Guru
+  sp1     // Spesialis 1
+  sp2     // Spesialis 2
+}
+
+// Jenis pendaftaran mahasiswa — wajib untuk PDDikti Neo Feeder.
+// "baru" = penerimaan reguler, "pindahan" = transfer dari PT lain,
+// "lanjutan" = lanjut jenjang (D3→S1), "ppg" = pendaftaran PPG,
+// "transfer" = transfer internal lintas prodi, "rpl" = rekognisi
+// pembelajaran lampau.
+enum JenisPendaftaran {
+  baru
+  pindahan
+  lanjutan
+  ppg
+  transfer
+  rpl
 }
 
 model Prodi {
@@ -160,6 +177,8 @@ model Prodi {
   lingkupAmi   LingkupAmi[]
   akademikAdmins Akademik[]
   standarMutu  StandarMutu[]
+  dayaTampung  DayaTampungProdi[]
+  inboundTujuan MahasiswaInbound[]
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -283,6 +302,15 @@ model Mahasiswa {
   jalurMasukKode       String?
   jalurMasuk           KodeJalurMasuk?       @relation(fields: [jalurMasukKode], references: [kode])
 
+  // Jenis pendaftaran (Phase 2 PDDikti) — baru/pindahan/lanjutan/ppg/transfer/rpl.
+  jenisPendaftaran     JenisPendaftaran?     @default(baru)
+  tanggalMasuk         DateTime?             // tanggal masuk PT (untuk history pendidikan)
+
+  // Phase 2 — relasi tambahan
+  akm                  AktivitasKuliahMahasiswa[]
+  pesertaAktivitas     PesertaAktivitas[]
+  nilaiTransfer        NilaiTransfer[]
+
   // PDDikti / Neo Feeder sync metadata
   feederId      String?  @unique // UUID dari Feeder, idempotensi
   lastSyncedAt  DateTime?
@@ -333,6 +361,7 @@ model Dosen {
   bkdLaporan         BkdLaporan[]
   auditorAmi         AuditorAmi[]
   capaPic            TindakLanjutCapa[] @relation("CapaPicDosen")
+  pembimbingAktivitas PembimbingAktivitas[]
 
   // ============================================================
   // PDDikti biodata extension — Phase 1 Neo Feeder readiness.
@@ -431,6 +460,10 @@ model Semester {
   mutasi        MutasiMahasiswa[]
   bkdLaporan    BkdLaporan[]
   heregistrasi  Heregistrasi[]
+  akm           AktivitasKuliahMahasiswa[]
+  aktivitas     AktivitasMahasiswa[]
+  dayaTampung   DayaTampungProdi[]
+  inbound       MahasiswaInbound[]
 
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -473,9 +506,17 @@ model MataKuliah {
   sks         Int
   sksTeori    Int                   @default(0)
   sksPraktik  Int                   @default(0)
+  sksLapangan Int                   @default(0)
+  sksSimulasi Int                   @default(0)
   jenis       JenisMK               @default(wajib_prodi)
   prodiId     String
   prodi       Prodi                 @relation(fields: [prodiId], references: [id])
+
+  // PDDikti Phase 2 — IKU 7 + Kelompok MK
+  linkRps        String?            @db.Text  // URL RPS untuk reporting IKU 7
+  bidangIlmu     String?                      // Bidang ilmu PDDikti
+  kelompokMatkul String?                      // MKWU/MKWK/MKK/MKB/MPK/dst
+  deskripsi      String?            @db.Text  // ringkasan substansi
 
   kurikulum     MataKuliahKurikulum[]
   kelas         Kelas[]
@@ -483,6 +524,7 @@ model MataKuliah {
   prasyaratDari Prasyarat[]         @relation("MKPrasyarat")
   mbkmKonversi  MbkmKonversi[]
   cpmk          Cpmk[]
+  nilaiTransfer NilaiTransfer[]
 
   feederId    String?               @unique
   lastSyncedAt DateTime?
@@ -544,6 +586,13 @@ enum Hari {
   minggu
 }
 
+// Metode pembelajaran per kelas — IKU 7 reporting.
+enum MetodePembelajaran {
+  tatap_muka
+  daring
+  blended       // hybrid
+}
+
 model Kelas {
   id           String     @id @default(uuid())
   mataKuliahId String
@@ -560,6 +609,9 @@ model Kelas {
   jamMulai     String?    // "08:00"
   jamSelesai   String?    // "09:40"
 
+  // PDDikti Phase 2 — IKU 7
+  metodePembelajaran MetodePembelajaran? @default(tatap_muka)
+
   krs          Krs[]
   pertemuan    Pertemuan[]
   edomResponse EdomResponse[]
@@ -569,6 +621,7 @@ model Kelas {
   forumThread  ForumThread[]
   team         KelasDosen[]
   bobotNilai   BobotNilaiKelas?
+  komponenEvaluasi KomponenEvaluasiKelas[]
 
   feederId     String?    @unique
   lastSyncedAt DateTime?
@@ -847,6 +900,7 @@ model Krs {
 
   nilai       Nilai?
   nilaiCpmk   NilaiCpmk[]
+  nilaiKomponen NilaiKomponenEvaluasi[]
 
   feederId    String?   @unique
   lastSyncedAt DateTime?
@@ -1983,6 +2037,13 @@ enum FeederEntity {
   nilai
   aktivitas
   yudisium
+  // Phase 2 PDDikti
+  akm
+  komponen_evaluasi
+  nilai_komponen
+  daya_tampung
+  mahasiswa_inbound
+  nilai_transfer
 }
 
 enum FeederOperation {
@@ -2778,4 +2839,320 @@ model OrangTuaMahasiswa {
 
   @@unique([mahasiswaId, jenis])
   @@index([mahasiswaId])
+}
+
+// ============================================================
+// AKM — AKTIVITAS KULIAH MAHASISWA per semester (Phase 2 PDDikti).
+// PDDikti wajib: status mhs per semester + IPS/IPK/SKS snapshot.
+// Distinct dari Heregistrasi (yang fokus pada workflow cuti) — AKM
+// = laporan akademik per semester yang dilaporkan ke Neo Feeder.
+// Sumber data: dihitung dari Nilai (IPS) + akumulasi (IPK, SKS).
+// ============================================================
+
+enum StatusAkm {
+  aktif              // A — kuliah reguler
+  cuti               // C — cuti akademik
+  non_aktif          // N — tidak registrasi tapi belum cuti formal
+  kampus_merdeka     // K — MBKM aktif
+  mengundurkan_diri  // U
+  lulus              // L
+  drop_out           // D
+}
+
+model AktivitasKuliahMahasiswa {
+  id            String     @id @default(uuid())
+  mahasiswaId   String
+  mahasiswa     Mahasiswa  @relation(fields: [mahasiswaId], references: [id], onDelete: Cascade)
+  semesterId    String
+  semester      Semester   @relation(fields: [semesterId], references: [id])
+
+  status        StatusAkm  @default(aktif)
+  ips           Float?     // IP semester ini
+  ipk           Float?     // IPK kumulatif s/d semester ini
+  sksSemester   Int?       // SKS diambil semester ini
+  sksTotal      Int?       // SKS lulus kumulatif
+  biayaKuliah   Decimal?   @db.Decimal(15, 2) // biaya/UKT semester ini
+
+  // PDDikti / Neo Feeder sync metadata
+  feederId      String?    @unique
+  lastSyncedAt  DateTime?
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([mahasiswaId, semesterId])
+  @@index([semesterId])
+  @@index([status])
+}
+
+// ============================================================
+// KOMPONEN EVALUASI per Kelas + NILAI per komponen (NeoFeeder 2.3+).
+// IKU 7: MK yang ≥50% bobot evaluasinya pakai case method atau
+// team-based project = MK pembelajaran inovatif.
+// Pola pendataan: 1 kelas → N komponen evaluasi → setiap mhs
+// (Krs) punya 1 nilai per komponen.
+// Beda dengan BobotNilaiKelas: BNK = 5-slot tetap (tugas/UTS/UAS/
+// praktikum/kehadiran) utk perhitungan nilai akhir lokal; komponen
+// evaluasi PDDikti = N komponen dinamis untuk reporting IKU 7.
+// ============================================================
+
+enum JenisKomponenEvaluasi {
+  tugas
+  uts
+  uas
+  quiz
+  praktikum
+  kehadiran
+  proyek
+  presentasi
+  laporan
+  case_method          // IKU 7
+  team_based_project   // IKU 7
+  lainnya
+}
+
+model KomponenEvaluasiKelas {
+  id                 String                 @id @default(uuid())
+  kelasId            String
+  kelas              Kelas                  @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+  nama               String                 // "UTS", "Proyek Kelompok"
+  jenis              JenisKomponenEvaluasi
+  bobotPersen        Float                  // 0-100, total per kelas seharusnya 100
+  deskripsi          String?                @db.Text
+  // IKU 7 marker — dapat berbeda dengan jenis (mis. jenis=proyek tapi
+  // metodeTeamBased=true berarti metode TBP).
+  metodeCaseMethod   Boolean                @default(false)
+  metodeTeamBased    Boolean                @default(false)
+  urutan             Int                    @default(0)
+
+  nilaiKomponen      NilaiKomponenEvaluasi[]
+
+  feederId           String?                @unique
+  lastSyncedAt       DateTime?
+
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  @@index([kelasId])
+}
+
+model NilaiKomponenEvaluasi {
+  id                  String                 @id @default(uuid())
+  komponenEvaluasiId  String
+  komponenEvaluasi    KomponenEvaluasiKelas  @relation(fields: [komponenEvaluasiId], references: [id], onDelete: Cascade)
+  krsId               String
+  krs                 Krs                    @relation(fields: [krsId], references: [id], onDelete: Cascade)
+  nilai               Float?                 // 0-100
+
+  feederId            String?                @unique
+  lastSyncedAt        DateTime?
+
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+
+  @@unique([komponenEvaluasiId, krsId])
+  @@index([krsId])
+}
+
+// ============================================================
+// AKTIVITAS MAHASISWA — unified MBKM, Pertukaran, Magang, Riset,
+// Pengabdian, Kewirausahaan, PPL PPG, dll. PDDikti reporting Tahap 2.
+// Berbeda dengan Mbkm (yg fokus 1 mhs : 1 program MBKM), model ini
+// support N mhs (peserta) + N dosen pembimbing per aktivitas. Sehingga
+// 1 program MBKM/PKL kelompok bisa 1 row + N pesertaAktivitas.
+// ============================================================
+
+enum JenisAktivitasMhs {
+  pertukaran_pelajar       // MBKM
+  magang                   // MBKM atau wajib
+  asistensi_mengajar       // MBKM
+  riset                    // MBKM
+  pengabdian_masyarakat
+  kewirausahaan
+  proyek_independen
+  proyek_kemanusiaan
+  bela_negara
+  kkn_tematik
+  kerja_praktek
+  studi_independen
+  ppl                      // PPG
+  lainnya
+}
+
+enum StatusAktivitasMhs {
+  diajukan
+  berjalan
+  selesai
+  dibatalkan
+}
+
+model AktivitasMahasiswa {
+  id              String                 @id @default(uuid())
+  jenis           JenisAktivitasMhs
+  nama            String                 // "MBKM Bangkit Academy 2024"
+  deskripsi       String?                @db.Text
+  semesterId      String
+  semester        Semester               @relation(fields: [semesterId], references: [id])
+
+  lokasi          String?
+  mitra           String?                // institusi mitra
+  isMbkm          Boolean                @default(false)
+  isFlagship      Boolean                @default(false) // MBKM Flagship vs Mandiri
+  isEksternal     Boolean                @default(false) // pertukaran antar PT
+  linkProposal    String?                @db.Text
+  linkLaporan     String?                @db.Text
+  linkSertifikat  String?                @db.Text
+
+  tanggalMulai    DateTime?
+  tanggalSelesai  DateTime?
+
+  status          StatusAktivitasMhs     @default(diajukan)
+  catatan         String?                @db.Text
+
+  peserta         PesertaAktivitas[]
+  pembimbing      PembimbingAktivitas[]
+
+  feederId        String?                @unique
+  lastSyncedAt    DateTime?
+
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  @@index([semesterId])
+  @@index([jenis])
+  @@index([status])
+}
+
+model PesertaAktivitas {
+  id           String              @id @default(uuid())
+  aktivitasId  String
+  aktivitas    AktivitasMahasiswa  @relation(fields: [aktivitasId], references: [id], onDelete: Cascade)
+  mahasiswaId  String
+  mahasiswa    Mahasiswa           @relation(fields: [mahasiswaId], references: [id])
+  peran        String?             // "Ketua Tim", "Anggota"
+  konversiSks  Int?                // SKS hasil konversi (max 24 reg / 36 PLPG)
+
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@unique([aktivitasId, mahasiswaId])
+  @@index([mahasiswaId])
+}
+
+model PembimbingAktivitas {
+  id           String              @id @default(uuid())
+  aktivitasId  String
+  aktivitas    AktivitasMahasiswa  @relation(fields: [aktivitasId], references: [id], onDelete: Cascade)
+  dosenId      String
+  dosen        Dosen               @relation(fields: [dosenId], references: [id])
+  peran        String?             // "Pembimbing Utama", "Pembimbing Lapangan"
+
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@unique([aktivitasId, dosenId])
+  @@index([dosenId])
+}
+
+// ============================================================
+// DAYA TAMPUNG PRODI per periode — wajib pelaporan Tahap 1.
+// Diisi sebelum semester ganjil dimulai per prodi.
+// Berlaku untuk semester awal periode (mis. 20251 untuk ganjil 2025).
+// ============================================================
+model DayaTampungProdi {
+  id                  String   @id @default(uuid())
+  prodiId             String
+  prodi               Prodi    @relation(fields: [prodiId], references: [id])
+  semesterId          String
+  semester            Semester @relation(fields: [semesterId], references: [id])
+
+  dayaTampung         Int      // jumlah kursi yang dibuka
+  jumlahDaftar        Int?     // jumlah pendaftar
+  jumlahLulusSeleksi  Int?     // diterima
+  jumlahRegistrasi    Int?     // yg lapor diri/aktif
+
+  feederId            String?  @unique
+  lastSyncedAt        DateTime?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([prodiId, semesterId])
+  @@index([semesterId])
+}
+
+// ============================================================
+// MAHASISWA INBOUND — mhs dari PT lain yang mengikuti MBKM di Tazkia.
+// Distinct dari Mahasiswa (yang punya akun login internal); inbound
+// adalah row reporting saja, sinkron dengan PDDikti via approval.
+// ============================================================
+model MahasiswaInbound {
+  id              String              @id @default(uuid())
+  namaMahasiswa   String
+  nimAsal         String              // NIM di PT asal
+  ptAsal          String              // nama PT asal
+  kodeProdiAsal   String?             // kode prodi PDDikti asal
+  prodiTujuanId   String
+  prodiTujuan     Prodi               @relation(fields: [prodiTujuanId], references: [id])
+  semesterId      String
+  semester        Semester            @relation(fields: [semesterId], references: [id])
+
+  jenisAktivitas  JenisAktivitasMhs   @default(pertukaran_pelajar)
+  tanggalMulai    DateTime?
+  tanggalSelesai  DateTime?
+  status          StatusAktivitasMhs  @default(diajukan)
+
+  feederId        String?             @unique
+  lastSyncedAt    DateTime?
+
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([prodiTujuanId])
+  @@index([semesterId])
+}
+
+// ============================================================
+// NILAI TRANSFER / KONVERSI — generic untuk mhs pindahan, MBKM, RPL.
+// Untuk pindahan: kode + nama MK asal di-tracking biar audit bisa cek.
+// Untuk MBKM: MbkmKonversi tetap dipakai per program MBKM; NilaiTransfer
+// lebih untuk konversi generic (transfer kredit, RPL, dll).
+// ============================================================
+enum SumberNilaiTransfer {
+  pindahan_pt
+  mbkm
+  rpl
+  konversi_internal
+  lainnya
+}
+
+model NilaiTransfer {
+  id             String              @id @default(uuid())
+  mahasiswaId    String
+  mahasiswa      Mahasiswa           @relation(fields: [mahasiswaId], references: [id], onDelete: Cascade)
+  mataKuliahId   String              // MK lokal yang menerima konversi
+  mataKuliah     MataKuliah          @relation(fields: [mataKuliahId], references: [id])
+
+  // Snapshot MK asal (kalau dari PT lain)
+  kodeMkAsal     String?
+  namaMkAsal     String?
+  sksAsal        Int?
+  nilaiHurufAsal String?
+
+  // Hasil pengakuan
+  nilaiHurufAkui String              // huruf yang diakui
+  bobotAkui      Float?
+  sksAkui        Int                 // SKS yang diakui
+
+  sumber         SumberNilaiTransfer @default(pindahan_pt)
+  catatan        String?             @db.Text
+
+  feederId       String?             @unique
+  lastSyncedAt   DateTime?
+
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([mahasiswaId])
+  @@index([mataKuliahId])
 }
