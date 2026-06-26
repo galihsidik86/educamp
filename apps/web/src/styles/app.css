@@ -556,6 +556,87 @@ html, body, #root {
   flex-shrink: 0;
 }
 
+/* ============================================================
+   Dashboard widget refinement
+   ============================================================ */
+
+/* Card heading dengan inline icon (lucide) — pattern umum di
+   dashboard: <h3><Icon /> Jadwal hari ini</h3>. Polish: spacing,
+   icon dapat brand-soft circle background untuk feel widget. */
+.tz-card > h3 svg:first-child,
+.tz-card > h2 svg:first-child {
+  vertical-align: middle;
+  margin-right: 8px;
+  color: var(--action);
+}
+
+/* Widget list — ul tanpa class, langsung di dalam .tz-card.
+   Pattern: jadwal kuliah hari ini, daftar pengumuman, dst.
+   Polish: gap consistent, item dapat hover background tipis,
+   separator subtle. */
+.tz-card > div > ul {
+  padding: 0 !important;
+  margin: 0 !important;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.tz-card > div > ul > li {
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: padding-left var(--dur-fast) var(--ease-standard);
+}
+.tz-card > div > ul > li:first-child { padding-top: 0; }
+.tz-card > div > ul > li:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.tz-card > div > ul > li:hover {
+  padding-left: var(--space-2);
+}
+
+/* Time range pill — jam mulai–selesai di widget jadwal.
+   Target: span dengan font mono kecil di dalam list item dashboard. */
+.tz-card > div > ul > li > span[style*="mono"]:last-child,
+.tz-card > div > ul > li .mono:last-child {
+  background: var(--surface-sunken);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  font-size: var(--text-xs);
+  color: var(--text-body);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* "Lihat semua →" link di header widget — lebih halus + hover state */
+.tz-card > .row:first-child a[href] {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--text-link);
+  text-decoration: none;
+  font-weight: var(--fw-medium);
+  transition: background var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard);
+}
+.tz-card > .row:first-child a[href]:hover {
+  background: var(--action-soft);
+  color: var(--action-hover);
+}
+
+/* Empty state inside widget — lebih halus padding daripada
+   default empty-state besar. */
+.tz-card > div > p.muted:only-child {
+  padding: var(--space-4) 0;
+  text-align: center;
+  font-size: var(--text-sm);
+}
+
 /* Mobile responsive: konten lebih dekat ke edge supaya layout tidak
    terlalu sempit di phone, tablist scroll horizontal kalau perlu. */
 @media (max-width: 640px) {
