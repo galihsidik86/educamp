@@ -85,12 +85,29 @@ async function main() {
   });
 
   console.log('▶ Seed: akun akademik (5 sub-peran)');
-  // Existing — backward compat. Mark sebagai super_admin.
+
+  // Super admin — akses semua modul. Akun BARU agar nama jelas (sebelumnya
+  // akademik@tazkia.ac.id dipakai sebagai super, sekarang diturunkan ke
+  // akademik scope karena membingungkan secara penamaan).
+  await prisma.user.upsert({
+    where: { email: 'superadmin@tazkia.ac.id' },
+    update: { akademik: { update: { subRole: 'super_admin' } } },
+    create: {
+      email: 'superadmin@tazkia.ac.id',
+      passwordHash: PW_HASH,
+      role: Role.akademik,
+      akademik: {
+        create: { nama: 'Super Admin', nip: '198001012010010001', jabatan: 'Super Admin BAAK', subRole: 'super_admin' },
+      },
+    },
+  });
+
+  // Akademik core (Kepala BAAK) — sekarang scope 'akademik' saja, tidak super.
   const userAkademik = await prisma.user.upsert({
     where: { email: 'akademik@tazkia.ac.id' },
     update: {
       akademik: {
-        update: { subRole: 'super_admin', jabatan: 'Super Admin (Kepala BAAK)' },
+        update: { subRole: 'akademik', jabatan: 'Kepala BAAK' },
       },
     },
     create: {
@@ -98,12 +115,12 @@ async function main() {
       passwordHash: PW_HASH,
       role: Role.akademik,
       akademik: {
-        create: { nama: 'Bagian Akademik', nip: '198001012010011001', jabatan: 'Super Admin (Kepala BAAK)', subRole: 'super_admin' },
+        create: { nama: 'Bagian Akademik', nip: '198001012010011001', jabatan: 'Kepala BAAK', subRole: 'akademik' },
       },
     },
   });
 
-  // Admin akademik core (mahasiswa/dosen/kurikulum/krs)
+  // Duplicate dgn nama lain — staf akademik biasa
   await prisma.user.upsert({
     where: { email: 'admin.akademik@tazkia.ac.id' },
     update: { akademik: { update: { subRole: 'akademik' } } },
