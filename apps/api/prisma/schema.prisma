@@ -255,6 +255,33 @@ model Mahasiswa {
   wali                WaliMahasiswa[]
   sertifikatDigital   SertifikatDigital[]
   heregistrasi        Heregistrasi[]
+  orangTua            OrangTuaMahasiswa[]
+
+  // ============================================================
+  // PDDikti biodata extension — Phase 1 Neo Feeder readiness.
+  // Semua nullable supaya migrasi aman, di-lengkapi via import/update.
+  // ============================================================
+  nik                  String?  @db.VarChar(16)   // 16 digit KTP, unique kalau diisi
+  nisn                 String?  @db.VarChar(10)   // 10 digit Nomor Induk Siswa Nasional
+  npsn                 String?  @db.VarChar(10)   // NPSN sekolah asal
+  namaSekolahAsal      String?
+  jenisSekolahAsal     String?                    // negeri/swasta/luar_negeri/paket_c
+  tahunLulusSekolah    Int?
+  kewarganegaraan      String?  @default("Indonesia")
+  kodeWilayahAlamat    String?  @db.VarChar(8)    // BPS 6-8 digit
+  pembiayaan           String?                    // mandiri/beasiswa/kip_kuliah/sponsorship
+  kebutuhanKhusus      String?                    // kode disabilitas PDDikti
+  semesterAwal         String?  @db.VarChar(5)    // YYYYS (mis. "20211")
+
+  // Reference relations
+  agamaKode            Int?
+  agama                KodeAgama?            @relation(fields: [agamaKode], references: [kode])
+  jenisTinggalKode     Int?
+  jenisTinggal         KodeJenisTinggal?     @relation(fields: [jenisTinggalKode], references: [kode])
+  alatTransportasiKode Int?
+  alatTransportasi     KodeAlatTransportasi? @relation(fields: [alatTransportasiKode], references: [kode])
+  jalurMasukKode       String?
+  jalurMasuk           KodeJalurMasuk?       @relation(fields: [jalurMasukKode], references: [kode])
 
   // PDDikti / Neo Feeder sync metadata
   feederId      String?  @unique // UUID dari Feeder, idempotensi
@@ -266,6 +293,7 @@ model Mahasiswa {
   @@index([prodiId])
   @@index([angkatan])
   @@index([status])
+  @@index([nik])
 }
 
 enum JabatanFungsional {
@@ -305,6 +333,25 @@ model Dosen {
   bkdLaporan         BkdLaporan[]
   auditorAmi         AuditorAmi[]
   capaPic            TindakLanjutCapa[] @relation("CapaPicDosen")
+
+  // ============================================================
+  // PDDikti biodata extension — Phase 1 Neo Feeder readiness.
+  // ============================================================
+  nik                          String?  @db.VarChar(16)
+  nip                          String?  @db.VarChar(20)
+  nuk                          String?  @db.VarChar(20)
+  statusKepegawaian            String?  // pns/tetap_non_pns/kontrak/dosen_lb
+  statusKeaktifan              String?  @default("aktif") // aktif/tugas_belajar/tugas_luar/pensiun/cuti
+  pendidikanTerakhirJenjang    String?  // s1/s2/s3/d3/d4/profesi
+  pendidikanTerakhirGelar      String?
+  pendidikanTerakhirTahunLulus Int?
+  pendidikanTerakhirBidang     String?
+  pangkatGolongan              String?  // mis "III/b" untuk PNS
+  tanggalMulaiKerja            DateTime?
+  serdosStatus                 Boolean? @default(false) // sertifikasi dosen
+  serdosTanggal                DateTime?
+  agamaKode                    Int?
+  agamaDosen                   KodeAgama? @relation("DosenAgama", fields: [agamaKode], references: [kode])
 
   // PDDikti / Neo Feeder sync metadata
   feederId           String?             @unique
@@ -1255,6 +1302,10 @@ model Yudisium {
   // Di-generate saat status berubah ke 'lulus' (atau manual regen).
   verifikasiToken String?          @unique
 
+  // PDDikti sync tracking
+  feederId        String?          @unique
+  lastSyncedAt    DateTime?
+
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
@@ -1931,6 +1982,7 @@ enum FeederEntity {
   krs
   nilai
   aktivitas
+  yudisium
 }
 
 enum FeederOperation {
@@ -2653,4 +2705,77 @@ model Heregistrasi {
   @@unique([mahasiswaId, semesterId])
   @@index([semesterId])
   @@index([status])
+}
+
+// ============================================================
+// PDDIKTI REFERENCE TABLES — Phase 1 Neo Feeder readiness.
+// Lookup enum-like tables yg PDDikti gunakan. Seed dari seed.ts.
+// ============================================================
+
+model KodeAgama {
+  kode      Int    @id // 1=Islam, 2=Kristen Protestan, 3=Katolik, 4=Hindu, 5=Buddha, 6=Khonghucu, 99=Lainnya
+  nama      String
+
+  mahasiswa Mahasiswa[]
+  dosen     Dosen[]    @relation("DosenAgama")
+
+  @@map("ref_agama")
+}
+
+model KodeJenisTinggal {
+  kode      Int    @id // 1=Bersama Ortu, 2=Asrama, 3=Kos/Sewa, 4=Rumah Sendiri, 5=Tinggal di Rumah Keluarga, 6=Lainnya
+  nama      String
+
+  mahasiswa Mahasiswa[]
+
+  @@map("ref_jenis_tinggal")
+}
+
+model KodeAlatTransportasi {
+  kode      Int    @id // 1=Jalan Kaki, 2=Sepeda, 3=Sepeda Motor, 4=Mobil Pribadi, 5=Angkutan Umum, 6=Kereta Api, 7=Kapal/Perahu, 8=Lainnya
+  nama      String
+
+  mahasiswa Mahasiswa[]
+
+  @@map("ref_alat_transportasi")
+}
+
+model KodeJalurMasuk {
+  kode      String @id @db.VarChar(20) // SNMPTN, SBMPTN, MANDIRI, KIPK, PRESTASI, KERJASAMA, TRANSFER, LAINNYA
+  nama      String
+
+  mahasiswa Mahasiswa[]
+
+  @@map("ref_jalur_masuk")
+}
+
+// ============================================================
+// ORANG TUA / WALI MAHASISWA — biodata utk laporan PDDikti.
+// Beda dengan WaliMahasiswa (akun login wali untuk dashboard) —
+// ini purely data tentang orang tua/wali (NIK, pendidikan, dst).
+// ============================================================
+
+enum JenisOrangTua {
+  ayah
+  ibu
+  wali
+}
+
+model OrangTuaMahasiswa {
+  id          String        @id @default(uuid())
+  mahasiswaId String
+  mahasiswa   Mahasiswa     @relation(fields: [mahasiswaId], references: [id], onDelete: Cascade)
+  jenis       JenisOrangTua
+  nama        String
+  nik         String?       @db.VarChar(16)
+  tahunLahir  Int?
+  pendidikan  String?       // sd/smp/sma/d1/d2/d3/d4/s1/s2/s3/profesi/tidak_sekolah
+  pekerjaan   String?
+  penghasilan Decimal?      @db.Decimal(15, 2) // Rupiah per bulan
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([mahasiswaId, jenis])
+  @@index([mahasiswaId])
 }

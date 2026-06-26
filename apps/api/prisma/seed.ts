@@ -22,6 +22,54 @@ const prisma = new PrismaClient();
 const PW_HASH = bcrypt.hashSync('password123', 10);
 
 async function main() {
+  console.log('▶ Seed: PDDikti reference tables');
+  // Kode agama (PDDikti standard)
+  await prisma.$transaction([
+    ...[
+      { kode: 1, nama: 'Islam' },
+      { kode: 2, nama: 'Kristen Protestan' },
+      { kode: 3, nama: 'Katolik' },
+      { kode: 4, nama: 'Hindu' },
+      { kode: 5, nama: 'Buddha' },
+      { kode: 6, nama: 'Khonghucu' },
+      { kode: 99, nama: 'Lainnya' },
+    ].map((r) => prisma.kodeAgama.upsert({ where: { kode: r.kode }, update: { nama: r.nama }, create: r })),
+  ]);
+  await prisma.$transaction([
+    ...[
+      { kode: 1, nama: 'Bersama Orang Tua' },
+      { kode: 2, nama: 'Asrama' },
+      { kode: 3, nama: 'Kos/Sewa' },
+      { kode: 4, nama: 'Rumah Sendiri' },
+      { kode: 5, nama: 'Tinggal di Rumah Keluarga' },
+      { kode: 6, nama: 'Lainnya' },
+    ].map((r) => prisma.kodeJenisTinggal.upsert({ where: { kode: r.kode }, update: { nama: r.nama }, create: r })),
+  ]);
+  await prisma.$transaction([
+    ...[
+      { kode: 1, nama: 'Jalan Kaki' },
+      { kode: 2, nama: 'Sepeda' },
+      { kode: 3, nama: 'Sepeda Motor' },
+      { kode: 4, nama: 'Mobil Pribadi' },
+      { kode: 5, nama: 'Angkutan Umum' },
+      { kode: 6, nama: 'Kereta Api' },
+      { kode: 7, nama: 'Kapal/Perahu' },
+      { kode: 8, nama: 'Lainnya' },
+    ].map((r) => prisma.kodeAlatTransportasi.upsert({ where: { kode: r.kode }, update: { nama: r.nama }, create: r })),
+  ]);
+  await prisma.$transaction([
+    ...[
+      { kode: 'SNMPTN', nama: 'Seleksi Nasional Masuk PTN' },
+      { kode: 'SBMPTN', nama: 'Seleksi Bersama Masuk PTN' },
+      { kode: 'MANDIRI', nama: 'Jalur Mandiri' },
+      { kode: 'KIPK', nama: 'KIP Kuliah' },
+      { kode: 'PRESTASI', nama: 'Jalur Prestasi' },
+      { kode: 'KERJASAMA', nama: 'Jalur Kerjasama' },
+      { kode: 'TRANSFER', nama: 'Pindah/Transfer' },
+      { kode: 'LAINNYA', nama: 'Lainnya' },
+    ].map((r) => prisma.kodeJalurMasuk.upsert({ where: { kode: r.kode }, update: { nama: r.nama }, create: r })),
+  ]);
+
   console.log('▶ Seed: fakultas & prodi');
   const fakultas = await prisma.fakultas.upsert({
     where: { kode: 'FTI' },
