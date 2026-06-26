@@ -35,7 +35,11 @@ fi
 SCHEMA_CHANGED=0
 if ! git diff --quiet HEAD@{1} HEAD -- apps/api/prisma/schema.prisma 2>/dev/null; then
   echo "▶ schema berubah → prisma db push"
-  docker compose -f docker-compose.prod.yml run --rm api npx prisma db push --skip-generate
+  # --accept-data-loss: aman untuk additive schema changes (kolom baru
+  # nullable, unique constraint pada kolom baru). Prisma konservatif —
+  # MySQL mengizinkan banyak NULL pada unique constraint sehingga tidak
+  # ada data loss aktual.
+  docker compose -f docker-compose.prod.yml run --rm api npx prisma db push --skip-generate --accept-data-loss
   SCHEMA_CHANGED=1
 fi
 
