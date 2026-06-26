@@ -28,7 +28,7 @@ html, body, #root {
 }
 
 .app__content {
-  padding: var(--page-gutter);
+  padding: var(--space-6) var(--page-gutter) var(--space-10);
   max-width: var(--container-max);
   width: 100%;
   margin: 0 auto;
@@ -312,7 +312,7 @@ html, body, #root {
 }
 
 /* ----- Stack helper ----- */
-.stack { display: flex; flex-direction: column; gap: var(--space-4); }
+.stack { display: flex; flex-direction: column; gap: var(--space-5); }
 .row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 
 /* Grid 2 kolom yang stack di mobile */
@@ -343,14 +343,83 @@ html, body, #root {
 /* ============================================================
    Page header (judul + eyebrow)
    ============================================================ */
-.page-head { display: flex; flex-direction: column; gap: var(--space-1); margin-bottom: var(--space-2); }
+/* PageHead — diperkuat hierarki + napas:
+   eyebrow tegas dgn dot accent, title lebih besar + tracking ketat,
+   subtle border-bottom utk separasi dari konten. */
+.page-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
 .page-head__eyebrow {
+  position: relative;
   font-size: var(--text-2xs);
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
   color: var(--accent);
+  font-weight: var(--fw-bold);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
 }
-.page-head__title { margin: 0; font-size: var(--text-xl); color: var(--text-strong); }
+.page-head__eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+}
+.page-head__title {
+  margin: 0;
+  font-size: clamp(var(--text-xl), 2.4vw, var(--text-2xl));
+  color: var(--text-strong);
+  letter-spacing: -0.02em;
+  line-height: var(--leading-tight);
+}
+
+/* Row wrapping PageHead + right slot: tambah border-bottom subtle + spacing */
+.stack > .row:first-child:has(.page-head) {
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: var(--space-2);
+}
+
+/* Filter toolbar — Card berisi search + Select filter di atas tabel.
+   Polish: tone surface lebih lembut + section di-treat sebagai "control
+   strip" bukan card berat. */
+.stack > .row:has(.tz-input):has(+ .tz-table-wrap),
+.stack > div:has(> .row > .tz-input):has(+ .tz-table-wrap) {
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--shadow-xs);
+}
+
+/* "Section title" mini-pattern: muted + uppercase + spaced — pakai utk
+   sub-heading dalam card. Tidak butuh markup khusus selain class. */
+.section-eyebrow {
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--text-muted);
+  font-weight: var(--fw-bold);
+  margin: 0 0 var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.section-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 12px;
+  background: var(--accent);
+  border-radius: var(--radius-full);
+}
 
 /* ============================================================
    Tabel data
@@ -366,9 +435,16 @@ html, body, #root {
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
   color: var(--text-muted);
+  font-weight: var(--fw-bold);
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--border-default);
   background: var(--surface-sunken);
+  /* Sticky header — header tetap visible saat scroll vertikal di
+     wrapper. tz-table-wrap mengandung overflow-x; vertical scroll
+     biasanya di window, jadi sticky relatif viewport. */
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 .tz-table tbody td {
   padding: var(--space-3) var(--space-4);
@@ -376,10 +452,15 @@ html, body, #root {
   color: var(--text-body);
   vertical-align: middle;
 }
+/* Zebra striping super-subtle (2% tint) — bantu mata melacak baris di
+   tabel panjang tanpa terlalu busy. */
+.tz-table tbody tr:nth-child(even) td {
+  background: color-mix(in oklch, var(--surface-card) 98%, var(--neutral-500));
+}
 .tz-table tbody tr {
   transition: background var(--dur-fast) var(--ease-standard);
 }
-.tz-table tbody tr:hover {
+.tz-table tbody tr:hover td {
   background: var(--action-soft);
 }
 .tz-table tfoot td {
