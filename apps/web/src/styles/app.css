@@ -459,6 +459,103 @@ html, body, #root {
   padding: var(--space-3) var(--space-4);
 }
 
+/* ============================================================
+   Paket C — Form & input polish
+   ============================================================ */
+
+/* Form section — grouping fields dengan eyebrow heading + divider.
+   Pakai: <div class="form-section"><h4>Data Pribadi</h4>...</div> */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--border-subtle);
+}
+.form-section:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+.form-section > h3,
+.form-section > h4 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--text-muted);
+  font-weight: var(--fw-bold);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.form-section > h3::before,
+.form-section > h4::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 12px;
+  background: var(--accent);
+  border-radius: var(--radius-full);
+}
+
+/* Required indicator: dari merah ke gold accent — tetap kelihatan
+   tapi tidak alarming. Asterisk dgn vertical align fine-tune. */
+.tz-req {
+  color: var(--accent) !important;
+  margin-left: 4px !important;
+  font-weight: var(--fw-bold);
+  font-size: var(--text-sm);
+  vertical-align: middle;
+}
+
+/* Modal body/footer treatment lewat structural selectors.
+   Pattern umum di codebase: <Modal>...<div class="stack" style="padding...">
+   ...<div class="row" style="justify-content:flex-end">[buttons]</div></div></Modal>
+
+   Style row terakhir (footer button area) supaya feel sticky-footer:
+   border-top + padding-top, separasi visual dari konten. */
+.modal-card form > .row:last-child:has(button[type="submit"]),
+.modal-card form > .row:last-child:has(.tz-btn--primary),
+.modal-card .stack > .row:last-child:has(.tz-btn--primary):has(.tz-btn--ghost) {
+  padding-top: var(--space-4);
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Modal head — bigger separator dari body */
+.modal-card__head {
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: var(--space-4) !important;
+}
+
+/* Field label: tingkatkan kelegaan + sedikit tracking */
+.tz-field__label {
+  letter-spacing: -0.005em;
+}
+
+/* Hint: italic + muted untuk informational helper */
+.tz-field__hint {
+  font-style: italic;
+}
+
+/* Error: lebih kentara dgn dot indicator + tetap a11y-safe (no emoji
+   sesuai brand guideline) */
+.tz-field__error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tz-field__error::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+  flex-shrink: 0;
+}
+
 /* Mobile responsive: konten lebih dekat ke edge supaya layout tidak
    terlalu sempit di phone, tablist scroll horizontal kalau perlu. */
 @media (max-width: 640px) {
