@@ -637,6 +637,87 @@ html, body, #root {
   font-size: var(--text-sm);
 }
 
+/* ============================================================
+   Detail page polish — back link, strong sub-headings, info blocks
+   ============================================================ */
+
+/* Back link "← Kembali ke ..." — pattern umum di top detail page.
+   Target Link[to] dengan inline-flex display + warna link.
+   Polish: padding-rounded button-like, hover bg + arrow slide. */
+.stack > a[href]:first-child[style*="inline-flex"],
+.stack > div:first-child > a[href][style*="ChevronLeft"],
+.stack > a[href]:first-child:has(svg) {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  margin-bottom: var(--space-1);
+  color: var(--text-muted) !important;
+  font-size: var(--text-sm) !important;
+  font-weight: var(--fw-medium);
+  text-decoration: none !important;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  transition: background var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard),
+              border-color var(--dur-fast) var(--ease-standard),
+              padding-left var(--dur-fast) var(--ease-standard);
+  align-self: flex-start;
+  width: fit-content;
+}
+.stack > a[href]:first-child:has(svg):hover {
+  background: var(--surface-sunken);
+  color: var(--text-strong) !important;
+  border-color: var(--border-subtle);
+  padding-left: 8px;
+}
+.stack > a[href]:first-child:has(svg) > svg {
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+.stack > a[href]:first-child:has(svg):hover > svg {
+  transform: translateX(-2px);
+}
+
+/* <strong> langsung sebagai sub-heading dalam Card (pattern:
+   <Card><strong>Deskripsi</strong>...</Card> alih h3).
+   Polish: bigger, dengan gold accent line di kiri. */
+.tz-card > strong:first-child {
+  display: block;
+  font-size: var(--text-base);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  letter-spacing: -0.005em;
+  margin-bottom: var(--space-2);
+  padding-left: 10px;
+  border-left: 3px solid var(--accent);
+  line-height: 1.2;
+}
+
+/* Strong dalam .row first-child di Card (pattern status header row) */
+.tz-card > .row:first-child > strong:first-child {
+  font-size: var(--text-base);
+  color: var(--text-strong);
+  letter-spacing: -0.005em;
+}
+
+/* Info/note block — div dengan background surface-sunken inline style.
+   Pattern umum: "Catatan dosen: ...". Polish: padding lebih napas +
+   border-left accent. */
+.tz-card div[style*="surface-sunken"]:not(.tz-table-wrap):not(.skeleton) {
+  border-left: 3px solid var(--info-solid);
+  padding-left: var(--space-3) !important;
+  margin-top: var(--space-3) !important;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0 !important;
+}
+
+/* Highlighted score / value pattern — "Nilai: 78 / 100" with
+   mono. Tetap inline, hanya polish typography. */
+.tz-card strong[style*="mono"] {
+  font-size: var(--text-lg);
+  color: var(--accent-strong);
+  letter-spacing: -0.02em;
+}
+
 /* Mobile responsive: konten lebih dekat ke edge supaya layout tidak
    terlalu sempit di phone, tablist scroll horizontal kalau perlu. */
 @media (max-width: 640px) {
