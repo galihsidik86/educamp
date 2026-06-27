@@ -127,9 +127,20 @@ export type KhsItem = {
   tugas: number | null; uts: number | null; uas: number | null; praktikum: number | null; kehadiran: number | null;
   nilaiAngka: number | null; nilaiHuruf: string | null; bobot: number | null; status: string;
 };
-export type Khs = {
-  semesters: Array<{ semesterKode: string; semesterNama: string; items: KhsItem[]; ip: number; totalSks: number }>;
+export type KhsSemester = {
+  semesterId: string;
+  semesterKode: string;
+  semesterNama: string;
+  items: KhsItem[];
+  ip: number;
+  totalSks: number;
+  // EDOM gating
+  locked: boolean;
+  pendingEdomCount: number;
+  totalKelas: number;
+  kuesionerId: string | null;
 };
+export type Khs = { semesters: KhsSemester[] };
 export const useKhs = () => useApi<Khs>(['khs'], '/mahasiswa/nilai/khs');
 
 export type StatusPembayaran = 'menunggu' | 'disetujui' | 'ditolak';

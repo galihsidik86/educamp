@@ -19,6 +19,39 @@ export function MahasiswaNilaiKhsCetak() {
   if (profil.isLoading || khs.isLoading) return <p className="muted">Memuat…</p>;
   if (!profil.data || !khs.data) return <p className="muted">Data tidak tersedia.</p>;
 
+  // Gating EDOM: kalau ada semester yang terkunci, blokir cetak.
+  const lockedSemesters = khs.data.semesters.filter((s) => s.locked);
+  if (lockedSemesters.length > 0) {
+    return (
+      <div className="stack" style={{ maxWidth: 720, margin: 'var(--space-6) auto', padding: 'var(--space-4)' }}>
+        <Button variant="ghost" size="sm" onClick={() => navigate('/mahasiswa/nilai')} leftIcon={<ArrowLeft size={14} />}>
+          Kembali
+        </Button>
+        <div style={{
+          padding: 'var(--space-5)', background: 'var(--surface-card)',
+          borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)',
+        }}>
+          <h2 style={{ marginTop: 0, color: 'var(--text-strong)' }}>KHS belum dapat dicetak</h2>
+          <p>
+            Lengkapi pengisian EDOM terlebih dahulu untuk{' '}
+            <strong>{lockedSemesters.length} semester</strong> yang masih terkunci:
+          </p>
+          <ul>
+            {lockedSemesters.map((s) => (
+              <li key={s.semesterKode}>
+                <strong>{s.semesterNama}</strong>{' '}
+                <span className="muted">({s.pendingEdomCount} dari {s.totalKelas} kelas belum diisi)</span>
+              </li>
+            ))}
+          </ul>
+          <Button variant="primary" onClick={() => navigate('/mahasiswa/edom')}>
+            Buka Halaman EDOM
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const dpa = profil.data.dpa
     ? [profil.data.dpa.gelarDepan, profil.data.dpa.nama, profil.data.dpa.gelarBelakang].filter(Boolean).join(' ')
     : '—';
