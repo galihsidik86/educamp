@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Alert, Button, Card, Input, Select } from '@/ds';
-import { ShieldOff, ShieldCheck, KeyRound, MonitorSmartphone, Search, Copy, AlertTriangle, UserCog } from 'lucide-react';
+import { ShieldOff, ShieldCheck, KeyRound, MonitorSmartphone, Search, Copy, AlertTriangle, UserCog, UserPlus } from 'lucide-react';
 import {
   useAdminUsers, useAdminUserActions, useAdminUserSessions,
-  type AdminUser, type Role, type AkademikSubRole,
+  type AdminUser, type Role, type AkademikSubRole, type CreateAkademikUserInput,
 } from '@/lib/queries-users';
 import { useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
@@ -43,6 +43,7 @@ export function AkademikUsers() {
   const [actErr, setActErr] = useState<string | null>(null);
   const [resetResult, setResetResult] = useState<{ user: AdminUser; password: string } | null>(null);
   const [subRoleTarget, setSubRoleTarget] = useState<AdminUser | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const toast = useToast();
   const confirmDialog = useConfirm();
 
@@ -70,11 +71,16 @@ export function AkademikUsers() {
 
   return (
     <div className="stack">
-      <PageHead
-        eyebrow="ADMIN"
-        title="Kelola Akun Pengguna"
-        subtitle="Reset password, nonaktifkan akun, paksa ganti password, dan kelola sesi aktif."
-      />
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
+        <PageHead
+          eyebrow="ADMIN"
+          title="Kelola Akun Pengguna"
+          subtitle="Reset password, nonaktifkan akun, paksa ganti password, dan kelola sesi aktif."
+        />
+        <Button variant="primary" size="sm" leftIcon={<UserPlus size={14} />} onClick={() => setCreateOpen(true)}>
+          Tambah Akun Akademik
+        </Button>
+      </div>
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
       {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
@@ -191,6 +197,17 @@ export function AkademikUsers() {
             }
           }}
           confirm={confirmDialog}
+        />
+      )}
+
+      {createOpen && (
+        <CreateUserModal
+          onClose={() => setCreateOpen(false)}
+          onCreated={(user, password) => {
+            setCreateOpen(false);
+            setResetResult({ user, password });
+            toast.success(`Akun ${user.email} berhasil dibuat.`);
+          }}
         />
       )}
 
@@ -359,6 +376,155 @@ function SubRoleModal({ user, onClose, onSave, confirm }: {
         <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}>
           <Button variant="ghost" size="sm" onClick={onClose}>Batal</Button>
           <Button variant="primary" size="sm" onClick={submit}>Simpan</Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function CreateUserModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: (user: AdminUser, password: string) => void;
+}) {
+  const prodi = useProdi();
+  const actions = useAdminUserActions();
+  const [form, setForm] = useState<CreateAkademikUserInput>({
+    email: '',
+    nama: '',
+    nip: '',
+    jabatan: '',
+    subRole: 'akademik',
+    prodiId: null,
+    password: '',
+  });
+  const [autoPw, setAutoPw] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const set = <K extends keyof CreateAkademikUserInput>(k: K, v: CreateAkademikUserInput[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
+
+  const submit = async () => {
+    setErr(null);
+    if (!form.email.trim() || !form.nama.trim()) {
+      setErr('Email dan nama wajib diisi.');
+      return;
+    }
+    if (form.subRole === 'prodi' && !form.prodiId) {
+      setErr('Admin Prodi wajib memilih prodi scope.');
+      return;
+    }
+    if (!autoPw && (form.password ?? '').length < 8) {
+      setErr('Password minimal 8 karakter (atau pakai opsi auto-generate).');
+      return;
+    }
+    setBusy(true);
+    try {
+      const payload: CreateAkademikUserInput = {
+        ...form,
+        email: form.email.trim().toLowerCase(),
+        nip: form.nip?.trim() || null,
+        jabatan: form.jabatan?.trim() || null,
+        prodiId: form.subRole === 'prodi' ? form.prodiId : null,
+        password: autoPw ? undefined : form.password,
+      };
+      const r = await actions.create.mutateAsync(payload);
+      onCreated(r.user, r.password);
+    } catch (e) {
+      setErr(e instanceof ApiError ? e.message : 'Gagal membuat akun');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal open onClose={onClose} title="Tambah Akun Akademik" width={560}>
+      <div className="stack" style={{ padding: 'var(--space-4)' }}>
+        {err && <Alert variant="danger" title="Gagal">{err}</Alert>}
+
+        <Alert variant="info" title="Catatan">
+          Hanya untuk staf Akademik (super admin, akademik, keuangan, prodi, SPMI). Untuk akun mahasiswa atau dosen, pakai menu master data masing-masing.
+        </Alert>
+
+        <Input
+          label="Email"
+          type="email"
+          value={form.email}
+          onChange={(e) => set('email', (e.target as HTMLInputElement).value)}
+          placeholder="nama@tazkia.ac.id"
+          required
+        />
+        <Input
+          label="Nama lengkap"
+          value={form.nama}
+          onChange={(e) => set('nama', (e.target as HTMLInputElement).value)}
+          required
+        />
+        <div className="row" style={{ gap: 'var(--space-3)' }}>
+          <div style={{ flex: 1 }}>
+            <Input
+              label="NIP (opsional)"
+              value={form.nip ?? ''}
+              onChange={(e) => set('nip', (e.target as HTMLInputElement).value)}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <Input
+              label="Jabatan (opsional)"
+              value={form.jabatan ?? ''}
+              onChange={(e) => set('jabatan', (e.target as HTMLInputElement).value)}
+              placeholder="mis. Kepala BAAK"
+            />
+          </div>
+        </div>
+
+        <Select
+          label="Sub-peran"
+          value={form.subRole}
+          onChange={(e) => set('subRole', (e.target as HTMLSelectElement).value as AkademikSubRole)}
+        >
+          {(Object.keys(SUB_ROLE_LABEL) as AkademikSubRole[]).map((k) => (
+            <option key={k} value={k}>{SUB_ROLE_LABEL[k]}</option>
+          ))}
+        </Select>
+
+        {form.subRole === 'prodi' && (
+          <Select
+            label="Prodi scope (wajib)"
+            value={form.prodiId ?? ''}
+            onChange={(e) => set('prodiId', (e.target as HTMLSelectElement).value || null)}
+          >
+            <option value="">— Pilih prodi —</option>
+            {prodi.data?.items.map((p) => (
+              <option key={p.id} value={p.id}>{p.kode} — {p.nama}</option>
+            ))}
+          </Select>
+        )}
+
+        <div className="stack" style={{ gap: 'var(--space-2)' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)' }}>
+            <input type="checkbox" checked={autoPw} onChange={(e) => setAutoPw(e.target.checked)} />
+            Auto-generate password sementara (user wajib ganti saat login)
+          </label>
+          {!autoPw && (
+            <Input
+              label="Password awal"
+              type="password"
+              value={form.password ?? ''}
+              onChange={(e) => set('password', (e.target as HTMLInputElement).value)}
+              placeholder="min. 8 karakter"
+            />
+          )}
+        </div>
+
+        <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}>
+          <Button variant="ghost" size="sm" onClick={onClose} disabled={busy}>Batal</Button>
+          <Button variant="primary" size="sm" onClick={submit} disabled={busy}>
+            {busy ? 'Menyimpan…' : 'Buat Akun'}
+          </Button>
         </div>
       </div>
     </Modal>
