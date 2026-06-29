@@ -320,7 +320,7 @@ kurikulumRouter.get('/kelas', async (req, res) => {
       dosen: { select: { nidn: true, nama: true, gelarDepan: true, gelarBelakang: true, prodi: { select: { kode: true, nama: true } } } },
       ruangan: { select: { kode: true } },
       semester: { include: { tahunAjaran: true } },
-      _count: { select: { krs: true } },
+      _count: { select: { krs: { where: { status: { in: ['diajukan', 'disetujui'] } } } } },
     },
     orderBy: [{ semester: { kode: 'desc' } }, { hari: 'asc' }, { jamMulai: 'asc' }],
   });
@@ -496,8 +496,11 @@ kurikulumRouter.patch('/kelas/:id', async (req, res) => {
 });
 
 kurikulumRouter.delete('/kelas/:id', async (req, res) => {
-  const usage = await prisma.krs.count({ where: { kelasId: req.params.id } });
-  if (usage > 0) throw Conflict(`Kelas dipakai di ${usage} KRS — pindahkan atau batalkan KRS terlebih dahulu`);
+  const usage = await prisma.krs.count({
+    where: { kelasId: req.params.id, status: { in: ['diajukan', 'disetujui'] } },
+  });
+  if (usage > 0) throw Conflict(`Kelas dipakai di ${usage} KRS aktif — pindahkan atau batalkan KRS terlebih dahulu`);
+  await prisma.krs.deleteMany({ where: { kelasId: req.params.id } });
   await prisma.kelas.delete({ where: { id: req.params.id } });
   res.status(204).end();
 });

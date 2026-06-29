@@ -54,7 +54,7 @@ krsRouter.get('/krs/penawaran', async (req, res) => {
       dosen: { select: { nidn: true, nama: true, gelarDepan: true, gelarBelakang: true } },
       team: { include: { dosen: { select: { nama: true, gelarDepan: true, gelarBelakang: true } } } },
       ruangan: true,
-      _count: { select: { krs: true } },
+      _count: { select: { krs: { where: { status: { in: ['diajukan', 'disetujui'] } } } } },
     },
     orderBy: [{ hari: 'asc' }, { jamMulai: 'asc' }],
   });
@@ -199,7 +199,7 @@ krsRouter.post('/krs/items', async (req, res) => {
 
   const kelas = await prisma.kelas.findUnique({
     where: { id: kelasId },
-    include: { mataKuliah: true, _count: { select: { krs: true } } },
+    include: { mataKuliah: true, _count: { select: { krs: { where: { status: { in: ['diajukan', 'disetujui'] } } } } } },
   });
   if (!kelas) throw NotFound('Kelas tidak ditemukan');
   if (kelas.semesterId !== semester.id) throw BadRequest('Kelas bukan dari semester aktif');

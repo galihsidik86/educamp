@@ -13,7 +13,7 @@ jadwalRouter.get('/jadwal', async (req, res) => {
       semesterId: semester.id,
       OR: [{ dosenId: d.id }, { team: { some: { dosenId: d.id } } }],
     },
-    include: { mataKuliah: true, ruangan: true, _count: { select: { krs: true } } },
+    include: { mataKuliah: true, ruangan: true, _count: { select: { krs: { where: { status: { in: ['diajukan', 'disetujui'] } } } } } },
   });
 
   res.json({
