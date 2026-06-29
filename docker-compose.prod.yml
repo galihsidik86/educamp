@@ -47,6 +47,12 @@ services:
       # request browser ke /api dipangkas oleh nginx → tidak ada Origin lintas-domain
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
       API_PORT: 4000
+      # Seed mode (lihat apps/api/prisma/seed.ts) — set SEED_DEMO=false di
+      # .env produksi untuk skip data demo. BOOTSTRAP_ADMIN_* untuk bikin
+      # akun super admin pasca-wipe.
+      SEED_DEMO: ${SEED_DEMO:-true}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
       TZ: Asia/Jakarta
     depends_on:
       mysql:
