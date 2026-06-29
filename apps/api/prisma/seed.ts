@@ -70,6 +70,42 @@ async function main() {
     ].map((r) => prisma.kodeJalurMasuk.upsert({ where: { kode: r.kode }, update: { nama: r.nama }, create: r })),
   ]);
 
+  // Bootstrap super-admin lewat env — supaya pasca-wipe DB tetap ada 1 akun
+  // untuk login. Tidak mengubah password kalau user sudah ada (idempotent).
+  const bootstrapEmail = process.env.BOOTSTRAP_ADMIN_EMAIL;
+  const bootstrapPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD;
+  if (bootstrapEmail && bootstrapPassword) {
+    console.log(`▶ Seed: bootstrap super admin ${bootstrapEmail}`);
+    const existing = await prisma.user.findUnique({ where: { email: bootstrapEmail } });
+    await prisma.user.upsert({
+      where: { email: bootstrapEmail },
+      update: { akademik: { update: { subRole: 'super_admin' } } },
+      create: {
+        email: bootstrapEmail,
+        passwordHash: bcrypt.hashSync(bootstrapPassword, 10),
+        role: Role.akademik,
+        akademik: {
+          create: {
+            nama: 'Super Admin',
+            nip: `BOOTSTRAP-${Date.now()}`,
+            jabatan: 'Super Admin',
+            subRole: 'super_admin',
+          },
+        },
+      },
+    });
+    if (!existing) console.log(`  → akun baru dibuat (password dari env).`);
+  }
+
+  // Mode produksi: skip semua data demo. PDDikti reference + bootstrap admin
+  // di atas tetap dijalankan (idempotent, aman).
+  const seedDemo = (process.env.SEED_DEMO ?? 'true').toLowerCase() !== 'false';
+  if (!seedDemo) {
+    console.log('⊘ SEED_DEMO=false — lewati semua data demo (mode produksi).');
+    console.log('✓ Seed selesai.');
+    return;
+  }
+
   console.log('▶ Seed: fakultas & prodi');
   const fakultas = await prisma.fakultas.upsert({
     where: { kode: 'FTI' },
