@@ -26,7 +26,14 @@ export function AdminValidasiKrsList() {
         subtitle="Kelola pengajuan KRS lintas mahasiswa semester aktif."
       />
 
-      {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
+      {error && error instanceof ApiError && error.status === 404 && /semester aktif/i.test(error.message) ? (
+        <Alert variant="info" title="Belum ada semester aktif">
+          Validasi KRS butuh semester aktif. Buat Tahun Ajaran & Semester (centang "Aktif") di menu{' '}
+          <Link to="/akademik/periode" style={{ color: 'var(--text-link)' }}>Periode KRS</Link> dulu.
+        </Alert>
+      ) : error ? (
+        <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>
+      ) : null}
       {perlu > 0 && filters.status !== 'diajukan' && (
         <Alert variant="info" title={`${perlu} mahasiswa menunggu validasi`}>
           Ganti filter status ke "diajukan" untuk fokus pada antrian.
