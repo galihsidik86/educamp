@@ -276,6 +276,11 @@ export function useFakultasActions() {
       mutationFn: (id: string) => api(`/akademik/fakultas/${id}`, { method: 'DELETE' }),
       onSuccess: inv,
     }),
+    importCsv: useMutation({
+      mutationFn: (rows: Array<Record<string, string>>) =>
+        apiPost<ImportResultKey>('/akademik/fakultas/import', { rows }),
+      onSuccess: inv,
+    }),
   };
 }
 
@@ -306,6 +311,11 @@ export function useProdiActions() {
     }),
     remove: useMutation({
       mutationFn: (id: string) => api(`/akademik/prodi/${id}`, { method: 'DELETE' }),
+      onSuccess: inv,
+    }),
+    importCsv: useMutation({
+      mutationFn: (rows: Array<Record<string, string>>) =>
+        apiPost<ImportResultKey>('/akademik/prodi/import', { rows }),
       onSuccess: inv,
     }),
   };
@@ -397,6 +407,11 @@ export function useRuanganActions() {
       onSuccess: inv,
     }),
     remove: useMutation({ mutationFn: (id: string) => api(`/akademik/ruangan/${id}`, { method: 'DELETE' }), onSuccess: inv }),
+    importCsv: useMutation({
+      mutationFn: (rows: Array<Record<string, string>>) =>
+        apiPost<ImportResultKey>('/akademik/ruangan/import', { rows }),
+      onSuccess: inv,
+    }),
   };
 }
 

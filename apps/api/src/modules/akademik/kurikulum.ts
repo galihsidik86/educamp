@@ -51,6 +51,45 @@ kurikulumRouter.delete('/fakultas/:id', async (req, res) => {
   res.status(204).end();
 });
 
+const fakultasImportRowSchema = z.object({
+  kode: z.string().trim().min(1).max(20),
+  nama: z.string().trim().min(2).max(120),
+});
+const importBodySchema = z.object({
+  rows: z.array(z.record(z.string(), z.string().nullable().optional())).max(500),
+});
+type ImportResult = { row: number; key: string | null; status: 'created' | 'failed'; message?: string };
+
+kurikulumRouter.post('/fakultas/import', async (req, res) => {
+  const { rows } = importBodySchema.parse(req.body);
+  if (rows.length === 0) throw BadRequest('Tidak ada baris untuk diimpor');
+  const results: ImportResult[] = [];
+  let created = 0; let failed = 0;
+  for (let i = 0; i < rows.length; i++) {
+    const rowNo = i + 1;
+    const clean = Object.fromEntries(
+      Object.entries(rows[i]!).map(([k, v]) => [k, v === '' || v == null ? undefined : v]),
+    );
+    const parsed = fakultasImportRowSchema.safeParse(clean);
+    if (!parsed.success) {
+      failed++;
+      results.push({ row: rowNo, key: (clean.kode as string | undefined) ?? null, status: 'failed', message: parsed.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ') });
+      continue;
+    }
+    const r = parsed.data;
+    try {
+      await prisma.fakultas.create({ data: { kode: r.kode, nama: r.nama } });
+      created++;
+      results.push({ row: rowNo, key: r.kode, status: 'created' });
+    } catch (e: any) {
+      failed++;
+      const msg = e?.code === 'P2002' ? 'Kode fakultas sudah dipakai' : (e?.message ?? 'gagal create');
+      results.push({ row: rowNo, key: r.kode, status: 'failed', message: msg });
+    }
+  }
+  res.json({ totalRows: rows.length, created, failed, results });
+});
+
 kurikulumRouter.get('/prodi', async (_req, res) => {
   const items = await prisma.prodi.findMany({
     include: {
@@ -105,6 +144,55 @@ kurikulumRouter.delete('/prodi/:id', async (req, res) => {
   if (blockers.length > 0) throw BadRequest(`Prodi masih dipakai: ${blockers.join(', ')}`);
   await prisma.prodi.delete({ where: { id: exists.id } });
   res.status(204).end();
+});
+
+const prodiImportRowSchema = z.object({
+  kode: z.string().trim().min(2).max(20),
+  nama: z.string().trim().min(3).max(120),
+  jenjang: z.enum(['d3', 'd4', 's1', 's2', 's3', 'profesi']),
+  fakultasKode: z.string().trim().min(1),
+  tarifSppDefault: z.coerce.number().nonnegative().optional().nullable(),
+  tarifUangPangkal: z.coerce.number().nonnegative().optional().nullable(),
+});
+
+kurikulumRouter.post('/prodi/import', async (req, res) => {
+  const { rows } = importBodySchema.parse(req.body);
+  if (rows.length === 0) throw BadRequest('Tidak ada baris untuk diimpor');
+  const fakList = await prisma.fakultas.findMany({ select: { id: true, kode: true } });
+  const fakByKode = new Map(fakList.map((f) => [f.kode, f.id]));
+  const results: ImportResult[] = [];
+  let created = 0; let failed = 0;
+  for (let i = 0; i < rows.length; i++) {
+    const rowNo = i + 1;
+    const clean = Object.fromEntries(
+      Object.entries(rows[i]!).map(([k, v]) => [k, v === '' || v == null ? undefined : v]),
+    );
+    const parsed = prodiImportRowSchema.safeParse(clean);
+    if (!parsed.success) {
+      failed++;
+      results.push({ row: rowNo, key: (clean.kode as string | undefined) ?? null, status: 'failed', message: parsed.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ') });
+      continue;
+    }
+    const r = parsed.data;
+    const fakultasId = fakByKode.get(r.fakultasKode);
+    if (!fakultasId) { failed++; results.push({ row: rowNo, key: r.kode, status: 'failed', message: `Kode fakultas tidak ditemukan: ${r.fakultasKode}` }); continue; }
+    try {
+      await prisma.prodi.create({
+        data: {
+          kode: r.kode, nama: r.nama, jenjang: r.jenjang, fakultasId,
+          tarifSppDefault: r.tarifSppDefault ?? null,
+          tarifUangPangkal: r.tarifUangPangkal ?? null,
+        },
+      });
+      created++;
+      results.push({ row: rowNo, key: r.kode, status: 'created' });
+    } catch (e: any) {
+      failed++;
+      const msg = e?.code === 'P2002' ? 'Kode prodi sudah dipakai' : (e?.message ?? 'gagal create');
+      results.push({ row: rowNo, key: r.kode, status: 'failed', message: msg });
+    }
+  }
+  res.json({ totalRows: rows.length, created, failed, results });
 });
 
 // ============================================================
@@ -287,6 +375,51 @@ kurikulumRouter.delete('/ruangan/:id', async (req, res) => {
   if (exists._count.kelas > 0) throw Conflict(`Ruangan dipakai pada ${exists._count.kelas} kelas`);
   await prisma.ruangan.delete({ where: { id: exists.id } });
   res.status(204).end();
+});
+
+const ruanganImportRowSchema = z.object({
+  kode: z.string().trim().min(1).max(20),
+  nama: z.string().trim().min(2).max(60),
+  gedung: z.string().trim().max(60).optional().nullable(),
+  lantai: z.coerce.number().int().min(0).max(20).optional().nullable(),
+  kapasitas: z.coerce.number().int().min(0).max(500).optional().default(0),
+});
+
+kurikulumRouter.post('/ruangan/import', async (req, res) => {
+  const { rows } = importBodySchema.parse(req.body);
+  if (rows.length === 0) throw BadRequest('Tidak ada baris untuk diimpor');
+  const results: ImportResult[] = [];
+  let created = 0; let failed = 0;
+  for (let i = 0; i < rows.length; i++) {
+    const rowNo = i + 1;
+    const clean = Object.fromEntries(
+      Object.entries(rows[i]!).map(([k, v]) => [k, v === '' || v == null ? undefined : v]),
+    );
+    const parsed = ruanganImportRowSchema.safeParse(clean);
+    if (!parsed.success) {
+      failed++;
+      results.push({ row: rowNo, key: (clean.kode as string | undefined) ?? null, status: 'failed', message: parsed.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ') });
+      continue;
+    }
+    const r = parsed.data;
+    try {
+      await prisma.ruangan.create({
+        data: {
+          kode: r.kode, nama: r.nama,
+          gedung: r.gedung ?? null,
+          lantai: r.lantai ?? null,
+          kapasitas: r.kapasitas,
+        },
+      });
+      created++;
+      results.push({ row: rowNo, key: r.kode, status: 'created' });
+    } catch (e: any) {
+      failed++;
+      const msg = e?.code === 'P2002' ? 'Kode ruangan sudah dipakai' : (e?.message ?? 'gagal create');
+      results.push({ row: rowNo, key: r.kode, status: 'failed', message: msg });
+    }
+  }
+  res.json({ totalRows: rows.length, created, failed, results });
 });
 
 // ============================================================

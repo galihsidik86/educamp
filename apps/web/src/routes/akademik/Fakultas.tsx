@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Alert, Button, Input } from '@/ds';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileUp } from 'lucide-react';
 import { useFakultas, useFakultasActions, type Fakultas, type FakultasInput } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { ExcelImportModal } from '@/components/ExcelImportModal';
 import { ApiError } from '@/lib/api';
 
 export function AdminFakultas() {
@@ -11,6 +12,7 @@ export function AdminFakultas() {
   const actions = useFakultasActions();
   const [modal, setModal] = useState<{ mode: 'create' } | { mode: 'edit'; f: Fakultas } | null>(null);
   const [actErr, setActErr] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const onDelete = async (f: Fakultas) => {
     if (!confirm(`Hapus fakultas ${f.kode} — ${f.nama}?`)) return;
@@ -25,9 +27,14 @@ export function AdminFakultas() {
         title="Fakultas"
         subtitle="Kelola daftar fakultas (induk Program Studi)."
         right={
-          <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setModal({ mode: 'create' })}>
-            Tambah Fakultas
-          </Button>
+          <div className="row" style={{ gap: 'var(--space-2)' }}>
+            <Button variant="ghost" leftIcon={<FileUp size={16} />} onClick={() => setImportOpen(true)}>
+              Impor Excel
+            </Button>
+            <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setModal({ mode: 'create' })}>
+              Tambah Fakultas
+            </Button>
+          </div>
         }
       />
 
@@ -60,6 +67,20 @@ export function AdminFakultas() {
           </tbody>
         </table>
       </div>
+
+      <ExcelImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import Fakultas via Excel"
+        expectedHeaders={['kode', 'nama']}
+        templateFilename="template-fakultas.xlsx"
+        keyHeader="Kode"
+        sampleRows={[
+          { kode: 'FTI', nama: 'Fakultas Teknologi Informasi' },
+          { kode: 'FEB', nama: 'Fakultas Ekonomi & Bisnis' },
+        ]}
+        importMutation={actions.importCsv}
+      />
 
       {modal && (
         <FakultasModal

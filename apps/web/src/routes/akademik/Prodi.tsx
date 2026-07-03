@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Alert, Button, Input, Select } from '@/ds';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileUp } from 'lucide-react';
 import { useProdi, useProdiActions, useFakultas, type Prodi, type ProdiInput } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { ExcelImportModal } from '@/components/ExcelImportModal';
 import { formatRupiah } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -14,6 +15,7 @@ export function AdminProdi() {
   const actions = useProdiActions();
   const [modal, setModal] = useState<{ mode: 'create' } | { mode: 'edit'; p: Prodi } | null>(null);
   const [actErr, setActErr] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const onDelete = async (p: Prodi) => {
     if (!confirm(`Hapus prodi ${p.kode} — ${p.nama}?`)) return;
@@ -28,9 +30,14 @@ export function AdminProdi() {
         title="Program Studi"
         subtitle="Kelola prodi, fakultas, dan tarif default (UKT semester & uang pangkal)."
         right={
-          <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setModal({ mode: 'create' })}>
-            Tambah Prodi
-          </Button>
+          <div className="row" style={{ gap: 'var(--space-2)' }}>
+            <Button variant="ghost" leftIcon={<FileUp size={16} />} onClick={() => setImportOpen(true)}>
+              Impor Excel
+            </Button>
+            <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setModal({ mode: 'create' })}>
+              Tambah Prodi
+            </Button>
+          </div>
         }
       />
 
@@ -72,6 +79,22 @@ export function AdminProdi() {
           </tbody>
         </table>
       </div>
+
+      <ExcelImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import Prodi via Excel"
+        expectedHeaders={['kode', 'nama', 'jenjang', 'fakultasKode']}
+        optionalHeaders={['tarifSppDefault', 'tarifUangPangkal']}
+        templateFilename="template-prodi.xlsx"
+        keyHeader="Kode"
+        notes={<><code>jenjang</code>: d3/d4/s1/s2/s3/profesi. <code>fakultasKode</code> harus sudah terdaftar. Tarif dalam Rupiah (angka saja, tanpa titik/koma).</>}
+        sampleRows={[
+          { kode: '55201', nama: 'Teknik Informatika', jenjang: 's1', fakultasKode: 'FTI', tarifSppDefault: 5000000 },
+          { kode: '57201', nama: 'Sistem Informasi', jenjang: 's1', fakultasKode: 'FTI', tarifSppDefault: 5000000, tarifUangPangkal: 10000000 },
+        ]}
+        importMutation={actions.importCsv}
+      />
 
       {modal && (
         <ProdiModal

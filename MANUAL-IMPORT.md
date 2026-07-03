@@ -6,14 +6,17 @@ Panduan praktis untuk staf Akademik saat memasukkan data dalam jumlah besar via 
 
 | # | Menu | Path | Digunakan untuk |
 |---|---|---|---|
-| 1 | Mahasiswa | `/akademik/mahasiswa` | Data mahasiswa baru dalam jumlah besar |
-| 2 | Dosen | `/akademik/dosen` | Data dosen (tetap & LB) |
-| 3 | Mata Kuliah | `/akademik/mata-kuliah` | Kurikulum MK per prodi |
-| 4 | Kelas (Penawaran) | `/akademik/kelas` | Kelas yang ditawarkan tiap semester |
-| 5 | Nilai (per Kelas) | `/dosen/kelas/:id/nilai` | Nilai akhir mahasiswa (untuk dosen) |
+| 1 | Fakultas | `/akademik/fakultas` | Daftar fakultas |
+| 2 | Program Studi | `/akademik/prodi` | Prodi + tarif default |
+| 3 | Ruangan | `/akademik/ruangan` | Ruang kelas & lab |
+| 4 | Mahasiswa | `/akademik/mahasiswa` | Data mahasiswa baru dalam jumlah besar |
+| 5 | Dosen | `/akademik/dosen` | Data dosen (tetap & LB) |
+| 6 | Mata Kuliah | `/akademik/mata-kuliah` | Kurikulum MK per prodi |
+| 7 | Kelas (Penawaran) | `/akademik/kelas` | Kelas yang ditawarkan tiap semester |
+| 8 | Nilai (per Kelas) | `/dosen/kelas/:id/nilai` | Nilai akhir mahasiswa (untuk dosen) |
 
 Data lain yang **belum** memiliki import massal (harus input satu per satu via form):
-Fakultas, Prodi, Ruangan, Tahun Ajaran/Semester, Pengumuman, Kalender, KRS, Tagihan (bulk lewat filter, bukan file), CPL/CPMK, SPMI, Beasiswa, Sertifikasi, Prestasi.
+Tahun Ajaran/Semester, Pengumuman, Kalender, KRS, Tagihan (bulk lewat filter, bukan file), CPL/CPMK, SPMI, Beasiswa, Sertifikasi, Prestasi.
 
 ## Aturan umum
 
@@ -29,9 +32,9 @@ Fakultas, Prodi, Ruangan, Tahun Ajaran/Semester, Pengumuman, Kalender, KRS, Tagi
 Ikuti urutan ini jika Anda baru mulai isi data dari nol. Melompat urutan akan menyebabkan error "prodi tidak ditemukan", "MK tidak ditemukan", dll.
 
 ```
-1. Fakultas         (manual, via form)
-2. Prodi            (manual, via form)  ← butuh Fakultas
-3. Ruangan          (manual, via form)
+1. Fakultas         (import Excel)
+2. Prodi            (import Excel)      ← butuh Fakultas
+3. Ruangan          (import Excel)
 4. Tahun Ajaran     (manual, via form)  ← centang "Aktif" pada semester!
 5. Dosen            (import Excel)      ← butuh Prodi
 6. Mata Kuliah      (import Excel)      ← butuh Prodi
@@ -42,7 +45,78 @@ Ikuti urutan ini jika Anda baru mulai isi data dari nol. Melompat urutan akan me
 
 ---
 
-## 1. Import Mahasiswa
+## 1. Import Fakultas
+
+**Menu**: Fakultas → tombol **Impor Excel**.
+
+### Kolom
+
+| Kolom | Wajib | Tipe | Format | Contoh |
+|---|---|---|---|---|
+| `kode` | ✅ | teks | 1–20 karakter, unik | `FTI` |
+| `nama` | ✅ | teks | 2–120 karakter | `Fakultas Teknologi Informasi` |
+
+### Perilaku
+
+- Create-only. Jika `kode` sudah ada → baris gagal dengan pesan "Kode fakultas sudah dipakai".
+- Tidak ada prasyarat data lain (Fakultas adalah entitas paling dasar).
+
+---
+
+## 2. Import Program Studi
+
+**Menu**: Program Studi → tombol **Impor Excel**.
+
+### Kolom
+
+| Kolom | Wajib | Tipe | Format | Contoh |
+|---|---|---|---|---|
+| `kode` | ✅ | teks | 2–20 karakter, unik | `55201` |
+| `nama` | ✅ | teks | 3–120 karakter | `Teknik Informatika` |
+| `jenjang` | ✅ | enum | lihat daftar bawah | `s1` |
+| `fakultasKode` | ✅ | teks | kode fakultas terdaftar | `FTI` |
+| `tarifSppDefault` | ⬜ | angka | Rupiah, angka saja | `5000000` |
+| `tarifUangPangkal` | ⬜ | angka | Rupiah, angka saja | `10000000` |
+
+**Nilai `jenjang` yang valid**: `d3`, `d4`, `s1`, `s2`, `s3`, `profesi`.
+
+### Prasyarat
+
+Fakultas dengan `fakultasKode` harus sudah ada. Import Fakultas dulu.
+
+### Perilaku
+
+- Create-only. Kode prodi harus unik di seluruh sistem.
+- Tarif ditulis sebagai angka polos (tanpa titik/koma pemisah). Kosongkan sel kalau tidak dipakai.
+
+### Kode prodi (referensi PDDikti)
+
+Untuk konsistensi dengan Neo Feeder, gunakan kode PDDikti resmi (5 digit) — mis. `55201` = Teknik Informatika S1, `57201` = Sistem Informasi S1, `61201` = Manajemen S1.
+
+---
+
+## 3. Import Ruangan
+
+**Menu**: Ruangan → tombol **Impor Excel**.
+
+### Kolom
+
+| Kolom | Wajib | Tipe | Format | Contoh |
+|---|---|---|---|---|
+| `kode` | ✅ | teks | 1–20 karakter, unik | `R-101` |
+| `nama` | ✅ | teks | 2–60 karakter | `Ruang 101` |
+| `gedung` | ⬜ | teks | max 60 | `A` |
+| `lantai` | ⬜ | angka | 0–20 | `1` |
+| `kapasitas` | ⬜ | angka | 0–500, default 0 | `40` |
+
+### Perilaku
+
+- Create-only. Duplikat `kode` → gagal.
+- `kapasitas=0` boleh untuk ruang yang tidak dipakai kuliah reguler (mis. ruang rapat).
+
+---
+
+## 4. Import Mahasiswa
 
 **Menu**: Mahasiswa → tombol **Impor Excel**.
 
@@ -79,7 +153,7 @@ Ikuti urutan ini jika Anda baru mulai isi data dari nol. Melompat urutan akan me
 
 ---
 
-## 2. Import Dosen
+## 5. Import Dosen
 
 **Menu**: Dosen → tombol **Impor Excel**.
 
@@ -113,7 +187,7 @@ Ikuti urutan ini jika Anda baru mulai isi data dari nol. Melompat urutan akan me
 
 ---
 
-## 3. Import Mata Kuliah
+## 6. Import Mata Kuliah
 
 **Menu**: Mata Kuliah → tombol **Impor Excel**.
 
@@ -139,7 +213,7 @@ Ikuti urutan ini jika Anda baru mulai isi data dari nol. Melompat urutan akan me
 
 ---
 
-## 4. Import Kelas (Penawaran)
+## 7. Import Kelas (Penawaran)
 
 **Menu**: Kelas → tombol **Impor Excel**.
 
@@ -173,7 +247,7 @@ Pastikan Tahun Ajaran & Semester sudah dibuat di menu Periode KRS sebelum import
 
 ---
 
-## 5. Import Nilai (per Kelas)
+## 8. Import Nilai (per Kelas)
 
 **Menu (dari sisi Dosen)**: Kelas → pilih kelas → tab Input Nilai → tombol **Impor Excel**.
 

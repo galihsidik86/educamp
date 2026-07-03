@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Alert, Button, Card, Input } from '@/ds';
-import { Plus, Trash2, ClipboardEdit, MapPin } from 'lucide-react';
+import { Plus, Trash2, ClipboardEdit, MapPin, FileUp } from 'lucide-react';
 import { useRuangan, useRuanganActions, type Ruangan } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { ExcelImportModal } from '@/components/ExcelImportModal';
 import { ApiError } from '@/lib/api';
 
 export function AkademikRuangan() {
@@ -12,6 +13,7 @@ export function AkademikRuangan() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editFor, setEditFor] = useState<Ruangan | null>(null);
   const [actErr, setActErr] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const remove = (r: Ruangan) => {
     if (!confirm(`Hapus ruangan ${r.kode} - ${r.nama}?`)) return;
@@ -27,9 +29,14 @@ export function AkademikRuangan() {
         title="Ruangan"
         subtitle="Master data ruangan/lab — dipakai sebagai lokasi kelas/jadwal kuliah."
         right={
-          <Button variant="primary" size="sm" leftIcon={<Plus size={14} />} onClick={() => setCreateOpen(true)}>
-            Tambah Ruangan
-          </Button>
+          <div className="row" style={{ gap: 'var(--space-2)' }}>
+            <Button variant="ghost" size="sm" leftIcon={<FileUp size={14} />} onClick={() => setImportOpen(true)}>
+              Impor Excel
+            </Button>
+            <Button variant="primary" size="sm" leftIcon={<Plus size={14} />} onClick={() => setCreateOpen(true)}>
+              Tambah Ruangan
+            </Button>
+          </div>
         }
       />
 
@@ -100,6 +107,21 @@ export function AkademikRuangan() {
           onError: (e: any) => setActErr(e instanceof ApiError ? e.message : 'Gagal'),
         })}
         title="Edit Ruangan"
+      />
+
+      <ExcelImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import Ruangan via Excel"
+        expectedHeaders={['kode', 'nama']}
+        optionalHeaders={['gedung', 'lantai', 'kapasitas']}
+        templateFilename="template-ruangan.xlsx"
+        keyHeader="Kode"
+        sampleRows={[
+          { kode: 'R-101', nama: 'Ruang 101', gedung: 'A', lantai: 1, kapasitas: 40 },
+          { kode: 'LAB-1', nama: 'Laboratorium Komputer 1', gedung: 'B', lantai: 1, kapasitas: 30 },
+        ]}
+        importMutation={actions.importCsv}
       />
     </div>
   );
