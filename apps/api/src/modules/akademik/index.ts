@@ -48,6 +48,7 @@ import { skalaNilaiRouter } from './skala-nilai.js';
 import { akmRouter } from './akm.js';
 import { aktivitasMhsRouter } from './aktivitas-mhs.js';
 import { dayaTampungRouter } from './daya-tampung.js';
+import { refRouter } from './ref.js';
 
 export const akademikRouter = Router();
 
@@ -70,6 +71,7 @@ akademikRouter.use(dashboardRouter);
 akademikRouter.use(pengumumanRouter);
 akademikRouter.use(kalenderRouter);
 akademikRouter.use(tiketRouter);
+akademikRouter.use(refRouter);
 
 // Akademik core — administrasi mahasiswa, dosen, kurikulum, kelas.
 // 'prodi' boleh akses modul yang punya scope filter (auto-filter

@@ -11,7 +11,7 @@ import {
   type StatusAmi, type KategoriTemuan, type StatusCapa,
   type Temuan, type Capa,
 } from '@/lib/queries-spmi';
-import { useAdminDosen, useProdi } from '@/lib/queries-akademik';
+import { useDosenRef as useAdminDosen, useProdiRef as useProdi } from '@/lib/queries-akademik';
 import { useStandarMutu } from '@/lib/queries-spmi';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';

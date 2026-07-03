@@ -293,6 +293,27 @@ export type Prodi = {
 };
 export const useProdi = () => useApi<{ items: Prodi[] }>(['prodi'], '/akademik/prodi');
 
+/**
+ * Read-only prodi list utk dropdown — dapat diakses semua sub-role
+ * akademik (termasuk keuangan/spmi). Endpoint `/akademik/ref/prodi`.
+ */
+export type ProdiRef = {
+  id: string; kode: string; nama: string; jenjang: string;
+  fakultas: { kode: string; nama: string };
+};
+export const useProdiRef = () => useApi<{ items: ProdiRef[] }>(['prodi-ref'], '/akademik/ref/prodi');
+
+/**
+ * Read-only dosen list utk dropdown — dapat diakses semua sub-role.
+ * Endpoint `/akademik/ref/dosen`.
+ */
+export type DosenRef = {
+  id: string; nidn: string; nama: string;
+  gelarDepan: string | null; gelarBelakang: string | null;
+  prodi: { kode: string; nama: string };
+};
+export const useDosenRef = () => useApi<{ items: DosenRef[] }>(['dosen-ref'], '/akademik/ref/dosen');
+
 export type ProdiInput = {
   kode: string; nama: string; jenjang: 'd3' | 'd4' | 's1' | 's2' | 's3' | 'profesi';
   fakultasId: string;
@@ -1140,6 +1161,12 @@ export type Periode = {
   }>;
 };
 export const usePeriode = () => useApi<Periode>(['periode'], '/akademik/periode');
+
+/**
+ * Read-only periode list utk dropdown semester — dapat diakses semua
+ * sub-role akademik. Bentuk sama dgn usePeriode. Endpoint `/akademik/ref/periode`.
+ */
+export const usePeriodeRef = () => useApi<Periode>(['periode-ref'], '/akademik/ref/periode');
 
 // ============================================================
 // Akreditasi dashboard

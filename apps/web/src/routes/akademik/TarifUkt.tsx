@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Alert, Badge, Button, Card, Input, Select } from '@/ds';
 import { Plus, Trash2, ClipboardEdit, Wallet } from 'lucide-react';
-import { useKategoriUkt, useKategoriUktActions, useProdi, type KategoriUkt } from '@/lib/queries-akademik';
+import { useKategoriUkt, useKategoriUktActions, useProdiRef, type KategoriUkt } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { formatRupiah } from '@/lib/format';
@@ -10,7 +10,7 @@ import { ApiError } from '@/lib/api';
 export function AkademikTarifUkt() {
   const [prodiFilter, setProdiFilter] = useState('');
   const { data, isLoading, error } = useKategoriUkt(prodiFilter || undefined);
-  const prodi = useProdi();
+  const prodi = useProdiRef();
   const actions = useKategoriUktActions();
   const [createOpen, setCreateOpen] = useState(false);
   const [editFor, setEditFor] = useState<KategoriUkt | null>(null);
@@ -117,7 +117,7 @@ function KategoriUktModal({ open, onClose, onSubmit, initial, title }: {
   initial?: KategoriUkt;
   title: string;
 }) {
-  const prodi = useProdi();
+  const prodi = useProdiRef();
   const [form, setForm] = useState({
     prodiId: initial?.prodiId ?? '',
     kode: initial?.kode ?? '',

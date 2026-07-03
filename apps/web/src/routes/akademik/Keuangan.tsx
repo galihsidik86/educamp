@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Alert, Button, Card, Input, Select } from '@/ds';
 import { Plus, Trash2, Receipt, Users } from 'lucide-react';
 import {
-  useAkademikTagihan, useKeuanganActions, useProdi, usePeriode,
+  useAkademikTagihan, useKeuanganActions, useProdiRef, usePeriodeRef,
   type AkademikTagihan, type BulkTagihanInput, type PembayaranInput,
 } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
@@ -111,8 +111,8 @@ export function AdminKeuangan() {
 }
 
 function BulkModal({ onClose }: { onClose: () => void }) {
-  const periode = usePeriode();
-  const prodi = useProdi();
+  const periode = usePeriodeRef();
+  const prodi = useProdiRef();
   const aktif = periode.data?.items.flatMap((ta) => ta.semester).find((s) => s.isAktif);
   const actions = useKeuanganActions();
   const [form, setForm] = useState<Partial<BulkTagihanInput>>({

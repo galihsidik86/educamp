@@ -19,7 +19,7 @@ import {
   useStandarMutu, useStandarMutuActions,
   type StandarMutu, type KategoriStandar, type SumberDataStandar, type StatusPencapaian,
 } from '@/lib/queries-spmi';
-import { useProdi } from '@/lib/queries-akademik';
+import { useProdiRef as useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { ApiError } from '@/lib/api';
