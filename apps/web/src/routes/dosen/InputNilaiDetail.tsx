@@ -344,11 +344,11 @@ export function DosenInputNilaiDetail() {
         onClose={() => setImportOpen(false)}
         title={`Import Nilai · ${k.kodeMK} ${k.kodeKelas}`}
         expectedHeaders={['nim']}
-        optionalHeaders={['tugas', 'uts', 'uas', 'praktikum', 'kehadiran', 'nilaiAngka', 'status']}
+        optionalHeaders={['nama', 'tugas', 'uts', 'uas', 'praktikum', 'kehadiran', 'nilaiAngka', 'status']}
         templateFilename={`template-nilai-${k.kodeMK}-${k.kodeKelas}.xlsx`}
         keyHeader="NIM"
-        notes={<>Nilai komponen 0–100. <code>nilaiAngka</code> opsional — kalau diisi, huruf & bobot dihitung otomatis. <code>status</code>: belum/draft/finalized (default <code>draft</code>; <code>finalized</code> wajib punya nilaiAngka).</>}
-        sampleRows={data.peserta.slice(0, 3).map((p) => ({ nim: p.mahasiswa.nim, tugas: 80, uts: 75, uas: 78, kehadiran: 95 }))}
+        notes={<>Template sudah berisi <strong>{data.peserta.length} mahasiswa peserta kelas ini</strong> — Anda tinggal isi nilai per kolom. Skor komponen 0–100. Kolom <code>nama</code> hanya referensi (tidak diproses server). <code>nilaiAngka</code> opsional — kalau diisi, huruf & bobot dihitung otomatis. <code>status</code>: belum/draft/finalized (default <code>draft</code>; <code>finalized</code> wajib punya nilaiAngka).</>}
+        sampleRows={data.peserta.map((p) => ({ nim: p.mahasiswa.nim, nama: p.mahasiswa.nama }))}
         importMutation={importNilai}
       />
     </div>

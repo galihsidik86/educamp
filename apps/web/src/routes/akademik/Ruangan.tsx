@@ -117,6 +117,7 @@ export function AkademikRuangan() {
         optionalHeaders={['gedung', 'lantai', 'kapasitas']}
         templateFilename="template-ruangan.xlsx"
         keyHeader="Kode"
+        notes={<><code>kode</code> unik (mis. R-101, LAB-1). <code>lantai</code> integer (0 utk lantai dasar). <code>kapasitas</code> jumlah kursi (default 0 — bisa dipakai untuk ruang non-kuliah spt ruang rapat).</>}
         sampleRows={[
           { kode: 'R-101', nama: 'Ruang 101', gedung: 'A', lantai: 1, kapasitas: 40 },
           { kode: 'LAB-1', nama: 'Laboratorium Komputer 1', gedung: 'B', lantai: 1, kapasitas: 30 },

@@ -75,6 +75,7 @@ export function AdminFakultas() {
         expectedHeaders={['kode', 'nama']}
         templateFilename="template-fakultas.xlsx"
         keyHeader="Kode"
+        notes={<><code>kode</code> singkat & unik (mis. FTI, FEB); <code>nama</code> lengkap sesuai statuta. Fakultas jadi induk Program Studi.</>}
         sampleRows={[
           { kode: 'FTI', nama: 'Fakultas Teknologi Informasi' },
           { kode: 'FEB', nama: 'Fakultas Ekonomi & Bisnis' },
