@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth, requireRole, requireAkademikSubRole } from '../../middleware/auth.js';
+import { requireAuth, requireRole, subRoleGate } from '../../middleware/auth.js';
 import { writeLimiter } from '../../middleware/rateLimit.js';
 import { profilRouter } from './profil.js';
 import { dashboardRouter } from './dashboard.js';
@@ -75,56 +75,57 @@ akademikRouter.use(refRouter);
 
 // Akademik core — administrasi mahasiswa, dosen, kurikulum, kelas.
 // 'prodi' boleh akses modul yang punya scope filter (auto-filter
-// per prodi-nya).
-akademikRouter.use(requireAkademikSubRole('akademik', 'prodi'), mahasiswaRouter);
-akademikRouter.use(requireAkademikSubRole('akademik', 'prodi'), dosenRouter);
-akademikRouter.use(requireAkademikSubRole('akademik', 'prodi'), kurikulumRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), periodeRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), krsRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), suratRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), waliAdminRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), mutasiRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), skpiRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), skripsiRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), yudisiumRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), edomRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), kknRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), mbkmRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), bkdAdminRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), ewsRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), prestasiAdminRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), sertifikasiAdminRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), feederRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), skalaNilaiRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), laporanRouter);
+// per prodi-nya). subRoleGate = path-scoped supaya middleware tidak
+// salah blok request untuk router lain di rantai berikutnya.
+akademikRouter.use(subRoleGate(['/mahasiswa', '/pddikti'], 'akademik', 'prodi'), mahasiswaRouter);
+akademikRouter.use(subRoleGate(['/dosen'], 'akademik', 'prodi'), dosenRouter);
+akademikRouter.use(subRoleGate(['/fakultas', '/prodi', '/mata-kuliah', '/kelas', '/ruangan'], 'akademik', 'prodi'), kurikulumRouter);
+akademikRouter.use(subRoleGate(['/periode'], 'akademik'), periodeRouter);
+akademikRouter.use(subRoleGate(['/krs'], 'akademik'), krsRouter);
+akademikRouter.use(subRoleGate(['/surat'], 'akademik'), suratRouter);
+akademikRouter.use(subRoleGate(['/wali'], 'akademik'), waliAdminRouter);
+akademikRouter.use(subRoleGate(['/mutasi'], 'akademik'), mutasiRouter);
+akademikRouter.use(subRoleGate(['/skpi'], 'akademik'), skpiRouter);
+akademikRouter.use(subRoleGate(['/skripsi'], 'akademik'), skripsiRouter);
+akademikRouter.use(subRoleGate(['/yudisium', '/periode-wisuda'], 'akademik'), yudisiumRouter);
+akademikRouter.use(subRoleGate(['/edom'], 'akademik'), edomRouter);
+akademikRouter.use(subRoleGate(['/kkn'], 'akademik'), kknRouter);
+akademikRouter.use(subRoleGate(['/mbkm'], 'akademik'), mbkmRouter);
+akademikRouter.use(subRoleGate(['/bkd'], 'akademik'), bkdAdminRouter);
+akademikRouter.use(subRoleGate(['/ews'], 'akademik'), ewsRouter);
+akademikRouter.use(subRoleGate(['/prestasi'], 'akademik'), prestasiAdminRouter);
+akademikRouter.use(subRoleGate(['/sertifikasi'], 'akademik'), sertifikasiAdminRouter);
+akademikRouter.use(subRoleGate(['/feeder'], 'akademik'), feederRouter);
+akademikRouter.use(subRoleGate(['/skala-nilai'], 'akademik'), skalaNilaiRouter);
+akademikRouter.use(subRoleGate(['/laporan'], 'akademik'), laporanRouter);
 // Phase 2 PDDikti
-akademikRouter.use(requireAkademikSubRole('akademik', 'prodi'), akmRouter);
-akademikRouter.use(requireAkademikSubRole('akademik'), aktivitasMhsRouter);
-akademikRouter.use(requireAkademikSubRole('akademik', 'prodi'), dayaTampungRouter);
+akademikRouter.use(subRoleGate(['/akm'], 'akademik', 'prodi'), akmRouter);
+akademikRouter.use(subRoleGate(['/aktivitas-mahasiswa'], 'akademik'), aktivitasMhsRouter);
+akademikRouter.use(subRoleGate(['/daya-tampung'], 'akademik', 'prodi'), dayaTampungRouter);
 
 // Keuangan — tagihan, pembayaran, UKT, heregistrasi, beasiswa
-akademikRouter.use(requireAkademikSubRole('keuangan'), keuanganRouter);
-akademikRouter.use(requireAkademikSubRole('keuangan'), kategoriUktRouter);
-akademikRouter.use(requireAkademikSubRole('keuangan'), heregistrasiAdminRouter);
-akademikRouter.use(requireAkademikSubRole('keuangan'), beasiswaRouter);
+akademikRouter.use(subRoleGate(['/keuangan'], 'keuangan'), keuanganRouter);
+akademikRouter.use(subRoleGate(['/kategori-ukt'], 'keuangan'), kategoriUktRouter);
+akademikRouter.use(subRoleGate(['/heregistrasi'], 'keuangan'), heregistrasiAdminRouter);
+akademikRouter.use(subRoleGate(['/beasiswa'], 'keuangan'), beasiswaRouter);
 
 // Prodi — akreditasi, OBE (akademik core juga bisa)
-akademikRouter.use(requireAkademikSubRole('akademik', 'prodi'), akreditasiRouter);
-akademikRouter.use(requireAkademikSubRole('akademik', 'prodi'), obeRouter);
+akademikRouter.use(subRoleGate(['/akreditasi'], 'akademik', 'prodi'), akreditasiRouter);
+akademikRouter.use(subRoleGate(['/obe', '/cpl', '/cpmk'], 'akademik', 'prodi'), obeRouter);
 
 // SPMI — penjaminan mutu (standar, AMI, RTM, survei)
-akademikRouter.use(requireAkademikSubRole('spmi'), spmiStandarRouter);
-akademikRouter.use(requireAkademikSubRole('spmi'), spmiAmiRouter);
-akademikRouter.use(requireAkademikSubRole('spmi'), spmiRtmRouter);
-akademikRouter.use(requireAkademikSubRole('spmi'), spmiSurveiRouter);
-akademikRouter.use(requireAkademikSubRole('spmi'), spmiDashboardRouter);
-akademikRouter.use(requireAkademikSubRole('spmi'), spmiLaporanRouter);
+akademikRouter.use(subRoleGate(['/spmi'], 'spmi'), spmiStandarRouter);
+akademikRouter.use(subRoleGate(['/spmi'], 'spmi'), spmiAmiRouter);
+akademikRouter.use(subRoleGate(['/spmi'], 'spmi'), spmiRtmRouter);
+akademikRouter.use(subRoleGate(['/spmi'], 'spmi'), spmiSurveiRouter);
+akademikRouter.use(subRoleGate(['/spmi'], 'spmi'), spmiDashboardRouter);
+akademikRouter.use(subRoleGate(['/spmi'], 'spmi'), spmiLaporanRouter);
 
 // Super admin only — manage akun, institusi, audit, dokumen, sertifikat,
-// oversight. Pakai sub-role kosong supaya hanya super_admin yang lolos.
-akademikRouter.use(requireAkademikSubRole(), usersRouter);
-akademikRouter.use(requireAkademikSubRole(), institusiAdminRouter);
-akademikRouter.use(requireAkademikSubRole(), auditRouter);
-akademikRouter.use(requireAkademikSubRole(), oversightRouter);
-akademikRouter.use(requireAkademikSubRole(), dokumenAdminRouter);
-akademikRouter.use(requireAkademikSubRole(), sertifikatAdminRouter);
+// oversight. subRoleGate tanpa allowed → hanya super_admin yang lolos.
+akademikRouter.use(subRoleGate(['/users']), usersRouter);
+akademikRouter.use(subRoleGate(['/institusi']), institusiAdminRouter);
+akademikRouter.use(subRoleGate(['/audit']), auditRouter);
+akademikRouter.use(subRoleGate(['/konsultasi', '/penelitian', '/pengabdian']), oversightRouter);
+akademikRouter.use(subRoleGate(['/dokumen']), dokumenAdminRouter);
+akademikRouter.use(subRoleGate(['/sertifikat']), sertifikatAdminRouter);

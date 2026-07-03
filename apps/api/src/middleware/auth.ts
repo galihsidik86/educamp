@@ -55,3 +55,20 @@ export const requireAkademikSubRole = (...allowed: AkademikSubRole[]): RequestHa
     next(err);
   }
 };
+
+/**
+ * Path-scoped variant. Hanya jalankan sub-role check kalau `req.path` cocok
+ * dengan salah satu prefix. Kalau tidak cocok, langsung `next()` — request
+ * tidak diblok. Dipakai di `akademikRouter.use(gate, someRouter)` supaya
+ * middleware tidak salah blok request yang seharusnya ditangani router lain
+ * di rantai berikutnya.
+ */
+export const subRoleGate = (paths: string[], ...allowed: AkademikSubRole[]): RequestHandler => {
+  const check = requireAkademikSubRole(...allowed);
+  return (req, res, next) => {
+    const p = req.path;
+    const matches = paths.some((prefix) => p === prefix || p.startsWith(prefix + '/'));
+    if (!matches) return next();
+    return check(req, res, next);
+  };
+};
