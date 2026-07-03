@@ -6,6 +6,7 @@ import { useAkademikDashboard } from '@/lib/queries-akademik';
 import { DashboardHero } from '@/components/DashboardHero';
 import { PengumumanWidget } from '@/components/PengumumanWidget';
 import { formatRupiah } from '@/lib/format';
+import { ApiError } from '@/lib/api';
 
 export function AkademikDashboard() {
   const { state } = useAuth();
@@ -22,7 +23,14 @@ export function AkademikDashboard() {
         right={a.jabatan ? <>{a.jabatan}</> : <>Bagian Akademik</>}
       />
 
-      {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
+      {error && error instanceof ApiError && error.status === 404 && /semester aktif/i.test(error.message) ? (
+        <Alert variant="info" title="Belum ada semester aktif">
+          Dashboard butuh semester aktif untuk menampilkan KPI. Buat Tahun Ajaran &amp; Semester (centang "Aktif") di menu{' '}
+          <Link to="/akademik/periode" style={{ color: 'var(--text-link)' }}>Periode KRS</Link> dulu. Setelah itu semua menu operasional akan tersedia.
+        </Alert>
+      ) : error ? (
+        <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>
+      ) : null}
 
       {data && data.krsPending > 0 && (
         <Alert variant="warning" title={`${data.krsPending} KRS menunggu validasi`}>
