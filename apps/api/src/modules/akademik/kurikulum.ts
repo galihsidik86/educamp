@@ -199,6 +199,8 @@ kurikulumRouter.post('/prodi/import', async (req, res) => {
 // Mata Kuliah
 // ============================================================
 
+const KELOMPOK_MATKUL = ['MKWU', 'MKDK', 'MKWK', 'MKK', 'MKB', 'MPK'] as const;
+
 const mkSchema = z.object({
   kode: z.string().min(2).max(20),
   nama: z.string().min(2).max(120),
@@ -207,6 +209,7 @@ const mkSchema = z.object({
   sksTeori: z.number().int().min(0).max(10).default(0),
   sksPraktik: z.number().int().min(0).max(10).default(0),
   jenis: z.enum(['wajib_universitas', 'wajib_prodi', 'pilihan']).default('wajib_prodi'),
+  kelompokMatkul: z.enum(KELOMPOK_MATKUL).nullish(),
   prodiId: z.string().uuid(),
 });
 
@@ -243,6 +246,7 @@ const mkImportRowSchema = z.object({
   sksTeori: z.coerce.number().int().min(0).max(10).optional().default(0),
   sksPraktik: z.coerce.number().int().min(0).max(10).optional().default(0),
   jenis: z.enum(['wajib_universitas', 'wajib_prodi', 'pilihan']).optional().default('wajib_prodi'),
+  kelompokMatkul: z.enum(KELOMPOK_MATKUL).optional().nullable(),
   prodiKode: z.string().min(1),
 });
 const mkImportBodySchema = z.object({
@@ -298,6 +302,7 @@ kurikulumRouter.post('/mata-kuliah/import', async (req, res) => {
           namaInggris: r.namaInggris ?? null,
           sks: r.sks, sksTeori: r.sksTeori, sksPraktik: r.sksPraktik,
           jenis: r.jenis,
+          kelompokMatkul: r.kelompokMatkul ?? null,
           prodiId,
         },
       });

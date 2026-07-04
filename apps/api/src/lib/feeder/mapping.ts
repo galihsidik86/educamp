@@ -284,7 +284,7 @@ export function mapMataKuliahToFeeder(mk: {
   // Phase 2
   linkRps?: string | null;
   bidangIlmu?: string | null;
-  kelompokMatkul?: string | null;
+  kelompokMatkul?: 'MKWU' | 'MKDK' | 'MKWK' | 'MKK' | 'MKB' | 'MPK' | null;
   deskripsi?: string | null;
   feederId?: string | null;
 }) {

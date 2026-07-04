@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Alert, Button, Input, Select } from '@/ds';
 import { Plus, Pencil, Trash2, Upload, Download } from 'lucide-react';
-import { useMataKuliah, useMkActions, useProdi, type Mk, type MkInput, type MkImportResult } from '@/lib/queries-akademik';
+import { useMataKuliah, useMkActions, useProdi, KELOMPOK_MATKUL, type Mk, type MkInput, type MkImportResult } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { ApiError } from '@/lib/api';
@@ -10,7 +10,7 @@ import { parseXlsxFile, downloadXlsxTemplate } from '@/lib/xlsx';
 
 const JENIS = ['wajib_universitas', 'wajib_prodi', 'pilihan'] as const;
 const MK_EXPECTED_HEADERS = ['kode', 'nama', 'sks', 'prodiKode'] as const;
-const MK_OPTIONAL_HEADERS = ['namaInggris', 'sksTeori', 'sksPraktik', 'jenis'] as const;
+const MK_OPTIONAL_HEADERS = ['namaInggris', 'sksTeori', 'sksPraktik', 'jenis', 'kelompokMatkul'] as const;
 
 export function AdminMataKuliah() {
   const [filters, setFilters] = useState({ q: '', prodiId: '' });
@@ -58,19 +58,20 @@ export function AdminMataKuliah() {
         <table className="tz-table">
           <thead>
             <tr>
-              <th>Kode</th><th>Nama MK</th><th>Prodi</th><th>Jenis</th>
+              <th>Kode</th><th>Nama MK</th><th>Prodi</th><th>Jenis</th><th>Kelompok</th>
               <th className="num">SKS</th><th className="num">Teori</th><th className="num">Praktik</th><th></th>
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={8} className="muted center">Memuat…</td></tr>}
-            {data?.items.length === 0 && <tr><td colSpan={8} className="muted center">Tidak ada data.</td></tr>}
+            {isLoading && <tr><td colSpan={9} className="muted center">Memuat…</td></tr>}
+            {data?.items.length === 0 && <tr><td colSpan={9} className="muted center">Tidak ada data.</td></tr>}
             {data?.items.map((m) => (
               <tr key={m.id}>
                 <td className="mono">{m.kode}</td>
                 <td>{m.nama}{m.namaInggris && <div className="muted" style={{ fontSize: 'var(--text-2xs)' }}>{m.namaInggris}</div>}</td>
                 <td>{m.prodi.nama}</td>
                 <td>{formatStatus(m.jenis)}</td>
+                <td className="mono">{m.kelompokMatkul ?? <span className="muted">—</span>}</td>
                 <td className="num">{m.sks}</td>
                 <td className="num">{m.sksTeori}</td>
                 <td className="num">{m.sksPraktik}</td>
@@ -152,7 +153,8 @@ function MkImportModal({ open, onClose, importMutation }: {
         <Alert variant="info" title="Format Excel (.xlsx)">
           Header wajib: <code>{MK_EXPECTED_HEADERS.join(', ')}</code>.<br />
           Header opsional: <code>{MK_OPTIONAL_HEADERS.join(', ')}</code>.<br />
-          Prodi diidentifikasi via <code>prodiKode</code>. Jenis: <code>wajib_universitas</code> / <code>wajib_prodi</code> / <code>pilihan</code> (default <code>wajib_prodi</code>).
+          Prodi diidentifikasi via <code>prodiKode</code>. Jenis: <code>wajib_universitas</code> / <code>wajib_prodi</code> / <code>pilihan</code> (default <code>wajib_prodi</code>).<br />
+          Kelompok MK (opsional): <code>MKWU</code> / <code>MKDK</code> / <code>MKWK</code> / <code>MKK</code> / <code>MKB</code> / <code>MPK</code>.
         </Alert>
 
         <div>
@@ -165,8 +167,8 @@ function MkImportModal({ open, onClose, importMutation }: {
               'template-mata-kuliah.xlsx',
               [...MK_EXPECTED_HEADERS, ...MK_OPTIONAL_HEADERS],
               [
-                { kode: 'IF-3201', nama: 'Algoritma Lanjut', sks: 3, prodiKode: '55201', namaInggris: 'Advanced Algorithms', sksTeori: 2, sksPraktik: 1, jenis: 'wajib_prodi' },
-                { kode: 'IF-3202', nama: 'Big Data', sks: 3, prodiKode: '55201', sksTeori: 3, sksPraktik: 0, jenis: 'pilihan' },
+                { kode: 'IF-3201', nama: 'Algoritma Lanjut', sks: 3, prodiKode: '55201', namaInggris: 'Advanced Algorithms', sksTeori: 2, sksPraktik: 1, jenis: 'wajib_prodi', kelompokMatkul: 'MKK' },
+                { kode: 'IF-3202', nama: 'Big Data', sks: 3, prodiKode: '55201', sksTeori: 3, sksPraktik: 0, jenis: 'pilihan', kelompokMatkul: 'MKB' },
               ],
             )}
           >
@@ -262,6 +264,7 @@ function MkModal({ mode, initial, onClose, onSubmit }: {
     sksTeori: initial?.sksTeori ?? 3,
     sksPraktik: initial?.sksPraktik ?? 0,
     jenis: (initial?.jenis as any) ?? 'wajib_prodi',
+    kelompokMatkul: initial?.kelompokMatkul ?? null,
     prodiId: initialProdiId,
   });
   const [err, setErr] = useState<string | null>(null);
@@ -307,6 +310,19 @@ function MkModal({ mode, initial, onClose, onSubmit }: {
           <div style={{ flex: 1 }}>
             <Select label="Jenis" value={form.jenis} onChange={(e) => setForm({ ...form, jenis: (e.target as HTMLSelectElement).value as MkInput['jenis'] })}>
               {JENIS.map((j) => <option key={j} value={j}>{formatStatus(j)}</option>)}
+            </Select>
+          </div>
+          <div style={{ flex: 1 }}>
+            <Select
+              label="Kelompok MK"
+              value={form.kelompokMatkul ?? ''}
+              onChange={(e) => {
+                const v = (e.target as HTMLSelectElement).value;
+                setForm({ ...form, kelompokMatkul: v === '' ? null : (v as MkInput['kelompokMatkul']) });
+              }}
+            >
+              <option value="">— tidak ditentukan —</option>
+              {KELOMPOK_MATKUL.map((k) => <option key={k} value={k}>{k}</option>)}
             </Select>
           </div>
           <div style={{ flex: 2 }}>

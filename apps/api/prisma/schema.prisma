@@ -498,6 +498,22 @@ enum JenisMK {
   pilihan
 }
 
+// Kelompok Mata Kuliah — klasifikasi kurikulum (independen dari jenis wajib/pilihan).
+// MKWU = Wajib Umum (Agama, Pancasila, Kewarganegaraan, B.Indo — Kemendikbud)
+// MKDK = Dasar Kependidikan/Keahlian
+// MKWK = Wajib Kurikulum/Kompetensi
+// MKK  = Keilmuan dan Keterampilan
+// MKB  = Keahlian Berkarya
+// MPK  = Pengembangan Kepribadian
+enum KelompokMatkul {
+  MKWU
+  MKDK
+  MKWK
+  MKK
+  MKB
+  MPK
+}
+
 model MataKuliah {
   id          String                @id @default(uuid())
   kode        String                @unique // "IF-3101"
@@ -515,7 +531,7 @@ model MataKuliah {
   // PDDikti Phase 2 — IKU 7 + Kelompok MK
   linkRps        String?            @db.Text  // URL RPS untuk reporting IKU 7
   bidangIlmu     String?                      // Bidang ilmu PDDikti
-  kelompokMatkul String?                      // MKWU/MKWK/MKK/MKB/MPK/dst
+  kelompokMatkul KelompokMatkul?              // MKWU/MKDK/MKWK/MKK/MKB/MPK
   deskripsi      String?            @db.Text  // ringkasan substansi
 
   kurikulum     MataKuliahKurikulum[]

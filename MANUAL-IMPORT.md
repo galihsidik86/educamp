@@ -203,8 +203,22 @@ Untuk konsistensi dengan Neo Feeder, gunakan kode PDDikti resmi (5 digit) — mi
 | `sksTeori` | ⬜ | angka | 0–10, default 0 | `2` |
 | `sksPraktik` | ⬜ | angka | 0–10, default 0 | `1` |
 | `jenis` | ⬜ | enum | lihat bawah | `wajib_prodi` |
+| `kelompokMatkul` | ⬜ | enum | lihat bawah | `MKK` |
 
 **Nilai `jenis` yang valid**: `wajib_universitas`, `wajib_prodi` (default), `pilihan`.
+
+**Nilai `kelompokMatkul` yang valid** (opsional, kosongkan kalau tidak ditentukan):
+
+| Kode | Kepanjangan |
+|---|---|
+| `MKWU` | Mata Kuliah Wajib Umum (Agama, Pancasila, Kewarganegaraan, B. Indonesia) |
+| `MKDK` | Mata Kuliah Dasar Kependidikan/Keahlian |
+| `MKWK` | Mata Kuliah Wajib Kurikulum/Kompetensi |
+| `MKK`  | Mata Kuliah Keilmuan dan Keterampilan |
+| `MKB`  | Mata Kuliah Keahlian Berkarya |
+| `MPK`  | Mata Kuliah Pengembangan Kepribadian |
+
+> Catatan: `jenis` (wajib/pilihan) dan `kelompokMatkul` adalah dua klasifikasi terpisah. Contoh: MK Pancasila umumnya `jenis=wajib_universitas` **dan** `kelompokMatkul=MKWU`.
 
 ### Aturan penting
 

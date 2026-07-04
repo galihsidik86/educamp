@@ -370,9 +370,12 @@ export function useKategoriUktActions() {
   };
 }
 
+export const KELOMPOK_MATKUL = ['MKWU', 'MKDK', 'MKWK', 'MKK', 'MKB', 'MPK'] as const;
+export type KelompokMatkul = typeof KELOMPOK_MATKUL[number];
 export type Mk = {
   id: string; kode: string; nama: string; namaInggris: string | null;
   sks: number; sksTeori: number; sksPraktik: number; jenis: string;
+  kelompokMatkul?: KelompokMatkul | null;
   prodi: { kode: string; nama: string };
 };
 export const useMataKuliah = (filters: { q?: string; prodiId?: string } = {}) => {
@@ -386,6 +389,7 @@ export type MkInput = {
   kode: string; nama: string; namaInggris?: string;
   sks: number; sksTeori?: number; sksPraktik?: number;
   jenis?: 'wajib_universitas' | 'wajib_prodi' | 'pilihan';
+  kelompokMatkul?: KelompokMatkul | null;
   prodiId: string;
 };
 export function useMkActions() {
