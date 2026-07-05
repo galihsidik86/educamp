@@ -1,0 +1,3 @@
+# Shell script WAJIB LF — server Linux menjalankannya via bash; CRLF bikin
+# error "$'\r': command not found" dan deploy gagal diam-diam.
+*.sh text eol=lf
