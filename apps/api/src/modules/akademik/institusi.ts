@@ -31,7 +31,7 @@ const updateSchema = z.object({
 
 institusiAdminRouter.get('/institusi', async (_req, res) => {
   const cfg = await prisma.institusiConfig.findUnique({ where: { id: SINGLETON } });
-  res.json(cfg ?? { id: SINGLETON, nama: 'Institut Agama Islam Tazkia' });
+  res.json(cfg ?? { id: SINGLETON, nama: 'STMIK Tazkia' });
 });
 
 institusiAdminRouter.patch('/institusi', async (req, res) => {
@@ -63,7 +63,7 @@ institusiPublicRouter.get('/institusi', async (_req, res) => {
   const cfg = await prisma.institusiConfig.findUnique({ where: { id: SINGLETON } });
   if (!cfg) {
     return res.json({
-      nama: 'Institut Agama Islam Tazkia',
+      nama: 'STMIK Tazkia',
       namaPendek: null,
       tagline: null,
       logoUrl: null,

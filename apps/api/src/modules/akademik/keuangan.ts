@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { dateString, httpUrl } from '../../lib/validators.js';
 import { prisma } from '../../db.js';
 import { getAkademikForUser } from '../../lib/context.js';
 import { BadRequest, NotFound } from '../../lib/errors.js';
@@ -174,9 +175,9 @@ keuanganRouter.delete('/keuangan/tagihan/:id', async (req, res) => {
 const pembayaranSchema = z.object({
   tagihanId: z.string().uuid(),
   jumlah: z.number().positive(),
-  tanggalBayar: z.string(),
+  tanggalBayar: dateString,
   metode: z.enum(METODE),
-  buktiUrl: z.string().url().optional(),
+  buktiUrl: httpUrl.optional(),
   catatan: z.string().max(500).optional(),
 });
 

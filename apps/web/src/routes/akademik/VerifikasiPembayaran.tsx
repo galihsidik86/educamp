@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { safeHref } from '../../lib/format';
 import { Alert, Badge, Button, Card, Input, Select } from '@/ds';
 import { CheckCircle2, XCircle, Search, Wallet, Banknote } from 'lucide-react';
 import { useAdminPembayaran, useKeuanganActions, type PembayaranAdmin } from '@/lib/queries-akademik';
@@ -125,9 +126,9 @@ export function AkademikVerifikasiPembayaran() {
                 )}
               </div>
 
-              {p.buktiUrl && (
+              {safeHref(p.buktiUrl) && (
                 <div style={{ marginTop: 'var(--space-2)' }}>
-                  <a href={p.buktiUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-sm)' }}>
+                  <a href={safeHref(p.buktiUrl)!} target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-sm)' }}>
                     📎 Buka bukti pembayaran
                   </a>
                 </div>

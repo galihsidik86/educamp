@@ -37,7 +37,7 @@ spmiLaporanRouter.get('/spmi/laporan/standar', async (req, res) => {
 
   res.json({
     periode,
-    institusi: 'Institut Agama Islam Tazkia',
+    institusi: 'STMIK Tazkia',
     totalStandar: standar.length,
     ringkasan,
     persenTercapai: standar.length > 0 ? Math.round((ringkasan.tercapai / standar.length) * 100) : 0,
@@ -135,7 +135,7 @@ spmiLaporanRouter.get('/spmi/laporan/ppepp', async (req, res) => {
 
   res.json({
     periode,
-    institusi: 'Institut Agama Islam Tazkia',
+    institusi: 'STMIK Tazkia',
     generatedAt: new Date().toISOString(),
     penetapan: {
       totalStandar: standar.length,

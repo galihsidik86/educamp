@@ -55,7 +55,19 @@ export async function refresh(refreshToken: string) {
   }
 
   const row = await prisma.refreshToken.findUnique({ where: { id: payload.jti } });
-  if (!row || row.revokedAt) throw Unauthorized('Sesi telah berakhir, silakan login ulang');
+  // Reuse detection: token yang sudah dirotasi (revokedAt terisi) tidak
+  // seharusnya pernah muncul lagi. Kalau muncul, salah satu dari dua salinan
+  // (pemilik asli atau pencuri) sedang dipakai ulang — kita tidak tahu yang
+  // mana, jadi matikan SEMUA sesi user ini dan paksa login ulang. Tanpa ini,
+  // pencuri yang lebih dulu me-rotate token tetap memegang sesi valid 30 hari.
+  if (row?.revokedAt) {
+    await prisma.refreshToken.updateMany({
+      where: { userId: row.userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    throw Unauthorized('Sesi telah berakhir, silakan login ulang');
+  }
+  if (!row) throw Unauthorized('Sesi telah berakhir, silakan login ulang');
   if (row.tokenHash !== hashToken(refreshToken)) throw Unauthorized('Refresh token tidak cocok');
   if (row.expiresAt < new Date()) throw Unauthorized('Refresh token kedaluwarsa');
 

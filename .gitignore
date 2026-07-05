@@ -47,3 +47,7 @@ docker/mysql-data/
 
 # Project artifacts (one-off exports)
 Tazkia SIAKAD Design System.zip
+
+# jangan pernah commit token/kredensial hasil debug
+tok.txt
+login.json

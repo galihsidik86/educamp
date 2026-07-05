@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { httpUrl } from '../../lib/validators.js';
 import { prisma } from '../../db.js';
 import { BadRequest, Conflict, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
@@ -173,7 +174,7 @@ const temuanSchema = z.object({
   kategori: z.enum(KATEGORI_TEMUAN),
   standarId: z.string().uuid().optional().nullable(),
   deskripsi: z.string().min(5).max(5000),
-  buktiUrl: z.string().max(2000).optional().nullable(),
+  buktiUrl: httpUrl.optional().nullable(),
   rekomendasi: z.string().max(5000).optional().nullable(),
 });
 

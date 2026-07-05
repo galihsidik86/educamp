@@ -36,8 +36,11 @@ export function createApp(): Express {
   app.use(
     cors({
       origin: (origin, cb) => {
+        // Origin di luar allow-list cukup diblok (tanpa header CORS) —
+        // melempar Error di sini membuat setiap probe lintas-origin
+        // menjadi 500 INTERNAL_ERROR yang mengotori log & monitoring.
         if (!origin || env.CORS_ORIGINS_LIST.includes(origin)) return cb(null, true);
-        return cb(new Error(`CORS: origin ${origin} tidak diizinkan`));
+        return cb(null, false);
       },
       credentials: true,
     }),

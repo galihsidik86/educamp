@@ -53,10 +53,12 @@ verifikasiRouter.get('/:token', rateLimitVerifikasi, async (req, res) => {
 
   // Tampilkan data publik saja — TIDAK expose: alamat, email, telepon,
   // catatan internal, atau detail nilai per-MK.
+  const cfg = await prisma.institusiConfig.findFirst({ select: { nama: true } });
+
   res.json({
     valid: true,
     institusi: {
-      nama: 'Institut Agama Islam Tazkia',
+      nama: cfg?.nama ?? 'STMIK Tazkia',
       fakultas: y.mahasiswa.prodi.fakultas.nama,
     },
     lulusan: {
@@ -107,10 +109,12 @@ verifikasiRouter.get('/sertifikat/:token', rateLimitVerifikasi, async (req, res)
   if (!s) throw NotFound('Sertifikat tidak ditemukan');
   if (s.status !== 'terbit') throw NotFound('Sertifikat sudah tidak berlaku');
 
+  const cfg = await prisma.institusiConfig.findFirst({ select: { nama: true } });
+
   res.json({
     valid: true,
     institusi: {
-      nama: 'Institut Agama Islam Tazkia',
+      nama: cfg?.nama ?? 'STMIK Tazkia',
       fakultas: s.mahasiswa.prodi.fakultas.nama,
     },
     sertifikat: {

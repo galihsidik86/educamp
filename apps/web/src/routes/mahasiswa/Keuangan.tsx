@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { safeHref } from '../../lib/format';
 import { Alert, Badge, Button, Card, Input, Select, StatCard } from '@/ds';
 import { Wallet, CheckCircle2, AlertCircle, Upload, Trash2, FileCheck, Clock, XCircle } from 'lucide-react';
 import { useKeuangan, useKeuanganActions, type Tagihan, type UploadBuktiBody } from '@/lib/queries';
@@ -98,9 +99,9 @@ export function MahasiswaKeuangan() {
                       {p.bankPenerima && <>Ke: {p.bankPenerima}</>}
                     </div>
                   )}
-                  {p.buktiUrl && (
+                  {safeHref(p.buktiUrl) && (
                     <div style={{ fontSize: 'var(--text-xs)', marginTop: 2 }}>
-                      <a href={p.buktiUrl} target="_blank" rel="noopener noreferrer">📎 Bukti</a>
+                      <a href={safeHref(p.buktiUrl)!} target="_blank" rel="noopener noreferrer">📎 Bukti</a>
                     </div>
                   )}
                   {p.status === 'ditolak' && p.catatanValidasi && (

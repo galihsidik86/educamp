@@ -284,20 +284,33 @@ krsRouter.post('/krs/items', async (req, res) => {
 
   // Jika sebelumnya pernah ditolak/drop untuk kelas yang sama, reuse record-nya.
   // Unique constraint (mahasiswaId, kelasId) mencegah create record duplikat.
+  //
+  // Kapasitas dicek ulang DI DALAM transaksi dengan row-lock pada baris
+  // Kelas (SELECT ... FOR UPDATE). Pengecekan `_count` di atas hanyalah
+  // fast-path untuk pesan error dini; tanpa lock, dua mahasiswa yang
+  // menambah kursi terakhir bersamaan sama-sama lolos (classic rebutan
+  // kelas saat KRS dibuka).
   const previousDropped = existing.find((e) => e.kelasId === kelas.id && e.status === 'ditolak');
-  const upserted = previousDropped
-    ? await prisma.krs.update({
-        where: { id: previousDropped.id },
-        data: { status: 'draft', catatan: null },
-      })
-    : await prisma.krs.create({
-        data: {
-          mahasiswaId: m.id,
-          semesterId: semester.id,
-          kelasId: kelas.id,
-          status: 'draft',
-        },
-      });
+  const upserted = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM \`Kelas\` WHERE id = ${kelas.id} FOR UPDATE`;
+    const terisi = await tx.krs.count({
+      where: { kelasId: kelas.id, status: { in: ['diajukan', 'disetujui'] } },
+    });
+    if (terisi >= kelas.kapasitas) throw Conflict('Kapasitas kelas penuh');
+    return previousDropped
+      ? tx.krs.update({
+          where: { id: previousDropped.id },
+          data: { status: 'draft', catatan: null },
+        })
+      : tx.krs.create({
+          data: {
+            mahasiswaId: m.id,
+            semesterId: semester.id,
+            kelasId: kelas.id,
+            status: 'draft',
+          },
+        });
+  });
 
   res.status(201).json({ id: upserted.id });
 });
@@ -362,12 +375,43 @@ krsRouter.post('/krs/submit', async (req, res) => {
 
   const drafts = await prisma.krs.findMany({
     where: { mahasiswaId: m.id, semesterId: semester.id, status: 'draft' },
+    include: { kelas: { include: { mataKuliah: true } } },
   });
   if (drafts.length === 0) throw BadRequest('Tidak ada item draft untuk diajukan');
 
-  await prisma.krs.updateMany({
-    where: { mahasiswaId: m.id, semesterId: semester.id, status: 'draft' },
-    data: { status: 'diajukan' },
+  // Kapasitas HARUS dicek saat submit — status `draft` tidak menghitung
+  // kursi, jadi tanpa pengecekan ini semua mahasiswa yang men-draft kursi
+  // terakhir bisa sama-sama submit dan kelas overbooked. Row-lock per
+  // kelas (FOR UPDATE) menserialkan submit yang berebut kelas yang sama;
+  // siapa cepat dia dapat, yang kalah menerima error dengan nama kelasnya.
+  await prisma.$transaction(async (tx) => {
+    const byKelas = new Map<string, { count: number; kapasitas: number; label: string }>();
+    for (const d of drafts) {
+      const cur = byKelas.get(d.kelasId);
+      if (cur) cur.count += 1;
+      else byKelas.set(d.kelasId, {
+        count: 1,
+        kapasitas: d.kelas.kapasitas,
+        label: `${d.kelas.mataKuliah.kode} ${d.kelas.kodeKelas}`,
+      });
+    }
+    // Lock dengan urutan id yang stabil untuk menghindari deadlock antar
+    // transaksi yang mengunci beberapa kelas sekaligus.
+    const kelasIds = [...byKelas.keys()].sort();
+    for (const kelasId of kelasIds) {
+      await tx.$queryRaw`SELECT id FROM \`Kelas\` WHERE id = ${kelasId} FOR UPDATE`;
+      const terisi = await tx.krs.count({
+        where: { kelasId, status: { in: ['diajukan', 'disetujui'] } },
+      });
+      const info = byKelas.get(kelasId)!;
+      if (terisi + info.count > info.kapasitas) {
+        throw Conflict(`Kapasitas kelas ${info.label} sudah penuh — hapus dari KRS lalu pilih kelas lain`);
+      }
+    }
+    await tx.krs.updateMany({
+      where: { mahasiswaId: m.id, semesterId: semester.id, status: 'draft' },
+      data: { status: 'diajukan' },
+    });
   });
   void writeAudit(req, {
     action: 'krs.submit',

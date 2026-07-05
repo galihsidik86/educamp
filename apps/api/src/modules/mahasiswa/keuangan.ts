@@ -4,6 +4,7 @@ import { prisma } from '../../db.js';
 import { getMahasiswaForUser } from '../../lib/context.js';
 import { BadRequest, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
+import { dateString, httpUrl } from '../../lib/validators.js';
 
 export const keuanganRouter = Router();
 
@@ -69,9 +70,9 @@ const METODE = ['transfer_bank', 'va', 'tunai', 'qris', 'ewallet'] as const;
 const uploadBuktiSchema = z.object({
   tagihanId: z.string().uuid(),
   jumlah: z.number().positive(),
-  tanggalBayar: z.string(),
+  tanggalBayar: dateString,
   metode: z.enum(METODE),
-  buktiUrl: z.string().min(5).max(2000),
+  buktiUrl: httpUrl,
   bankPengirim: z.string().max(80).optional().nullable(),
   bankPenerima: z.string().max(80).optional().nullable(),
   noReferensi: z.string().max(80).optional().nullable(),

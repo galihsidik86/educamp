@@ -31,3 +31,20 @@ export const formatStatus = (s: string): string =>
 
 export const formatIp = (n: number | null | undefined): string =>
   n == null ? '—' : n.toFixed(2);
+
+/**
+ * Sanitasi href untuk data URL yang berasal dari input pengguna (mis.
+ * buktiUrl pembayaran). Hanya http/https yang diizinkan — skema lain
+ * (javascript:, data:, vbscript:) dikembalikan sebagai null agar link
+ * tidak dirender sama sekali. Lapisan kedua setelah validasi server;
+ * tetap perlu karena data lama di DB bisa lolos sebelum validasi ada.
+ */
+export function safeHref(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url, window.location.origin);
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.href : null;
+  } catch {
+    return null;
+  }
+}
