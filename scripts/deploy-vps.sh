@@ -52,6 +52,27 @@ docker compose -f docker-compose.prod.yml run --rm api npx prisma db seed || ech
 echo "▶ up -d"
 docker compose -f docker-compose.prod.yml up -d
 
+# Tunggu API benar-benar sehat sebelum menyatakan deploy sukses. `up -d`
+# hanya meluncurkan container — kalau API crash-loop (mis. drift skema),
+# tanpa gate ini deploy tetap "success" dan situs down diam-diam. Kita poll
+# /health via container web (jalur nginx→api yang sama seperti browser).
+echo "▶ tunggu API healthy"
+API_OK=0
+for i in $(seq 1 30); do
+  if docker compose -f docker-compose.prod.yml exec -T web wget -qO- http://api:4000/health >/dev/null 2>&1; then
+    API_OK=1
+    echo "  ✓ API sehat setelah ${i}x cek"
+    break
+  fi
+  sleep 4
+done
+if [ "$API_OK" -ne 1 ]; then
+  echo "✗ API tidak sehat dalam ~120 detik — deploy DIANGGAP GAGAL"
+  echo "  Log API terakhir:"
+  docker compose -f docker-compose.prod.yml logs api --tail=40 --no-color || true
+  exit 1
+fi
+
 # Cleanup old images
 echo "▶ prune old images"
 docker image prune -f

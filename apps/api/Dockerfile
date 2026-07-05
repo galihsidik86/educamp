@@ -3,7 +3,7 @@
 # ------------------------------------------------------------
 # Stage 1 (deps)    : install root + api workspace deps (lockfile-pinned)
 # Stage 2 (build)   : prisma generate + tsc compile → dist/
-# Stage 3 (runtime) : minimal alpine, non-root, migrate deploy + node
+# Stage 3 (runtime) : minimal alpine, non-root, db push + node
 # ============================================================
 
 # ---------- Stage 1: dependencies ----------
@@ -72,7 +72,12 @@ EXPOSE 4000
 
 # tini for proper PID 1 signal handling
 ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+# Sinkronisasi skema pakai `db push` — konsisten dengan scripts/deploy-vps.sh
+# yang juga pakai db push. JANGAN pakai `migrate deploy` di sini: mencampur
+# db push (yang tak mencatat migrasi) dengan migrate deploy (yang butuh riwayat
+# migrasi rapi) membuat boot menolak (P3009) begitu ada drift antara keduanya.
+# --accept-data-loss aman untuk perubahan additive (kolom baru nullable, dst).
+CMD ["sh", "-c", "npx prisma db push --skip-generate --accept-data-loss && node dist/index.js"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
   CMD curl -fsS http://localhost:4000/health || exit 1
