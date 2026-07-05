@@ -39,9 +39,12 @@ COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 # copy built SPA
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
 
-# nginx healthcheck inside-container
+# nginx healthcheck inside-container — pakai 127.0.0.1, BUKAN localhost:
+# nginx listen IPv4-only (`listen 80`), tapi `localhost` di container resolve
+# ke ::1 (IPv6) lebih dulu & busybox wget tak fallback ke IPv4 → "connection
+# refused" → container selalu unhealthy padahal melayani normal.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -q -O - http://localhost/healthz || exit 1
+  CMD wget -q -O - http://127.0.0.1/healthz || exit 1
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
