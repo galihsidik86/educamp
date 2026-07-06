@@ -21,6 +21,12 @@ export function AdminKelas() {
   const [semesterId, setSemesterId] = useState<string>('');
   const semIdEff = semesterId || aktif?.id || '';
 
+  // Form "Tambah Kelas" mengirim semesterId = semester efektif (aktif/terpilih).
+  // Kalau kosong (belum ada semester aktif & belum dipilih), request pasti
+  // ditolak backend dengan "Permintaan tidak valid" yang membingungkan — jadi
+  // blokir di sini dengan pesan yang jelas.
+  const noSemester = !semIdEff;
+
   const { data, isLoading, error } = useKelasAdmin({ semesterId: semIdEff });
   const actions = useKelasActions();
   const [modal, setModal] = useState<{ mode: 'create' } | { mode: 'edit'; kelas: Kelas } | null>(null);
@@ -42,11 +48,17 @@ export function AdminKelas() {
         subtitle="Kelola kelas per semester — assign MK, dosen, ruangan, jadwal."
         right={
           <div className="row" style={{ gap: 'var(--space-2)' }}>
-            <Button variant="ghost" leftIcon={<Upload size={16} />} onClick={() => setImportOpen(true)}>Import Excel</Button>
-            <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setModal({ mode: 'create' })}>Tambah Kelas</Button>
+            <Button variant="ghost" leftIcon={<Upload size={16} />} onClick={() => setImportOpen(true)} disabled={noSemester}>Import Excel</Button>
+            <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setModal({ mode: 'create' })} disabled={noSemester}>Tambah Kelas</Button>
           </div>
         }
       />
+
+      {noSemester && (
+        <Alert variant="warning" title="Belum ada semester aktif">
+          Aktifkan semester dulu di menu <strong>Akademik → Periode</strong> (tombol “Aktifkan”), atau pilih semester pada filter di bawah, sebelum menambah kelas.
+        </Alert>
+      )}
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
 
@@ -286,6 +298,10 @@ function KelasModal({ mode, initial, defaultSemesterId, onClose, onSubmit }: {
       const patch: any = { ...form };
       if (patch.ruanganId === '') patch.ruanganId = null;
       if (patch.hari === '') patch.hari = null;
+      if (!patch.semesterId) {
+        setErr('Belum ada semester aktif — aktifkan di menu Periode dulu.');
+        return;
+      }
       await onSubmit(patch, mode === 'edit' ? initial!.id : undefined);
     } catch (e) { setErr(e instanceof ApiError ? e.message : 'Gagal'); }
     finally { setBusy(false); }
