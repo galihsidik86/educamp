@@ -3,7 +3,7 @@ import { Alert, Badge, Button, Card, Input, Select } from '@/ds';
 import { Search, CheckCircle2, XCircle, Trash2, Award } from 'lucide-react';
 import { useAdminPrestasi, useAdminPrestasiActions, type PrestasiAdmin } from '@/lib/queries-portfolio';
 import { PageHead } from '@/components/PageHead';
-import { formatTanggal } from '@/lib/format';
+import { formatTanggal, safeHref } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
 const JENIS_LABEL: Record<string, string> = {
@@ -92,7 +92,7 @@ export function AkademikPrestasi() {
                     <strong>{p.nama}</strong>
                     {p.penyelenggara && <div className="muted" style={{ fontSize: 'var(--text-xs)' }}>{p.penyelenggara}</div>}
                     {p.peran && <div className="muted" style={{ fontSize: 'var(--text-xs)' }}>Peran: {p.peran}</div>}
-                    {p.fileUrl && <div style={{ fontSize: 'var(--text-xs)' }}><a href={p.fileUrl} target="_blank" rel="noopener noreferrer">📎 Bukti</a></div>}
+                    {p.fileUrl && <div style={{ fontSize: 'var(--text-xs)' }}><a href={safeHref(p.fileUrl) ?? undefined} target="_blank" rel="noopener noreferrer">📎 Bukti</a></div>}
                   </td>
                   <td>{JENIS_LABEL[p.jenis] ?? p.jenis}</td>
                   <td>{p.level ? LEVEL_LABEL[p.level] ?? p.level : '—'}</td>

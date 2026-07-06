@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { getActiveSemester, getMahasiswaForUser } from '../../lib/context.js';
 import { BadRequest, Forbidden, NotFound } from '../../lib/errors.js';
+import { optionalHttpUrl } from '../../lib/validators.js';
 import { writeAudit } from '../../lib/audit.js';
 
 export const tugasRouter = Router();
@@ -95,7 +96,7 @@ tugasRouter.get('/tugas/:id', async (req, res) => {
 });
 
 const submitSchema = z.object({
-  linkJawaban: z.string().max(500).optional().nullable(),
+  linkJawaban: optionalHttpUrl, // http/https saja — anti stored-XSS (dilihat dosen)
   isiJawaban: z.string().max(10000).optional().nullable(),
 });
 

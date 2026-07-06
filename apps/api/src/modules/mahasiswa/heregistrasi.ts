@@ -4,6 +4,7 @@ import { prisma } from '../../db.js';
 import { getMahasiswaForUser, getActiveSemester } from '../../lib/context.js';
 import { BadRequest, Conflict, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
+import { httpUrl } from '../../lib/validators.js';
 
 export const heregistrasiRouter = Router();
 
@@ -30,7 +31,9 @@ heregistrasiRouter.get('/heregistrasi/aktif', async (req, res) => {
 const createSchema = z.object({
   jenis: z.enum(['aktif', 'cuti']),
   alasan: z.string().max(2000).optional().nullable(),
-  dokumenUrl: z.string().url().max(2000).optional().nullable(),
+  // httpUrl (bukan z.string().url()) — cegah skema javascript:/data: yang jadi
+  // vektor stored-XSS saat link dokumen diklik akademik. Lihat lib/validators.
+  dokumenUrl: httpUrl.optional().nullable(),
 });
 
 heregistrasiRouter.post('/heregistrasi', async (req, res) => {

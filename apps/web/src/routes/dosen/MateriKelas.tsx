@@ -4,6 +4,7 @@ import { Alert, Button, Card, Input, Select } from '@/ds';
 import { ChevronLeft, Plus, Trash2, Pencil, ExternalLink, Link as LinkIcon, FileText, Video, FileType } from 'lucide-react';
 import { useDosenBahanAjar, useBahanAjarActions, useDosenPertemuan, type BahanAjarInput, type BahanAjarItem, type JenisBahanAjar } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
+import { safeHref } from '@/lib/format';
 import { Modal } from '@/components/Modal';
 import { ApiError } from '@/lib/api';
 
@@ -71,7 +72,7 @@ export function DosenMateriKelas() {
                 <strong style={{ color: 'var(--text-strong)', display: 'block', marginTop: 6 }}>{it.judul}</strong>
                 {it.deskripsi && <p className="muted" style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)' }}>{it.deskripsi}</p>}
                 {it.url && (
-                  <a href={it.url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)', color: 'var(--text-link)', marginTop: 6 }}>
+                  <a href={safeHref(it.url) ?? undefined} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)', color: 'var(--text-link)', marginTop: 6 }}>
                     Buka <ExternalLink size={10} />
                   </a>
                 )}

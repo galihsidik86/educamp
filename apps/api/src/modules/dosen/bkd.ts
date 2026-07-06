@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { getActiveSemester, getDosenForUser } from '../../lib/context.js';
 import { BadRequest, Forbidden, NotFound } from '../../lib/errors.js';
+import { optionalHttpUrl } from '../../lib/validators.js';
 import { writeAudit } from '../../lib/audit.js';
 import { createNotifikasi } from '../../lib/notifikasi.js';
 
@@ -17,7 +18,7 @@ const itemSchema = z.object({
   bobotSks: z.number().min(0.1).max(20),
   sumberEntity: z.enum(['kelas', 'skripsi', 'penelitian', 'pengabdian']).optional().nullable(),
   sumberId: z.string().uuid().optional().nullable(),
-  fileUrl: z.string().max(500).optional().nullable(),
+  fileUrl: optionalHttpUrl, // http/https saja — anti stored-XSS pada link bukti
 });
 
 /** List laporan BKD dosen (semua semester). */

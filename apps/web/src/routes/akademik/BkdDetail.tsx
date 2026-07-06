@@ -4,6 +4,7 @@ import { Alert, Button, Card } from '@/ds';
 import { ChevronLeft, Check, X, BookOpen, Microscope, HandHeart, Briefcase, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminBkdDetail, useAdminBkdRingkasan, useAdminBkdActions, type KategoriBkd } from '@/lib/queries-bkd';
+import { safeHref } from '@/lib/format';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
@@ -125,7 +126,7 @@ export function AkademikBkdDetail() {
                     <td>{it.deskripsi}</td>
                     <td className="num mono">{it.bobotSks.toFixed(1)}</td>
                     <td className="mono" style={{ fontSize: 'var(--text-xs)' }}>{it.sumberEntity ?? 'Manual'}</td>
-                    <td>{it.fileUrl ? <a href={it.fileUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--text-link)', fontSize: 'var(--text-xs)' }}>Lihat</a> : <span className="muted">—</span>}</td>
+                    <td>{it.fileUrl ? <a href={safeHref(it.fileUrl) ?? undefined} target="_blank" rel="noreferrer" style={{ color: 'var(--text-link)', fontSize: 'var(--text-xs)' }}>Lihat</a> : <span className="muted">—</span>}</td>
                   </tr>
                 ))}
               </tbody>

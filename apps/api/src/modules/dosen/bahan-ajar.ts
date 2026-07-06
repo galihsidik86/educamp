@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { getDosenForUser, requireKelasOwnership } from '../../lib/context.js';
 import { BadRequest, NotFound } from '../../lib/errors.js';
+import { optionalHttpUrl } from '../../lib/validators.js';
 import { writeAudit } from '../../lib/audit.js';
 
 export const bahanAjarRouter = Router();
@@ -13,7 +14,7 @@ const createSchema = z.object({
   jenis: z.enum(JENIS),
   judul: z.string().min(2).max(200),
   deskripsi: z.string().max(2000).optional().nullable(),
-  url: z.string().max(500).optional().nullable(),
+  url: optionalHttpUrl, // http/https saja — anti stored-XSS (dilihat mahasiswa)
   konten: z.string().max(10000).optional().nullable(),
   pertemuanId: z.string().uuid().optional().nullable(),
   urutan: z.number().int().min(0).max(999).optional(),

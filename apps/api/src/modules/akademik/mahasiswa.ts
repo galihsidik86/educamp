@@ -7,6 +7,7 @@ import { writeAudit } from '../../lib/audit.js';
 import { ensureUangPangkal } from '../../lib/tagihan-ukt.js';
 import { calculateIp } from '../../lib/grade.js';
 import { getActiveSemester, getProdiScope } from '../../lib/context.js';
+import { intParamOptional } from '../../lib/validators.js';
 
 export const mahasiswaRouter = Router();
 
@@ -54,7 +55,7 @@ mahasiswaRouter.get('/mahasiswa', async (req, res) => {
   const search = (req.query.q as string | undefined)?.trim();
   const scopeId = await getProdiScope(req.user!.sub);
   const prodiId = scopeId ?? (req.query.prodiId as string | undefined);
-  const angkatan = req.query.angkatan ? Number(req.query.angkatan) : undefined;
+  const angkatan = intParamOptional(req.query.angkatan);
   const status = req.query.status as string | undefined;
 
   const items = await prisma.mahasiswa.findMany({

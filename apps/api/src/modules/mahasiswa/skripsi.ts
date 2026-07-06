@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { getMahasiswaForUser } from '../../lib/context.js';
 import { BadRequest, Forbidden, NotFound } from '../../lib/errors.js';
+import { optionalHttpUrl } from '../../lib/validators.js';
 import { writeAudit } from '../../lib/audit.js';
 
 export const skripsiRouter = Router();
@@ -14,7 +15,7 @@ const ajukanSchema = z.object({
 });
 
 const updateSchema = z.object({
-  linkDokumen: z.string().max(500).optional().nullable(),
+  linkDokumen: optionalHttpUrl, // http/https saja — anti stored-XSS
   abstrak: z.string().max(5000).optional().nullable(),
 });
 

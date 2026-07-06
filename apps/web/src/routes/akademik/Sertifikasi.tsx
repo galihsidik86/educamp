@@ -3,7 +3,7 @@ import { Alert, Badge, Button, Card, Input, Select } from '@/ds';
 import { Search, CheckCircle2, XCircle, Trash2, FileBadge } from 'lucide-react';
 import { useAdminSertifikasi, useAdminSertifikasiActions, type SertifikasiAdmin } from '@/lib/queries-portfolio';
 import { PageHead } from '@/components/PageHead';
-import { formatTanggal } from '@/lib/format';
+import { formatTanggal, safeHref } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
 const JENIS_LABEL: Record<string, string> = {
@@ -84,7 +84,7 @@ export function AkademikSertifikasi() {
                     <strong>{s.nama}</strong>
                     <div className="muted" style={{ fontSize: 'var(--text-xs)' }}>Penerbit: {s.penerbit}</div>
                     {s.nomorSertifikat && <div className="mono" style={{ fontSize: 'var(--text-xs)' }}>No. {s.nomorSertifikat}</div>}
-                    {s.fileUrl && <div style={{ fontSize: 'var(--text-xs)' }}><a href={s.fileUrl} target="_blank" rel="noopener noreferrer">📎 Bukti</a></div>}
+                    {s.fileUrl && <div style={{ fontSize: 'var(--text-xs)' }}><a href={safeHref(s.fileUrl) ?? undefined} target="_blank" rel="noopener noreferrer">📎 Bukti</a></div>}
                   </td>
                   <td>{JENIS_LABEL[s.jenis] ?? s.jenis}</td>
                   <td className="mono" style={{ fontSize: 'var(--text-sm)' }}>{formatTanggal(s.tanggalTerbit)}</td>

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../../db.js';
+import { intParam } from '../../lib/validators.js';
 
 export const auditRouter = Router();
 
@@ -15,8 +16,8 @@ auditRouter.get('/audit', async (req, res) => {
   const actorRole = req.query.actorRole as string | undefined;
   const since = req.query.since ? new Date(req.query.since as string) : undefined;
   const until = req.query.until ? new Date(req.query.until as string) : undefined;
-  const take = Math.min(Number(req.query.take ?? 100), 200);
-  const skip = Math.max(Number(req.query.skip ?? 0), 0);
+  const take = intParam(req.query.take, 100, { min: 1, max: 200 });
+  const skip = intParam(req.query.skip, 0, { min: 0 });
 
   const where = {
     ...(action && { action: { contains: action } }),

@@ -6,6 +6,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { BadRequest, NotFound, Forbidden } from '../../lib/errors.js';
+import { optionalHttpUrl } from '../../lib/validators.js';
 import { writeAudit } from '../../lib/audit.js';
 import { enqueueFeederChange, buildFeederPayload } from '../../lib/feeder/queue.js';
 import { getProdiScope } from '../../lib/context.js';
@@ -74,9 +75,9 @@ const upsertSchema = z.object({
   isMbkm: z.boolean().optional(),
   isFlagship: z.boolean().optional(),
   isEksternal: z.boolean().optional(),
-  linkProposal: z.string().max(500).optional().nullable(),
-  linkLaporan: z.string().max(500).optional().nullable(),
-  linkSertifikat: z.string().max(500).optional().nullable(),
+  linkProposal: optionalHttpUrl, // http/https saja — anti stored-XSS
+  linkLaporan: optionalHttpUrl,
+  linkSertifikat: optionalHttpUrl,
   tanggalMulai: z.string().optional().nullable(),
   tanggalSelesai: z.string().optional().nullable(),
   status: z.enum(['diajukan', 'berjalan', 'selesai', 'dibatalkan']).optional(),

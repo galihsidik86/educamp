@@ -5,7 +5,7 @@ import { useAdminHeregistrasi, useAdminHeregistrasiActions } from '@/lib/queries
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
-import { formatTanggalWaktu } from '@/lib/format';
+import { formatTanggalWaktu, safeHref } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
 export function AdminHeregistrasi() {
@@ -72,9 +72,9 @@ export function AdminHeregistrasi() {
                   {h.mahasiswa.prodi.nama} · {h.semester.jenis} {h.semester.tahunAjaran.kode} · Diajukan {formatTanggalWaktu(h.createdAt)}
                 </div>
                 {h.alasan && <p style={{ marginTop: 'var(--space-2)' }}><strong>Alasan:</strong> {h.alasan}</p>}
-                {h.dokumenUrl && (
+                {safeHref(h.dokumenUrl) && (
                   <div style={{ marginTop: 'var(--space-2)' }}>
-                    <a href={h.dokumenUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--text-link)', fontSize: 'var(--text-sm)' }}>
+                    <a href={safeHref(h.dokumenUrl)!} target="_blank" rel="noreferrer" style={{ color: 'var(--text-link)', fontSize: 'var(--text-sm)' }}>
                       <FileText size={12} style={{ verticalAlign: 'middle' }} /> Dokumen pendukung
                     </a>
                   </div>

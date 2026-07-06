@@ -3,7 +3,7 @@ import { Alert, Card } from '@/ds';
 import { ChevronLeft, ExternalLink, Link as LinkIcon, FileText, Video, FileType } from 'lucide-react';
 import { useMahasiswaMateriDetail } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
-import { formatTanggal } from '@/lib/format';
+import { formatTanggal, safeHref } from '@/lib/format';
 
 const JENIS_LABEL: Record<string, string> = { link: 'Tautan', file: 'File', text: 'Catatan', video: 'Video' };
 
@@ -56,7 +56,7 @@ export function MahasiswaMateriKelas() {
             <strong style={{ color: 'var(--text-strong)', display: 'block', marginTop: 6 }}>{it.judul}</strong>
             {it.deskripsi && <p className="muted" style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)' }}>{it.deskripsi}</p>}
             {it.url && (
-              <a href={it.url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)', color: 'var(--text-link)', marginTop: 6 }}>
+              <a href={safeHref(it.url) ?? undefined} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)', color: 'var(--text-link)', marginTop: 6 }}>
                 Buka {it.jenis === 'video' ? 'video' : it.jenis === 'file' ? 'file' : 'tautan'} <ExternalLink size={10} />
               </a>
             )}

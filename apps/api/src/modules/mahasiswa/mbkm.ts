@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { getMahasiswaForUser } from '../../lib/context.js';
 import { BadRequest, Forbidden, NotFound } from '../../lib/errors.js';
+import { optionalHttpUrl } from '../../lib/validators.js';
 import { writeAudit } from '../../lib/audit.js';
 
 export const mbkmRouter = Router();
@@ -26,13 +27,13 @@ const daftarSchema = z.object({
   periode: z.string().regex(/^\d{5}$/, 'Periode: kode semester 5 digit, mis. 20251'),
   tanggalMulai: z.string().optional().nullable(),
   tanggalSelesai: z.string().optional().nullable(),
-  linkProposal: z.string().max(500).optional().nullable(),
+  linkProposal: optionalHttpUrl,
 });
 
 const updateSchema = z.object({
-  linkLaporan: z.string().max(500).optional().nullable(),
-  linkSertifikat: z.string().max(500).optional().nullable(),
-  linkProposal: z.string().max(500).optional().nullable(),
+  linkLaporan: optionalHttpUrl,
+  linkSertifikat: optionalHttpUrl,
+  linkProposal: optionalHttpUrl,
 });
 
 /** List MBKM mahasiswa, terbaru di atas, dengan konversi-nya. */

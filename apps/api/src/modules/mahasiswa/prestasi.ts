@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { getMahasiswaForUser } from '../../lib/context.js';
 import { BadRequest, Forbidden, NotFound } from '../../lib/errors.js';
+import { optionalHttpUrl } from '../../lib/validators.js';
 import { writeAudit } from '../../lib/audit.js';
 
 export const prestasiRouter = Router();
@@ -18,7 +19,9 @@ const inputSchema = z.object({
   level: z.enum(LEVEL).optional().nullable(),
   peran: z.string().max(100).optional().nullable(),
   deskripsi: z.string().max(2000).optional().nullable(),
-  fileUrl: z.string().max(2000).optional().nullable(),
+  // optionalHttpUrl: hanya http/https (cegah javascript:/data: stored-XSS saat
+  // bukti ini ditampilkan sebagai link ke staf akademik). Kosong = tak diisi.
+  fileUrl: optionalHttpUrl,
 });
 
 prestasiRouter.get('/prestasi', async (req, res) => {

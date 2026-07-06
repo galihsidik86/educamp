@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { BadRequest, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
+import { httpUrl, intParam } from '../../lib/validators.js';
 import { getFeederClient } from '../../lib/feeder/client.js';
 import { processFeederQueue, buildFeederPayload, enqueueFeederChange } from '../../lib/feeder/queue.js';
 import type { FeederEntity } from '@prisma/client';
@@ -12,7 +13,9 @@ export const feederRouter = Router();
 const SINGLETON = 'singleton';
 
 const configSchema = z.object({
-  baseUrl: z.string().url().max(300).optional().nullable(),
+  // httpUrl: batasi ke http/https (bukan z.string().url() yg terima skema apa
+  // pun). Catatan: ini TIDAK memblok SSRF ke IP internal — lihat EVALUASI.md.
+  baseUrl: httpUrl.optional().nullable(),
   username: z.string().max(120).optional().nullable(),
   password: z.string().max(200).optional().nullable(),
   semesterAktif: z.string().max(20).optional().nullable(),
@@ -102,7 +105,7 @@ feederRouter.get('/feeder/queue', async (req, res) => {
 
 /** Trigger manual worker batch. */
 feederRouter.post('/feeder/queue/process', async (req, res) => {
-  const result = await processFeederQueue({ take: Number(req.body?.take ?? 50) });
+  const result = await processFeederQueue({ take: intParam(req.body?.take, 50, { min: 1, max: 500 }) });
   void writeAudit(req, { action: 'feeder.queue.process', entity: 'feeder', metadata: result });
   res.json(result);
 });
@@ -129,7 +132,7 @@ feederRouter.delete('/feeder/queue/:id', async (req, res) => {
 
 /** Sync log terakhir. */
 feederRouter.get('/feeder/log', async (req, res) => {
-  const take = Math.min(Number(req.query.take ?? 100), 500);
+  const take = intParam(req.query.take, 100, { min: 1, max: 500 });
   const items = await prisma.feederSyncLog.findMany({
     orderBy: { createdAt: 'desc' },
     take,

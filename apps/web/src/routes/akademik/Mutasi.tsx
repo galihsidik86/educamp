@@ -8,7 +8,7 @@ import {
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
-import { formatTanggalWaktu } from '@/lib/format';
+import { formatTanggalWaktu, safeHref } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
 const STATUS_OPTS: Array<{ v: StatusMutasi | ''; label: string }> = [
@@ -96,7 +96,7 @@ export function AkademikMutasi() {
                   <p style={{ margin: '2px 0 0', whiteSpace: 'pre-wrap', fontSize: 'var(--text-sm)' }}>{m.alasan}</p>
                 </div>
                 {m.fileUrl && (
-                  <a href={m.fileUrl} target="_blank" rel="noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-link)' }}>
+                  <a href={safeHref(m.fileUrl) ?? undefined} target="_blank" rel="noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-link)' }}>
                     Lihat dokumen pendukung
                   </a>
                 )}

@@ -9,7 +9,7 @@ import {
 import { useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
-import { formatTanggal, formatTanggalWaktu } from '@/lib/format';
+import { formatTanggal, formatTanggalWaktu, safeHref } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
 const KAT_EMPTY: KategoriInput = { kode: '', nama: '', urutan: 0, isAktif: true };
@@ -261,7 +261,7 @@ function DokumenTab() {
                   <td className="mono" style={{ fontSize: 'var(--text-xs)' }}>{formatTanggal(d.updatedAt)}</td>
                   <td>
                     <div className="row" style={{ gap: 4, justifyContent: 'flex-end' }}>
-                      <a href={d.fileUrl} target="_blank" rel="noreferrer">
+                      <a href={safeHref(d.fileUrl) ?? undefined} target="_blank" rel="noreferrer">
                         <Button size="sm" variant="ghost">Buka</Button>
                       </a>
                       <Button size="sm" variant="ghost" leftIcon={<Activity size={12} />} onClick={() => setAksesFor(d)}>Akses</Button>

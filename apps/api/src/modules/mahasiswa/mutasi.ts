@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { getMahasiswaForUser } from '../../lib/context.js';
 import { BadRequest, Forbidden, NotFound } from '../../lib/errors.js';
+import { optionalHttpUrl } from '../../lib/validators.js';
 import { writeAudit } from '../../lib/audit.js';
 import { createNotifikasi } from '../../lib/notifikasi.js';
 
@@ -15,7 +16,7 @@ const createSchema = z.object({
   alasan: z.string().min(20).max(2000),
   prodiTujuanId: z.string().uuid().optional().nullable(),
   semesterId: z.string().uuid().optional().nullable(),
-  fileUrl: z.string().max(500).optional().nullable(),
+  fileUrl: optionalHttpUrl, // http/https saja — anti stored-XSS pada link bukti
 });
 
 /** Daftar prodi untuk dropdown pindah prodi. */

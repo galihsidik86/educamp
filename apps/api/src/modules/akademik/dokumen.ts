@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { BadRequest, Conflict, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
+import { httpUrl, intParam } from '../../lib/validators.js';
 
 export const dokumenAdminRouter = Router();
 
@@ -70,7 +71,7 @@ const dokumenSchema = z.object({
   deskripsi: z.string().max(2000).optional().nullable(),
   versi: z.string().max(40).optional().nullable(),
   target: z.string().regex(targetRegex, 'Target harus all/mahasiswa/dosen/prodi:<id>'),
-  fileUrl: z.string().min(3).max(2000),
+  fileUrl: httpUrl, // http/https saja — anti stored-XSS pada link dokumen
   jenisFile: z.string().max(20).optional().nullable(),
   ukuranByte: z.number().int().min(0).optional().nullable(),
   tanggalBerlaku: z.string().optional().nullable(),
@@ -152,7 +153,7 @@ dokumenAdminRouter.delete('/dokumen/:id', async (req, res) => {
 });
 
 dokumenAdminRouter.get('/dokumen/:id/akses', async (req, res) => {
-  const take = Math.min(Number(req.query.take ?? 100), 500);
+  const take = intParam(req.query.take, 100, { min: 1, max: 500 });
   const items = await prisma.dokumenAkses.findMany({
     where: { dokumenId: req.params.id },
     include: {

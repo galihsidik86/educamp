@@ -5,6 +5,7 @@ import { prisma } from '../../db.js';
 import { BadRequest, Conflict, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
 import { hashPassword } from '../../lib/password.js';
+import { intParam } from '../../lib/validators.js';
 
 export const usersRouter = Router();
 
@@ -13,8 +14,8 @@ usersRouter.get('/users', async (req, res) => {
   const role = req.query.role as string | undefined;
   const status = req.query.status as 'aktif' | 'nonaktif' | undefined;
   const q = req.query.q as string | undefined;
-  const take = Math.min(Number(req.query.take ?? 100), 500);
-  const skip = Math.max(Number(req.query.skip ?? 0), 0);
+  const take = intParam(req.query.take, 100, { min: 1, max: 500 });
+  const skip = intParam(req.query.skip, 0, { min: 0 });
 
   const where: any = {
     ...(role && { role: role as any }),

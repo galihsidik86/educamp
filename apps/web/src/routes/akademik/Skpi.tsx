@@ -8,7 +8,7 @@ import {
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
-import { formatTanggal } from '@/lib/format';
+import { formatTanggal, safeHref } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
 const STATUS_OPTS: Array<{ v: StatusVerifikasi | ''; label: string }> = [
@@ -98,7 +98,7 @@ function SertifikatVerif() {
                   {s.nomorSertifikat && ` · No. ${s.nomorSertifikat}`}
                 </div>
                 {s.fileUrl && (
-                  <a href={s.fileUrl} target="_blank" rel="noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-link)' }}>
+                  <a href={safeHref(s.fileUrl) ?? undefined} target="_blank" rel="noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-link)' }}>
                     Lihat bukti
                   </a>
                 )}
@@ -187,7 +187,7 @@ function PrestasiVerif() {
                   {p.peran && ` · Peran: ${p.peran}`}
                 </div>
                 {p.deskripsi && <p className="muted" style={{ margin: '6px 0 0', whiteSpace: 'pre-wrap', fontSize: 'var(--text-sm)' }}>{p.deskripsi}</p>}
-                {p.fileUrl && <a href={p.fileUrl} target="_blank" rel="noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-link)' }}>Lihat bukti</a>}
+                {p.fileUrl && <a href={safeHref(p.fileUrl) ?? undefined} target="_blank" rel="noreferrer" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-link)' }}>Lihat bukti</a>}
                 {p.catatanVerifikator && (
                   <div style={{ marginTop: 8, padding: 'var(--space-3)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)' }}>
                     <div className="muted" style={{ fontSize: 'var(--text-xs)' }}>Catatan sebelumnya:</div>

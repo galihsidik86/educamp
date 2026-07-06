@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { getActiveSemester, getMahasiswaForUser } from '../../lib/context.js';
 import { BadRequest, Forbidden, NotFound } from '../../lib/errors.js';
+import { optionalHttpUrl } from '../../lib/validators.js';
 import { writeAudit } from '../../lib/audit.js';
 import { calculateIp } from '../../lib/grade.js';
 
@@ -106,7 +107,7 @@ beasiswaRouter.get('/beasiswa', async (req, res) => {
 const daftarSchema = z.object({
   beasiswaId: z.string().uuid(),
   motivasi: z.string().min(50).max(5000),
-  linkDokumen: z.string().max(500).optional().nullable(),
+  linkDokumen: optionalHttpUrl, // http/https saja — anti stored-XSS
 });
 
 beasiswaRouter.post('/beasiswa/daftar', async (req, res) => {

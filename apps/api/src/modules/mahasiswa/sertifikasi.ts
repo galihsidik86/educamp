@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { getMahasiswaForUser } from '../../lib/context.js';
 import { BadRequest, Forbidden, NotFound } from '../../lib/errors.js';
+import { optionalHttpUrl } from '../../lib/validators.js';
 import { writeAudit } from '../../lib/audit.js';
 
 export const sertifikasiRouter = Router();
@@ -19,7 +20,7 @@ const inputSchema = z.object({
   tanggalKadaluwarsa: z.string().optional().nullable(),
   level: z.enum(LEVEL).optional().nullable(),
   skor: z.string().max(50).optional().nullable(),
-  fileUrl: z.string().max(2000).optional().nullable(),
+  fileUrl: optionalHttpUrl, // http/https saja — anti stored-XSS pada link bukti
 });
 
 sertifikasiRouter.get('/sertifikasi', async (req, res) => {
