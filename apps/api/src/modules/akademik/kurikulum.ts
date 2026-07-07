@@ -234,7 +234,11 @@ kurikulumRouter.post('/mata-kuliah', async (req, res) => {
   if (scopeId && body.prodiId !== scopeId) {
     throw Forbidden('Admin prodi hanya boleh tambah mata kuliah di prodi-nya');
   }
-  if (await prisma.mataKuliah.findUnique({ where: { kode: body.kode } })) throw Conflict('Kode MK sudah dipakai');
+  // Kode unik per-prodi: cek duplikat hanya di prodi yang sama, sehingga MKWU/
+  // MKDU (mis. Bahasa Inggris) boleh dibuat dengan kode sama di prodi berbeda.
+  if (await prisma.mataKuliah.findFirst({ where: { prodiId: body.prodiId, kode: body.kode }, select: { id: true } })) {
+    throw Conflict('Kode MK sudah dipakai di prodi ini');
+  }
   res.status(201).json(await prisma.mataKuliah.create({ data: body }));
 });
 
@@ -289,10 +293,11 @@ kurikulumRouter.post('/mata-kuliah/import', async (req, res) => {
       results.push({ row: rowNo, kode: r.kode, status: 'failed', message: `SKS Teori (${r.sksTeori}) + Praktik (${r.sksPraktik}) > SKS total (${r.sks})` });
       continue;
     }
-    const dup = await prisma.mataKuliah.findUnique({ where: { kode: r.kode }, select: { id: true } });
+    // Duplikat dicek per-prodi (kode unik per prodi, bukan global).
+    const dup = await prisma.mataKuliah.findFirst({ where: { prodiId, kode: r.kode }, select: { id: true } });
     if (dup) {
       failed++;
-      results.push({ row: rowNo, kode: r.kode, status: 'failed', message: `Kode MK sudah dipakai: ${r.kode}` });
+      results.push({ row: rowNo, kode: r.kode, status: 'failed', message: `Kode MK sudah dipakai di prodi ${r.prodiKode}: ${r.kode}` });
       continue;
     }
     try {
@@ -319,12 +324,22 @@ kurikulumRouter.post('/mata-kuliah/import', async (req, res) => {
 
 kurikulumRouter.patch('/mata-kuliah/:id', async (req, res) => {
   const body = mkSchema.partial().parse(req.body);
-  const mk = await prisma.mataKuliah.findUnique({ where: { id: req.params.id }, select: { prodiId: true } });
+  const mk = await prisma.mataKuliah.findUnique({ where: { id: req.params.id }, select: { prodiId: true, kode: true } });
   if (!mk) throw NotFound();
   const scopeId = await getProdiScope(req.user!.sub);
   if (scopeId && mk.prodiId !== scopeId) throw Forbidden('Mata kuliah di luar scope prodi Anda');
   if (scopeId && body.prodiId && body.prodiId !== scopeId) {
     throw Forbidden('Admin prodi tidak boleh memindah mata kuliah ke prodi lain');
+  }
+  // Cek duplikat kode per-prodi saat kode/prodi berubah — agar dapat pesan
+  // Conflict yang jelas, bukan error constraint DB mentah (500).
+  if ((body.kode && body.kode !== mk.kode) || body.prodiId) {
+    const targetProdi = body.prodiId ?? mk.prodiId;
+    const dup = await prisma.mataKuliah.findFirst({
+      where: { prodiId: targetProdi, kode: body.kode ?? mk.kode, NOT: { id: req.params.id } },
+      select: { id: true },
+    });
+    if (dup) throw Conflict('Kode MK sudah dipakai di prodi ini');
   }
   res.json(await prisma.mataKuliah.update({ where: { id: req.params.id }, data: body }));
 });
@@ -506,6 +521,9 @@ async function autoCreatePertemuan(kelasId: string, hari: string | null, semeste
 
 const kelasImportRowSchema = z.object({
   mkKode: z.string().min(1),
+  // Opsional — hanya wajib bila kode MK yang sama dipakai di >1 prodi (MKWU/MKDU),
+  // untuk menentukan MK prodi mana yang dimaksud.
+  prodiKode: z.string().optional().nullable(),
   semesterKode: z.string().min(1),
   dosenNidn: z.string().min(1),
   kodeKelas: z.string().min(1).max(8),
@@ -524,12 +542,22 @@ kurikulumRouter.post('/kelas/import', async (req, res) => {
   if (rows.length === 0) throw BadRequest('Tidak ada baris untuk diimpor');
 
   const [mkList, semList, dosenList, ruanganList] = await Promise.all([
-    prisma.mataKuliah.findMany({ select: { id: true, kode: true } }),
+    prisma.mataKuliah.findMany({ select: { id: true, kode: true, prodi: { select: { kode: true } } } }),
     prisma.semester.findMany({ select: { id: true, kode: true } }),
     prisma.dosen.findMany({ select: { id: true, nidn: true } }),
     prisma.ruangan.findMany({ select: { id: true, kode: true } }),
   ]);
-  const mkByKode = new Map(mkList.map((m) => [m.kode, m.id]));
+  // Kode MK kini unik per-prodi → satu kode bisa muncul di beberapa prodi.
+  // Petakan per (prodiKode::mkKode) dan hitung berapa prodi yg pakai tiap kode,
+  // supaya baris tanpa prodiKode hanya boleh kalau kodenya tak ambigu.
+  const mkByProdiKode = new Map<string, string>();
+  const mkKodeCount = new Map<string, number>();
+  const mkByKodeSingle = new Map<string, string>();
+  for (const m of mkList) {
+    mkByProdiKode.set(`${m.prodi.kode}::${m.kode}`, m.id);
+    mkKodeCount.set(m.kode, (mkKodeCount.get(m.kode) ?? 0) + 1);
+    mkByKodeSingle.set(m.kode, m.id);
+  }
   const semByKode = new Map(semList.map((s) => [s.kode, s.id]));
   const dosenByNidn = new Map(dosenList.map((d) => [d.nidn, d.id]));
   const ruanganByKode = new Map(ruanganList.map((r) => [r.kode, r.id]));
@@ -552,8 +580,18 @@ kurikulumRouter.post('/kelas/import', async (req, res) => {
     }
     const r = parsed.data;
     const keyLabel = `${r.mkKode}/${r.kodeKelas}`;
-    const mataKuliahId = mkByKode.get(r.mkKode);
-    if (!mataKuliahId) { failed++; results.push({ row: rowNo, key: keyLabel, status: 'failed', message: `Kode MK tidak ditemukan: ${r.mkKode}` }); continue; }
+    // Resolusi MK: kalau baris menyertakan prodiKode → pakai pasangan itu;
+    // kalau tidak, hanya boleh jika kode MK tak ambigu (dipakai 1 prodi saja).
+    let mataKuliahId: string | undefined;
+    if (r.prodiKode) {
+      mataKuliahId = mkByProdiKode.get(`${r.prodiKode}::${r.mkKode}`);
+      if (!mataKuliahId) { failed++; results.push({ row: rowNo, key: keyLabel, status: 'failed', message: `MK ${r.mkKode} tidak ada di prodi ${r.prodiKode}` }); continue; }
+    } else if ((mkKodeCount.get(r.mkKode) ?? 0) > 1) {
+      failed++; results.push({ row: rowNo, key: keyLabel, status: 'failed', message: `Kode MK ${r.mkKode} ada di beberapa prodi — isi kolom prodiKode` }); continue;
+    } else {
+      mataKuliahId = mkByKodeSingle.get(r.mkKode);
+      if (!mataKuliahId) { failed++; results.push({ row: rowNo, key: keyLabel, status: 'failed', message: `Kode MK tidak ditemukan: ${r.mkKode}` }); continue; }
+    }
     const semesterId = semByKode.get(r.semesterKode);
     if (!semesterId) { failed++; results.push({ row: rowNo, key: keyLabel, status: 'failed', message: `Kode semester tidak ditemukan: ${r.semesterKode}` }); continue; }
     const dosenId = dosenByNidn.get(r.dosenNidn);

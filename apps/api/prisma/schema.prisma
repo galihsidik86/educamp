@@ -516,7 +516,10 @@ enum KelompokMatkul {
 
 model MataKuliah {
   id          String                @id @default(uuid())
-  kode        String                @unique // "IF-3101"
+  // Kode unik PER PRODI (bukan global) — MKWU/MKDU spt "Bahasa Inggris" boleh
+  // memakai kode yang sama di banyak prodi, sesuai model PDDikti (MK dimiliki
+  // & didaftarkan per prodi). Lihat @@unique([prodiId, kode]) di bawah.
+  kode        String                // "IF-3101"
   nama        String
   namaInggris String?
   sks         Int
@@ -548,6 +551,7 @@ model MataKuliah {
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
 
+  @@unique([prodiId, kode])
   @@index([prodiId])
 }
 

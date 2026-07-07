@@ -135,13 +135,13 @@ export function AdminKelas() {
         onClose={() => setImportOpen(false)}
         title="Import Kelas (Penawaran) via Excel"
         expectedHeaders={['mkKode', 'semesterKode', 'dosenNidn', 'kodeKelas']}
-        optionalHeaders={['kapasitas', 'hari', 'jamMulai', 'jamSelesai', 'ruanganKode']}
+        optionalHeaders={['prodiKode', 'kapasitas', 'hari', 'jamMulai', 'jamSelesai', 'ruanganKode']}
         templateFilename="template-kelas.xlsx"
         keyHeader="MK / Kelas"
-        notes={<>MK & dosen via kode/NIDN. <code>semesterKode</code>: contoh <code>{aktifSemKode}</code> (semester aktif). <code>hari</code>: senin–minggu. Jam format <code>HH:MM</code>. Pertemuan otomatis di-generate 16 minggu.</>}
+        notes={<>MK & dosen via kode/NIDN. <code>semesterKode</code>: contoh <code>{aktifSemKode}</code> (semester aktif). <code>prodiKode</code>: isi hanya bila kode MK yang sama dipakai di beberapa prodi (mis. MKWU/MKDU). <code>hari</code>: senin–minggu. Jam format <code>HH:MM</code>. Pertemuan otomatis di-generate 16 minggu.</>}
         sampleRows={[
           { mkKode: 'IF-3101', semesterKode: aktifSemKode, dosenNidn: '0412019001', kodeKelas: 'A', kapasitas: 40, hari: 'senin', jamMulai: '08:00', jamSelesai: '10:30', ruanganKode: 'R-201' },
-          { mkKode: 'IF-3102', semesterKode: aktifSemKode, dosenNidn: '0412019002', kodeKelas: 'B', kapasitas: 35, hari: 'rabu', jamMulai: '13:00', jamSelesai: '15:30' },
+          { mkKode: 'MKWU-104', prodiKode: '55201', semesterKode: aktifSemKode, dosenNidn: '0412019002', kodeKelas: 'B', kapasitas: 35, hari: 'rabu', jamMulai: '13:00', jamSelesai: '15:30' },
         ]}
         importMutation={actions.importCsv}
       />
