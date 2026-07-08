@@ -25,14 +25,16 @@ export const httpUrl = z
 
 /**
  * Varian httpUrl untuk field opsional yang sering dikirim form sebagai string
- * kosong: `''`/`null`/`undefined` diperlakukan sebagai "tidak diisi" (→ null),
- * selain itu wajib http/https. Dipakai untuk field URL dokumen/bukti yang
- * disubmit pengguna dan ditampilkan sebagai link — mencegah stored-XSS skema
- * javascript:/data: tanpa menolak input kosong yang sah (happy-path aman).
+ * kosong. String kosong / null dipetakan ke **null** (bukan undefined) supaya
+ * pada update (`data: { ...body }`) field bisa benar-benar DIKOSONGKAN — kalau
+ * dipetakan ke undefined, Prisma menganggap "tidak berubah" sehingga URL lama
+ * tetap tampil meski pengguna sudah menghapusnya. Selain itu wajib http/https
+ * (cegah stored-XSS javascript:/data:). Key yang tidak dikirim tetap undefined
+ * (lewat .partial()) = "tidak berubah".
  */
 export const optionalHttpUrl = z.preprocess(
-  (v) => (v === '' || v === null || v === undefined ? undefined : v),
-  httpUrl.optional(),
+  (v) => (v === '' || v == null ? null : v),
+  httpUrl.nullish(),
 );
 
 /** Varian tanggal string yang wajib bisa di-parse menjadi Date valid. */

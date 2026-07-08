@@ -22,6 +22,17 @@ async function buatTagihan(token: string, jumlah: number) {
   return res.body.id as string;
 }
 
+describe('Keuangan — validasi tanggal jatuh tempo', () => {
+  it('jatuhTempo rusak → 400 (bukan 500 Invalid Date)', async () => {
+    const akToken = await loginAs(request(app), 'akademik-t@test.id');
+    const res = await request(app).post('/akademik/keuangan/tagihan')
+      .set('Authorization', `Bearer ${akToken}`)
+      .send({ mahasiswaId: f.mahasiswa.id, semesterId: f.semester.id, jenis: 'spp', deskripsi: 'SPP Test', jumlah: 500_000, jatuhTempo: 'bukan-tanggal' });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('VALIDATION_ERROR');
+  });
+});
+
 describe('Keuangan — status tagihan hanya dari pembayaran disetujui', () => {
   it('bukti mahasiswa yang masih menunggu TIDAK terhitung sebagai dibayar (view akademik)', async () => {
     const akToken = await loginAs(request(app), 'akademik-t@test.id');
@@ -89,8 +100,13 @@ describe('Keuangan — status tagihan hanya dari pembayaran disetujui', () => {
     tagihan = await prisma.tagihan.findUnique({ where: { id: tagihanId } });
     expect(tagihan!.status).toBe('belum_bayar');
 
-    // audit penghapusan pembayaran wajib ada
-    const audit = await prisma.auditLog.findFirst({ where: { action: 'pembayaran.delete' } });
+    // audit penghapusan pembayaran wajib ada. writeAudit fire-and-forget (void),
+    // jadi poll sebentar agar tidak flaky terhadap race commit audit.
+    let audit = null;
+    for (let i = 0; i < 20 && !audit; i++) {
+      audit = await prisma.auditLog.findFirst({ where: { action: 'pembayaran.delete' } });
+      if (!audit) await new Promise((r) => setTimeout(r, 50));
+    }
     expect(audit).not.toBeNull();
   });
 

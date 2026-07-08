@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { httpUrl, optionalHttpUrl, intParam, intParamOptional } from '../../src/lib/validators.js';
+import { z } from 'zod';
+import { httpUrl, optionalHttpUrl, dateString, intParam, intParamOptional } from '../../src/lib/validators.js';
 
 describe('httpUrl', () => {
   it('menerima http/https', () => {
@@ -19,10 +20,9 @@ describe('httpUrl', () => {
 });
 
 describe('optionalHttpUrl', () => {
-  it('string kosong / null / undefined → lolos sebagai undefined (tidak diisi)', () => {
-    expect(optionalHttpUrl.safeParse('')).toMatchObject({ success: true, data: undefined });
-    expect(optionalHttpUrl.safeParse(null)).toMatchObject({ success: true, data: undefined });
-    expect(optionalHttpUrl.safeParse(undefined)).toMatchObject({ success: true, data: undefined });
+  it('string kosong / null → dipetakan ke null (bukan undefined)', () => {
+    expect(optionalHttpUrl.safeParse('')).toMatchObject({ success: true, data: null });
+    expect(optionalHttpUrl.safeParse(null)).toMatchObject({ success: true, data: null });
   });
 
   it('http/https valid → lolos', () => {
@@ -32,6 +32,22 @@ describe('optionalHttpUrl', () => {
   it('skema berbahaya tetap ditolak', () => {
     expect(optionalHttpUrl.safeParse('javascript:alert(1)').success).toBe(false);
     expect(optionalHttpUrl.safeParse('data:text/html,x').success).toBe(false);
+  });
+
+  it('regresi: dalam .partial(), key absen = tak berubah (undefined) tapi "" = dikosongkan (null)', () => {
+    const schema = z.object({ fileUrl: optionalHttpUrl }).partial();
+    expect(schema.parse({}).fileUrl).toBeUndefined();          // absen → Prisma abaikan
+    expect(schema.parse({ fileUrl: '' }).fileUrl).toBeNull();  // '' → Prisma set null (clear)
+    expect(schema.parse({ fileUrl: 'https://a.test/x' }).fileUrl).toBe('https://a.test/x');
+  });
+});
+
+describe('dateString', () => {
+  it('tanggal valid lolos; string rusak & kosong ditolak (cegah Invalid Date → 500)', () => {
+    expect(dateString.safeParse('2026-12-31').success).toBe(true);
+    expect(dateString.safeParse('2026-12-31T10:00:00Z').success).toBe(true);
+    expect(dateString.safeParse('bukan-tanggal').success).toBe(false);
+    expect(dateString.safeParse('').success).toBe(false);
   });
 });
 

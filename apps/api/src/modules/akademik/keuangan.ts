@@ -24,7 +24,9 @@ const tagihanSchema = z.object({
   jenis: z.enum(JENIS),
   deskripsi: z.string().min(3).max(200),
   jumlah: z.number().positive(),
-  jatuhTempo: z.string(),
+  // dateString: wajib bisa di-parse jadi Date valid — string rusak jadi Invalid
+  // Date yang ditolak Prisma sebagai 500, bukan 400. (sib. dari fix tanggalBayar)
+  jatuhTempo: dateString,
   status: z.enum(STATUS_TAGIHAN).default('belum_bayar'),
 });
 
@@ -33,7 +35,7 @@ const bulkSchema = z.object({
   jenis: z.enum(JENIS),
   deskripsi: z.string().min(3).max(200),
   jumlah: z.number().positive(),
-  jatuhTempo: z.string(),
+  jatuhTempo: dateString, // validasi tanggal — cegah Invalid Date → 500
   prodiId: z.string().uuid().optional(),
   angkatan: z.number().int().optional(),
   statusMahasiswa: z.enum(['aktif', 'cuti', 'lulus']).default('aktif'),
