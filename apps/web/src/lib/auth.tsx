@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { apiGet, apiPost, tokenStore, ApiError } from './api';
+import { apiGet, apiPost, tokenStore, tryRestoreSession, ApiError } from './api';
 
 export type Role = 'mahasiswa' | 'dosen' | 'akademik' | 'wali';
 export type AkademikSubRole = 'super_admin' | 'akademik' | 'keuangan' | 'prodi' | 'spmi';
@@ -54,13 +54,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // jika ada refresh token, coba bootstrap session
-    const hasRefresh = tokenStore.getRefresh();
-    if (!hasRefresh) {
-      setState({ status: 'unauthenticated' });
-      return;
-    }
-    refreshProfile().catch(() => setState({ status: 'unauthenticated' }));
+    // Pulihkan sesi dari cookie httpOnly (refresh token). Access token in-memory
+    // hilang saat reload, jadi coba refresh dulu; kalau berhasil, ambil profil.
+    tryRestoreSession().then((ok) => {
+      if (ok) refreshProfile().catch(() => setState({ status: 'unauthenticated' }));
+      else setState({ status: 'unauthenticated' });
+    });
   }, [refreshProfile]);
 
   const login = useCallback(async (identifier: string, password: string) => {
@@ -70,15 +69,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: { id: string; email: string; role: Role };
     }>('/auth/login', { identifier, password });
     tokenStore.setAccess(res.accessToken);
-    tokenStore.setRefresh(res.refreshToken);
+    tokenStore.markSession(true); // refresh token disimpan server sbg cookie httpOnly
     const me = await apiGet<AuthUser>('/auth/me');
     setState({ status: 'authenticated', user: me });
     return me;
   }, []);
 
   const logout = useCallback(async () => {
-    const refresh = tokenStore.getRefresh();
-    try { await apiPost('/auth/logout', { refreshToken: refresh }); } catch { /* ignore */ }
+    // Cookie httpOnly ikut terkirim (credentials: include) → server mencabut &
+    // menghapus cookie. Tak ada refresh token di sisi klien untuk dikirim.
+    try { await apiPost('/auth/logout', {}); } catch { /* ignore */ }
     tokenStore.clear();
     setState({ status: 'unauthenticated' });
   }, []);

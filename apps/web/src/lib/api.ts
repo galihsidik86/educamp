@@ -1,24 +1,21 @@
 // Minimal fetch wrapper dengan auto-attach access token + refresh-on-401.
-// State token disimpan in-memory + localStorage (refresh saja).
+// Refresh token TIDAK lagi disimpan di localStorage — server menyimpannya
+// sebagai cookie httpOnly (tak terjangkau JavaScript → aman dari XSS). Access
+// token hanya in-memory. `sessionActive` menandai apakah kita (mungkin) punya
+// sesi via cookie; cookie httpOnly tak bisa dibaca JS, jadi kita lacak sendiri.
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || '/api';
-const LS_REFRESH = 'siakad.refresh';
 
 let accessToken: string | null = null;
+let sessionActive = false;
 let refreshPromise: Promise<void> | null = null;
 
 export const tokenStore = {
   getAccess: () => accessToken,
   setAccess: (t: string | null) => { accessToken = t; },
-  getRefresh: () => localStorage.getItem(LS_REFRESH),
-  setRefresh: (t: string | null) => {
-    if (t) localStorage.setItem(LS_REFRESH, t);
-    else localStorage.removeItem(LS_REFRESH);
-  },
-  clear: () => {
-    accessToken = null;
-    localStorage.removeItem(LS_REFRESH);
-  },
+  markSession: (v: boolean) => { sessionActive = v; },
+  hasSession: () => sessionActive,
+  clear: () => { accessToken = null; sessionActive = false; },
 };
 
 export class ApiError extends Error {
@@ -37,16 +34,17 @@ async function rawFetch(path: string, init: RequestInit = {}): Promise<Response>
   const headers = new Headers(init.headers);
   if (!headers.has('Content-Type') && init.body) headers.set('Content-Type', 'application/json');
   if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
-  return fetch(`${BASE_URL}${path}`, { ...init, headers });
+  // credentials: 'include' → cookie refresh httpOnly ikut terkirim (perlu utk
+  // lintas-origin dev; no-op untuk same-origin prod).
+  return fetch(`${BASE_URL}${path}`, { ...init, headers, credentials: 'include' });
 }
 
 async function doRefresh(): Promise<void> {
-  const refresh = tokenStore.getRefresh();
-  if (!refresh) throw new ApiError(401, 'NO_REFRESH', 'Tidak ada refresh token');
   const res = await fetch(`${BASE_URL}/auth/refresh`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken: refresh }),
+    body: '{}', // refresh token dibawa cookie httpOnly, bukan body
   });
   if (!res.ok) {
     tokenStore.clear();
@@ -54,7 +52,12 @@ async function doRefresh(): Promise<void> {
   }
   const data = await res.json();
   accessToken = data.accessToken;
-  tokenStore.setRefresh(data.refreshToken);
+  sessionActive = true;
+}
+
+/** Coba pulihkan sesi dari cookie httpOnly saat aplikasi dimuat. */
+export async function tryRestoreSession(): Promise<boolean> {
+  try { await doRefresh(); return true; } catch { return false; }
 }
 
 export async function api<T = unknown>(path: string, init: RequestInit = {}): Promise<T> {
@@ -65,7 +68,7 @@ export async function api<T = unknown>(path: string, init: RequestInit = {}): Pr
   // Endpoint lain (termasuk /auth/me yang dipakai bootstrap session di tab baru) harus boleh di-refresh.
   if (
     res.status === 401 &&
-    tokenStore.getRefresh() &&
+    tokenStore.hasSession() &&
     path !== '/auth/refresh' &&
     path !== '/auth/login'
   ) {
