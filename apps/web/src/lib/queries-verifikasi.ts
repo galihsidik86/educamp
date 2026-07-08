@@ -10,7 +10,7 @@ export type VerifikasiData = {
     nim: string;
     nama: string;
     tempatLahir: string | null;
-    tanggalLahir: string | null;
+    tahunLahir: number | null; // hanya tahun (privasi — endpoint publik)
     jenisKelamin: 'L' | 'P';
     tahunMasuk: number;
   };

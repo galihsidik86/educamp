@@ -239,35 +239,34 @@ const verifikasiSchema = z.object({
 keuanganRouter.post('/keuangan/pembayaran/:id/verifikasi', async (req, res) => {
   const a = await getAkademikForUser(req.user!.sub);
   const body = verifikasiSchema.parse(req.body);
-  const p = await prisma.pembayaran.findUnique({
-    where: { id: req.params.id },
-    include: { tagihan: { include: { pembayaran: true } } },
-  });
-  if (!p) throw NotFound('Pembayaran tidak ditemukan');
-  if (p.status !== 'menunggu') throw BadRequest(`Pembayaran sudah ${p.status}`);
+  // Transaksi + row-lock Tagihan: verifikasi beberapa bukti secara paralel pada
+  // tagihan yang sama tidak lagi menghitung status dari data basi (race).
+  const { p, updated, statusTagihanBaru } = await prisma.$transaction(async (tx) => {
+    const p = await tx.pembayaran.findUnique({ where: { id: req.params.id }, include: { tagihan: true } });
+    if (!p) throw NotFound('Pembayaran tidak ditemukan');
+    if (p.status !== 'menunggu') throw BadRequest(`Pembayaran sudah ${p.status}`);
+    await tx.$queryRaw`SELECT id FROM \`Tagihan\` WHERE id = ${p.tagihanId} FOR UPDATE`;
 
-  const updated = await prisma.pembayaran.update({
-    where: { id: p.id },
-    data: {
-      status: body.action === 'setujui' ? 'disetujui' : 'ditolak',
-      divalidasiOleh: a.nama,
-      validasiPada: new Date(),
-      catatanValidasi: body.catatan ?? null,
-    },
-  });
+    const updated = await tx.pembayaran.update({
+      where: { id: p.id },
+      data: {
+        status: body.action === 'setujui' ? 'disetujui' : 'ditolak',
+        divalidasiOleh: a.nama,
+        validasiPada: new Date(),
+        catatanValidasi: body.catatan ?? null,
+      },
+    });
 
-  // Hitung ulang status tagihan kalau setujui
-  let statusTagihanBaru: 'lunas' | 'cicil' | 'belum_bayar' = p.tagihan.status as any;
-  if (body.action === 'setujui') {
-    // `p` masih berstatus `menunggu` di data yang di-fetch (update di atas belum
-    // tercermin), jadi sertakan `x.id === p.id` agar pembayaran yang baru saja
-    // disetujui ikut terhitung. Status tetap hanya dari pembayaran disetujui.
-    const nominalDisetujui = p.tagihan.pembayaran
-      .filter((x) => x.status === 'disetujui' || x.id === p.id)
-      .reduce((s, x) => s + Number(x.jumlah), 0);
-    statusTagihanBaru = hitungStatusTagihan(Number(p.tagihan.jumlah), nominalDisetujui);
-    await prisma.tagihan.update({ where: { id: p.tagihanId }, data: { status: statusTagihanBaru } });
-  }
+    // Hitung ulang status tagihan kalau setujui. Update di atas sudah tercermin
+    // di dalam transaksi → cukup jumlahkan semua pembayaran DISETUJUI.
+    let statusTagihanBaru: 'lunas' | 'cicil' | 'belum_bayar' = p.tagihan.status as any;
+    if (body.action === 'setujui') {
+      const semua = await tx.pembayaran.findMany({ where: { tagihanId: p.tagihanId } });
+      statusTagihanBaru = hitungStatusTagihan(Number(p.tagihan.jumlah), totalDisetujui(semua));
+      await tx.tagihan.update({ where: { id: p.tagihanId }, data: { status: statusTagihanBaru } });
+    }
+    return { p, updated, statusTagihanBaru };
+  });
 
   void writeAudit(req, {
     action: `pembayaran.${body.action}.akademik`,
@@ -388,36 +387,41 @@ keuanganRouter.get('/keuangan/rekonsiliasi', async (req, res) => {
 keuanganRouter.post('/keuangan/pembayaran', async (req, res) => {
   const a = await getAkademikForUser(req.user!.sub);
   const body = pembayaranSchema.parse(req.body);
-  const tagihan = await prisma.tagihan.findUnique({
-    where: { id: body.tagihanId },
-    include: { pembayaran: true },
+
+  // Transaksi + row-lock pada baris Tagihan (FOR UPDATE) menserialkan
+  // pencatatan pembayaran untuk tagihan yang sama → cegah race check-then-write
+  // di mana dua request paralel sama-sama lolos guard over-payment.
+  const { tagihan, created, status, totalBaru } = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM \`Tagihan\` WHERE id = ${body.tagihanId} FOR UPDATE`;
+    const tagihan = await tx.tagihan.findUnique({ where: { id: body.tagihanId }, include: { pembayaran: true } });
+    if (!tagihan) throw NotFound('Tagihan tidak ditemukan');
+
+    // Anti over-payment: hitung dari disetujui + menunggu (bukti ditolak tidak
+    // menahan sisa). Perhitungan kini di dalam lock, jadi konsisten.
+    const terpakai = totalTerpakai(tagihan.pembayaran);
+    const sisa = Number(tagihan.jumlah) - terpakai;
+    if (body.jumlah > sisa) throw BadRequest(`Pembayaran melebihi sisa tagihan (${sisa.toLocaleString('id-ID')})`);
+
+    const created = await tx.pembayaran.create({
+      data: {
+        tagihanId: tagihan.id,
+        mahasiswaId: tagihan.mahasiswaId,
+        jumlah: body.jumlah,
+        tanggalBayar: new Date(body.tanggalBayar),
+        metode: body.metode,
+        buktiUrl: body.buktiUrl,
+        catatan: body.catatan,
+        divalidasiOleh: a.nama,
+      },
+    });
+
+    // pembayaran manual dibuat langsung `disetujui` (default) → total disetujui
+    // = (disetujui lama) + nominal baru.
+    const totalBaru = totalDisetujui(tagihan.pembayaran) + body.jumlah;
+    const status = hitungStatusTagihan(Number(tagihan.jumlah), totalBaru);
+    await tx.tagihan.update({ where: { id: tagihan.id }, data: { status } });
+    return { tagihan, created, status, totalBaru };
   });
-  if (!tagihan) throw NotFound('Tagihan tidak ditemukan');
-
-  // Anti over-payment: hitung dari disetujui + menunggu (bukti ditolak tidak
-  // menahan sisa). Sebelumnya menjumlahkan semua termasuk ditolak → sisa keliru.
-  const terpakai = totalTerpakai(tagihan.pembayaran);
-  const sisa = Number(tagihan.jumlah) - terpakai;
-  if (body.jumlah > sisa) throw BadRequest(`Pembayaran melebihi sisa tagihan (${sisa.toLocaleString('id-ID')})`);
-
-  const created = await prisma.pembayaran.create({
-    data: {
-      tagihanId: tagihan.id,
-      mahasiswaId: tagihan.mahasiswaId,
-      jumlah: body.jumlah,
-      tanggalBayar: new Date(body.tanggalBayar),
-      metode: body.metode,
-      buktiUrl: body.buktiUrl,
-      catatan: body.catatan,
-      divalidasiOleh: a.nama,
-    },
-  });
-
-  // update status tagihan — pembayaran manual ini dibuat langsung `disetujui`
-  // (default), jadi total disetujui = (disetujui lama) + nominal baru.
-  const totalBaru = totalDisetujui(tagihan.pembayaran) + body.jumlah;
-  const status = hitungStatusTagihan(Number(tagihan.jumlah), totalBaru);
-  await prisma.tagihan.update({ where: { id: tagihan.id }, data: { status } });
 
   void writeAudit(req, {
     action: 'pembayaran.create',

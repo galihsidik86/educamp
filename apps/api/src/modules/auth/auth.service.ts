@@ -1,29 +1,43 @@
 import { prisma } from '../../db.js';
 import { hashToken, refreshExpiresAt, signAccessToken, signRefreshToken, verifyRefreshToken } from '../../lib/jwt.js';
-import { hashPassword, verifyPassword } from '../../lib/password.js';
+import { hashPassword, verifyPassword, DUMMY_PASSWORD_HASH } from '../../lib/password.js';
 import { BadRequest, Unauthorized } from '../../lib/errors.js';
 import crypto from 'node:crypto';
 
 const NIM_REGEX = /^\d{7,12}$/;
+const MAX_FAILED = 10;            // percobaan gagal sebelum akun dikunci
+const LOCK_MS = 15 * 60 * 1000;   // durasi kunci
 
 export async function login(identifier: string, password: string, meta: { userAgent?: string; ip?: string }) {
   // identifier: email atau NIM
-  let email = identifier.toLowerCase().trim();
+  const email = identifier.toLowerCase().trim();
 
-  if (NIM_REGEX.test(identifier)) {
-    const mhs = await prisma.mahasiswa.findUnique({
-      where: { nim: identifier },
-      include: { user: true },
-    });
-    if (!mhs) throw Unauthorized('NIM atau password salah');
-    email = mhs.user.email;
+  const user = NIM_REGEX.test(identifier)
+    ? (await prisma.mahasiswa.findUnique({ where: { nim: identifier }, include: { user: true } }))?.user ?? null
+    : await prisma.user.findUnique({ where: { email } });
+
+  // Timing-safe: kalau user tak ada / nonaktif, tetap jalankan bcrypt terhadap
+  // hash dummy agar waktu respons seragam (cegah enumerasi user via timing).
+  if (!user || !user.isActive) {
+    await verifyPassword(password, DUMMY_PASSWORD_HASH);
+    throw Unauthorized('Email/NIM atau password salah');
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !user.isActive) throw Unauthorized('Email/NIM atau password salah');
+  // Lockout per-akun: tolak lebih awal bila masih dalam masa kunci.
+  if (user.lockedUntil && user.lockedUntil > new Date()) {
+    throw Unauthorized('Akun terkunci sementara karena terlalu banyak percobaan gagal. Coba lagi nanti.');
+  }
 
   const ok = await verifyPassword(password, user.passwordHash);
-  if (!ok) throw Unauthorized('Email/NIM atau password salah');
+  if (!ok) {
+    // Naikkan counter; kunci akun bila mencapai ambang.
+    const failed = user.failedAttempts + 1;
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { failedAttempts: failed, lockedUntil: failed >= MAX_FAILED ? new Date(Date.now() + LOCK_MS) : null },
+    });
+    throw Unauthorized('Email/NIM atau password salah');
+  }
 
   const accessToken = signAccessToken({ sub: user.id, role: user.role, email: user.email });
 
@@ -40,7 +54,8 @@ export async function login(identifier: string, password: string, meta: { userAg
         ip: meta.ip?.slice(0, 64),
       },
     }),
-    prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
+    // Login sukses → reset counter lockout + catat waktu login.
+    prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date(), failedAttempts: 0, lockedUntil: null } }),
   ]);
 
   return { accessToken, refreshToken, user };

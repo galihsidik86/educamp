@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { BadRequest, NotFound } from '../../lib/errors.js';
 import { writeAudit } from '../../lib/audit.js';
-import { httpUrl, intParam } from '../../lib/validators.js';
+import { externalHttpUrl, intParam } from '../../lib/validators.js';
 import { getFeederClient } from '../../lib/feeder/client.js';
 import { processFeederQueue, buildFeederPayload, enqueueFeederChange } from '../../lib/feeder/queue.js';
 import type { FeederEntity } from '@prisma/client';
@@ -13,9 +13,9 @@ export const feederRouter = Router();
 const SINGLETON = 'singleton';
 
 const configSchema = z.object({
-  // httpUrl: batasi ke http/https (bukan z.string().url() yg terima skema apa
-  // pun). Catatan: ini TIDAK memblok SSRF ke IP internal — lihat EVALUASI.md.
-  baseUrl: httpUrl.optional().nullable(),
+  // externalHttpUrl: http/https + tolak host loopback/link-local/metadata
+  // (mitigasi SSRF). LAN privat tetap diizinkan (Neo Feeder bisa on-prem).
+  baseUrl: externalHttpUrl.optional().nullable(),
   username: z.string().max(120).optional().nullable(),
   password: z.string().max(200).optional().nullable(),
   semesterAktif: z.string().max(20).optional().nullable(),

@@ -93,7 +93,7 @@ export function VerifikasiIjazah() {
                 <tbody>
                   <tr><td style={{ width: 160 }}>Nama Lengkap</td><td>:</td><td><strong>{data.lulusan.nama}</strong></td></tr>
                   <tr><td>NIM</td><td>:</td><td className="mono">{data.lulusan.nim}</td></tr>
-                  <tr><td>Tempat, tgl lahir</td><td>:</td><td>{data.lulusan.tempatLahir ?? '—'}{data.lulusan.tanggalLahir ? `, ${formatTanggal(data.lulusan.tanggalLahir)}` : ''}</td></tr>
+                  <tr><td>Tempat, tahun lahir</td><td>:</td><td>{data.lulusan.tempatLahir ?? '—'}{data.lulusan.tahunLahir ? `, ${data.lulusan.tahunLahir}` : ''}</td></tr>
                   <tr><td>Jenis Kelamin</td><td>:</td><td>{data.lulusan.jenisKelamin === 'L' ? 'Laki-laki' : 'Perempuan'}</td></tr>
                   <tr><td>Tahun Masuk</td><td>:</td><td className="mono">{data.lulusan.tahunMasuk}</td></tr>
                 </tbody>

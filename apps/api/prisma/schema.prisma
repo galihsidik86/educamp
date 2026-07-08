@@ -48,6 +48,10 @@ model User {
   isActive     Boolean  @default(true)
   passwordMustChange Boolean @default(false) // user wajib ganti password sesi berikutnya
   lastLoginAt  DateTime?
+  // Lockout per-akun (anti brute-force) — melengkapi limit per-IP yang bisa
+  // mengunci seluruh kampus di balik NAT. Reset saat login sukses.
+  failedAttempts Int      @default(0)
+  lockedUntil    DateTime?
 
   mahasiswa    Mahasiswa?
   dosen        Dosen?

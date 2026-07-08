@@ -37,6 +37,30 @@ export const optionalHttpUrl = z.preprocess(
   httpUrl.nullish(),
 );
 
+/**
+ * URL http/https untuk target request KELUAR (mis. baseUrl Feeder PDDikti).
+ * Selain skema, tolak host loopback/link-local/metadata (127.0.0.0/8, ::1,
+ * 0.0.0.0, localhost, 169.254.0.0/16 termasuk 169.254.169.254 metadata cloud)
+ * sebagai mitigasi SSRF. LAN privat (10./172.16-31./192.168.) SENGAJA diizinkan
+ * karena Neo Feeder bisa di-host di jaringan kampus. Catatan: cek berbasis host,
+ * belum resolusi DNS (lihat EVALUASI — rebinding di luar cakupan super_admin).
+ */
+function isHostTerblokir(hostname: string): boolean {
+  const h = hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (h === 'localhost' || h.endsWith('.localhost') || h === '0.0.0.0' || h === '::1' || h === '::') return true;
+  if (/^127\./.test(h)) return true;      // loopback
+  if (/^169\.254\./.test(h)) return true; // link-local + metadata cloud
+  return false;
+}
+
+export const externalHttpUrl = httpUrl.refine((v) => {
+  try {
+    return !isHostTerblokir(new URL(v).hostname);
+  } catch {
+    return false;
+  }
+}, 'URL tidak boleh menunjuk ke localhost/loopback/link-local');
+
 /** Varian tanggal string yang wajib bisa di-parse menjadi Date valid. */
 export const dateString = z
   .string()

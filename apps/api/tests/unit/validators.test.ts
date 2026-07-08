@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import { httpUrl, optionalHttpUrl, dateString, intParam, intParamOptional } from '../../src/lib/validators.js';
+import { httpUrl, optionalHttpUrl, externalHttpUrl, dateString, intParam, intParamOptional } from '../../src/lib/validators.js';
 
 describe('httpUrl', () => {
   it('menerima http/https', () => {
@@ -39,6 +39,25 @@ describe('optionalHttpUrl', () => {
     expect(schema.parse({}).fileUrl).toBeUndefined();          // absen → Prisma abaikan
     expect(schema.parse({ fileUrl: '' }).fileUrl).toBeNull();  // '' → Prisma set null (clear)
     expect(schema.parse({ fileUrl: 'https://a.test/x' }).fileUrl).toBe('https://a.test/x');
+  });
+});
+
+describe('externalHttpUrl (anti-SSRF)', () => {
+  it('host publik & LAN privat diizinkan (Neo Feeder bisa on-prem)', () => {
+    expect(externalHttpUrl.safeParse('https://feeder.pddikti.go.id/ws').success).toBe(true);
+    expect(externalHttpUrl.safeParse('http://192.168.1.10:8080').success).toBe(true);
+    expect(externalHttpUrl.safeParse('http://10.0.0.5').success).toBe(true);
+  });
+
+  it('loopback / link-local / metadata cloud ditolak', () => {
+    expect(externalHttpUrl.safeParse('http://localhost/x').success).toBe(false);
+    expect(externalHttpUrl.safeParse('http://127.0.0.1').success).toBe(false);
+    expect(externalHttpUrl.safeParse('http://169.254.169.254/latest/meta-data').success).toBe(false);
+    expect(externalHttpUrl.safeParse('http://[::1]/').success).toBe(false);
+  });
+
+  it('skema non-http tetap ditolak', () => {
+    expect(externalHttpUrl.safeParse('javascript:alert(1)').success).toBe(false);
   });
 });
 

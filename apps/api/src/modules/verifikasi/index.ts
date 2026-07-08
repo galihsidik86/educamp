@@ -65,7 +65,10 @@ verifikasiRouter.get('/:token', rateLimitVerifikasi, async (req, res) => {
       nim: y.mahasiswa.nim,
       nama: y.mahasiswa.nama,
       tempatLahir: y.mahasiswa.tempatLahir,
-      tanggalLahir: y.mahasiswa.tanggalLahir,
+      // Endpoint publik + token tercetak sebagai QR yang bisa difoto siapa pun →
+      // tanggal lahir lengkap tersamar jadi TAHUN saja untuk kurangi risiko
+      // pencurian identitas, tanpa menghilangkan kegunaan verifikasi.
+      tahunLahir: y.mahasiswa.tanggalLahir ? new Date(y.mahasiswa.tanggalLahir).getFullYear() : null,
       jenisKelamin: y.mahasiswa.jenisKelamin,
       tahunMasuk: y.mahasiswa.angkatan,
     },

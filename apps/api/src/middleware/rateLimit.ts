@@ -7,13 +7,15 @@ import rateLimit from 'express-rate-limit';
 import { env } from '../env.js';
 
 /**
- * Anti brute-force untuk /auth/login — 8 percobaan gagal / 15 menit / IP.
- * Login sukses tidak dihitung (skipSuccessfulRequests) supaya user yang valid
- * tidak ikut kena limit hanya karena beberapa kali login dari IP yang sama.
+ * Anti brute-force untuk /auth/login — 30 percobaan gagal / 15 menit / IP.
+ * Kuota per-IP sengaja longgar supaya banyak mahasiswa di balik satu IP publik
+ * (NAT kampus) tidak saling mengunci; perlindungan utama kini di LOCKOUT
+ * PER-AKUN (auth.service) yang mengunci akun spesifik setelah 10 gagal.
+ * Login sukses tidak dihitung (skipSuccessfulRequests).
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 8,
+  limit: 30,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   skipSuccessfulRequests: true,
