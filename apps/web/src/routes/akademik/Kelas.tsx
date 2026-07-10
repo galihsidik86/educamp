@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Alert, Button, Input, Select } from '@/ds';
-import { Plus, Pencil, Trash2, Users, Upload } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users, Upload, Search } from 'lucide-react';
 import {
   useKelasAdmin, useKelasActions, useMataKuliah, useAdminDosen,
   useRuangan, usePeriode,
@@ -33,6 +33,18 @@ export function AdminKelas() {
   const [teamFor, setTeamFor] = useState<Kelas | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const aktifSemKode = aktif?.kode ?? '20261';
+  const [q, setQ] = useState('');
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((k) =>
+      k.mataKuliah.kode.toLowerCase().includes(query) ||
+      k.mataKuliah.nama.toLowerCase().includes(query) ||
+      k.kodeKelas.toLowerCase().includes(query) ||
+      k.dosen.nama.toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   const onDelete = async (k: Kelas) => {
     if (!confirm(`Hapus kelas ${k.mataKuliah.kode} ${k.kodeKelas}?`)) return;
@@ -72,7 +84,20 @@ export function AdminKelas() {
             )}
           </Select>
         </div>
+        {data && data.items.length > 0 && (
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari kode/nama MK, kelas, atau dosen…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
       </div>
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada kelas yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
 
       <div className="tz-table-wrap">
         <table className="tz-table">
@@ -87,7 +112,7 @@ export function AdminKelas() {
           <tbody>
             {isLoading && <tr><td colSpan={9} className="muted center">Memuat…</td></tr>}
             {data?.items.length === 0 && <tr><td colSpan={9} className="muted center">Belum ada kelas.</td></tr>}
-            {data?.items.map((k) => (
+            {items.map((k) => (
               <tr key={k.id}>
                 <td className="mono">{k.mataKuliah.kode}</td>
                 <td>{k.mataKuliah.nama}</td>
