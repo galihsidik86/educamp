@@ -1,12 +1,24 @@
+import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Alert, Card } from '@/ds';
-import { ChevronLeft } from 'lucide-react';
+import { Alert, Card, Input } from '@/ds';
+import { ChevronLeft, Search } from 'lucide-react';
 import { useEdomRekap } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 
 export function AkademikEdomRekap() {
   const { id } = useParams<{ id: string }>();
   const { data, isLoading, error } = useEdomRekap(id);
+  const [q, setQ] = useState('');
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((k) =>
+      k.dosen.nama.toLowerCase().includes(query) ||
+      k.dosen.nidn.toLowerCase().includes(query) ||
+      k.kodeMK.toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   if (isLoading) return <p className="muted">Memuat…</p>;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
@@ -27,6 +39,22 @@ export function AkademikEdomRekap() {
       )}
 
       {data.items.length > 0 && (
+        <div className="row" style={{ alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari dosen atau kode MK…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        </div>
+      )}
+      {data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada kelas yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
+
+      {data.items.length > 0 && (
         <div className="tz-table-wrap">
           <table className="tz-table">
             <thead>
@@ -44,7 +72,7 @@ export function AkademikEdomRekap() {
               </tr>
             </thead>
             <tbody>
-              {data.items.map((k) => (
+              {items.map((k) => (
                 <tr key={k.kelasId}>
                   <td>{k.dosen.nama}<div className="muted mono" style={{ fontSize: 'var(--text-xs)' }}>{k.dosen.nidn}</div></td>
                   <td className="mono">{k.kodeMK}</td>
