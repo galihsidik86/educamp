@@ -84,6 +84,34 @@ Tazkia SIAKAD sudah punya **fondasi token yang benar** dan **identitas brand yan
 
 ---
 
+## 5. Changelog — eksekusi (setelah audit ini)
+
+Bagian §1-4 di atas adalah laporan audit asli (baca-kode-saja, sebelum ada perubahan). Bagian ini mencatat apa yang benar-benar dikerjakan sesudahnya, fase demi fase, sebagai riwayat visual singkat.
+
+### Fase 1 — Token
+- `--accent-text: var(--gold-700)` ditambahkan sebagai warna teks Gold yang lolos WCAG AA di atas surface terang (dipakai `.ds-eyebrow`, `.page-head__eyebrow`, `.tz-req`) — menutup masalah #2.
+- Fallback hex mentah `--brand-primary`/`--accent-fg` di Kartu Mahasiswa diganti ke token asli `--brand`/`--accent` — menutup masalah #6.
+
+### Fase 2 — Shell
+- `AppShell.tsx`/`Sidebar.tsx`/`Topbar.tsx`/`Breadcrumb.tsx` dirombak: sidebar dapat search filter menu (`.sidebar__search`) untuk mengurangi beban kognitif 7 grup/~50 item (masalah #9), collapse grup pakai teknik `grid-template-rows: 1fr↔0fr` (animasi tinggi CSS-murni, bukan `max-height`), topbar dapat dropdown user-menu (avatar+nama+"Profil"/"Keluar" alih-alih tombol Keluar selalu tampil).
+
+### Fase 3 — Komponen inti (satu commit per komponen)
+Card, Button (+ prop `loading`/`aria-busy`), Table+StatusPill, Form, Modal+ConfirmDialog, Toast, EmptyState+Skeleton, DashboardHero — didesain ulang konsisten dengan token baru. Beberapa bug nyata ditemukan & diperbaiki di jalan: `.tz-btn:active` terduplikasi (versi `app.css` diam-diam menang atas `components.css`), `.modal-tabs__btn` mereferensikan token yang tidak pernah ada (`--surface-muted`, `--surface-elev`, `--shadow-1`) sehingga hover/active state tab modal tidak pernah bekerja.
+
+### Refresh token (typografi/warna/elevation/transisi)
+Type scale dari `--text-base` naik ke rasio 1.25 ketat, kontras warna dihaluskan lewat `color-mix(in oklch, ...)` (bukan hex baru), radius scale dibuat lebih membulat (`--radius-xs:6px` … `--radius-2xl:32px`), shadow multi-layer lebih lembut, ditambah `--transition-fast`/`--transition-base`.
+
+### Fase 4 & polish per-role (mahasiswa → dosen → akademik → wali)
+Setiap halaman list/tabel diverifikasi: Dashboard pakai `DashboardHero`+`StatCard` grid, halaman tabel besar (roster mahasiswa bimbingan, kelas, nilai, dst.) dapat search/filter client-side (`useState`+`useMemo`, tidak menyentuh react-query), halaman cetak diverifikasi tanpa diubah. ~35 halaman lintas 4 role mendapat search bar baru; beberapa bug token-drift lain ditemukan sekalian (`--surface-default` yang tidak pernah ada di `NilaiCpmk.tsx`, dsb).
+
+### Tahap akhir — aksesibilitas, responsive, loading state
+- **Responsive**: breakpoint drawer sidebar (≤880px) dan `.tz-table-wrap { overflow-x: auto }` sudah benar sejak Fase 2; satu celah ditemukan & diperbaiki — `.grid-2col` stack di 760px, meleset dari 768px (breakpoint tablet standar), dinaikkan ke 800px.
+- **Fokus & keyboard**: `.spmi-nav-card:focus-visible` memakai outline emas yang beda sendiri dari ring biru standar (`--shadow-focus`) di seluruh app — disamakan. Sidebar search input tidak punya indikator fokus nyata di elemen `<input>`-nya sendiri — ditambah ring. 8 titik kartu yang navigasinya lewat `onClick` pada `<div>` (bukan `<Link>`/`<button>`) tidak bisa dijangkau keyboard sama sekali — ditambah `role="button" tabIndex={0} onKeyDown` (Enter/Space).
+- **Kontras WCAG AA**: `--text-muted` (dipakai `.muted`, label tabel, `.pill--neutral`, dan puluhan tempat lain) diaudit dan ternyata hanya 4.09–4.35:1 di atas surface terang — gagal AA (4.5:1). Dinaikkan dari `--neutral-500` ke `--neutral-600` (6.16:1), root-cause fix yang otomatis membenahi semua turunannya.
+- **Loading state**: komponen `Skeleton` sudah ada sejak Fase 3 tapi tidak pernah benar-benar dipakai di halaman manapun — audit menemukan 130+ titik "Memuat…" berupa teks polos di ~74 halaman tabel/roster lintas role, plus satu halaman (`mahasiswa/Heregistrasi.tsx`) yang bahkan tidak punya indikator loading sama sekali (tbody kosong tak bisa dibedakan dari "belum ada data"). Ditambah dua helper baru — `TableSkeletonRows` (baris shimmer di dalam `<tbody>`) dan `PageLoadingSkeleton` (placeholder halaman penuh) — lalu semua titik itu dikonversi.
+
+---
+
 ## 4. Rencana eksekusi bertahap (token → shell → komponen → halaman)
 
 Setiap fase didesain agar **aman & reversibel** — tidak ada fase yang butuh redesain besar, dan tiap fase bisa diverifikasi/diverifikasi ulang secara independen sebelum lanjut.
