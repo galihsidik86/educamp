@@ -1,6 +1,7 @@
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import { Button, Card } from '@/ds';
+import { ArrowLeft, Search } from 'lucide-react';
+import { Button, Card, Input } from '@/ds';
 import { useKrsRiwayat } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
@@ -8,6 +9,22 @@ import { StatusPill } from '@/components/StatusPill';
 export function MahasiswaKrsRiwayat() {
   const navigate = useNavigate();
   const { data, isLoading } = useKrsRiwayat();
+  const [q, setQ] = useState('');
+
+  const semesters = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.semesters ?? [];
+    return (data?.semesters ?? [])
+      .map((s) => ({
+        ...s,
+        items: s.items.filter((it) =>
+          it.kelas.namaMK.toLowerCase().includes(query) ||
+          it.kelas.kodeMK.toLowerCase().includes(query) ||
+          it.kelas.dosen.toLowerCase().includes(query),
+        ),
+      }))
+      .filter((s) => s.items.length > 0);
+  }, [data, q]);
 
   return (
     <div className="stack">
@@ -29,7 +46,23 @@ export function MahasiswaKrsRiwayat() {
         </Card>
       )}
 
-      {data?.semesters.map((s) => (
+      {data && data.semesters.length > 0 && (
+        <div className="row" style={{ alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari mata kuliah atau dosen…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        </div>
+      )}
+      {data && data.semesters.length > 0 && semesters.length === 0 && (
+        <p className="muted">Tidak ada mata kuliah yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
+
+      {semesters.map((s) => (
         <Card key={s.semester.kode}>
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'var(--space-3)' }}>
             <div>
@@ -37,7 +70,7 @@ export function MahasiswaKrsRiwayat() {
               <h3 style={{ margin: 0, color: 'var(--text-strong)' }}>{s.semester.nama}</h3>
             </div>
             <div className="muted" style={{ fontFamily: 'var(--font-mono)' }}>
-              {s.items.length} MK · {s.totalSks} SKS
+              {s.items.length} MK · {q.trim() ? s.items.reduce((n, it) => n + it.kelas.sks, 0) : s.totalSks} SKS
             </div>
           </div>
           <div className="tz-table-wrap">
