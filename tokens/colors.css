@@ -6,14 +6,20 @@
    ============================================================ */
 
 :root {
-  /* ---- Base palette: Tazkia Blue (primary) ---- */
+  /* ---- Base palette: Tazkia Blue (primary) ----
+     blue-500/600 dihaluskan via color-mix (10% putih di ruang oklch — blend
+     perseptual halus, bukan hex tebak-tebakan) utk kesan lebih tenang/modern
+     di tombol & link. Kontras teks putih di atasnya masih ≥6:1 (jauh di atas
+     4.5:1 AA) jadi aman. blue-800 (brand navy) & blue-900 SENGAJA tidak
+     disentuh — itu jangkar identitas brand (sidebar/hero), refresh visual
+     tidak boleh terasa seperti rebrand diam-diam. */
   --blue-50:  #EEF3FF;
   --blue-100: #DCE6FF;
   --blue-200: #BBCEFE;
   --blue-300: #8FACFB;
   --blue-400: #5E81F4;
-  --blue-500: #3A5CE4;
-  --blue-600: #2A45C9;  /* primary action */
+  --blue-500: color-mix(in oklch, #3A5CE4 90%, white);
+  --blue-600: color-mix(in oklch, #2A45C9 90%, white);  /* primary action */
   --blue-700: #2138A1;
   --blue-800: #1D3180;  /* brand navy */
   --blue-900: #172657;
@@ -110,6 +116,9 @@
   --surface-raised:  var(--neutral-0);
   --surface-inverse: var(--blue-900);
   --surface-brand:   var(--blue-800);
+  /* Alias generik — sinonim --surface-page utk konsumen yg cari nama
+     konvensional "--surface" polos. Tidak menggantikan token di atas. */
+  --surface:         var(--surface-page);
 
   /* Text */
   --text-strong:   var(--neutral-900);
@@ -119,6 +128,11 @@
   --text-inverse:  var(--neutral-0);
   --text-onbrand:  color-mix(in oklch, var(--neutral-0) 92%, var(--blue-200));
   --text-link:     var(--blue-600);
+  /* Alias konvensional — sinonim --text-strong/--text-body. Ditambahkan utk
+     konsumen yg terbiasa dgn penamaan primary/secondary; tidak menggantikan
+     --text-strong/--text-body yg sudah dipakai luas di komponen. */
+  --text-primary:   var(--text-strong);
+  --text-secondary: var(--text-body);
 
   /* Borders & dividers */
   --border-subtle:  var(--neutral-150);

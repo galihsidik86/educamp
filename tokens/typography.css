@@ -3,11 +3,19 @@
    ============================================================ */
 
 :root {
-  /* ---- Families ---- */
+  /* ---- Families ----
+     Tetap 3 keluarga font sesuai brand guideline (CLAUDE.md) — Plus Jakarta
+     Sans sudah jadi "modern alternative to Inter" (bukan kebetulan sering
+     disandingkan sebagai pengganti Inter di sistem SaaS modern), jadi
+     "pairing modern" dicapai lewat scale/weight/tracking di bawah, bukan
+     menambah font ke-4. --font-heading = alias eksplisit (bukan rename)
+     supaya heading punya hook sendiri tanpa mengubah font-sans yg dipakai
+     luas. */
   --font-sans:    'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-serif:   'Spectral', ui-serif, Georgia, 'Times New Roman', serif;
   --font-mono:    'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   --font-display: var(--font-sans);   /* default display = sans; serif for institutional moments */
+  --font-heading: var(--font-sans);   /* alias eksplisit utk heading — sama family, beda weight/tracking */
 
   /* ---- Weights ---- */
   --fw-regular:  400; /* @kind other */
@@ -16,28 +24,42 @@
   --fw-bold:     700; /* @kind other */
   --fw-extra:    800; /* @kind other */
 
-  /* ---- Type scale (1.250 major-third-ish, tuned for data UI) ---- */
+  /* ---- Type scale — refresh: rasio 1.25 konsisten dari --text-base ke atas
+     (base×1.25=lg, lg×1.25=xl, dst — modular scale asli, bukan dibulatkan
+     paksa ke angka genap). --text-base dinaikkan 15px→16px: memenuhi
+     ambang minimum "readable font size 16px di mobile" sekaligus jadi
+     jangkar rem yg lebih bersih utk rasio 1.25.
+     --text-2xs/xs/sm SENGAJA TIDAK diubah — ini nilai yg di-tuning khusus
+     utk densitas tabel data (diapresiasi eksplisit di UI-AUDIT.md sebagai
+     kekuatan); menaikkannya mengikuti rasio 1.25 murni akan menghasilkan
+     ~10px yg merusak densitas tabel, jadi bagian bawah scale tetap hybrid
+     (tuned-for-density), bukan strict-ratio. ---- */
   --text-2xs:  0.6875rem; /* 11px — table micro-labels, badges */
   --text-xs:   0.75rem;   /* 12px — meta, captions */
   --text-sm:   0.8125rem; /* 13px — dense table body, helper */
-  --text-base: 0.9375rem; /* 15px — UI body default */
-  --text-md:   1.0625rem; /* 17px — emphasized body */
-  --text-lg:   1.25rem;   /* 20px — card titles */
-  --text-xl:   1.5rem;    /* 24px — section headers */
-  --text-2xl:  1.875rem;  /* 30px — page titles */
-  --text-3xl:  2.375rem;  /* 38px — hero / display */
-  --text-4xl:  3rem;      /* 48px — marketing hero */
-  --text-5xl:  3.75rem;   /* 60px — splash */
+  --text-base: 1rem;      /* 16px — UI body default (was 15px) */
+  --text-md:   1.125rem;  /* 18px — emphasized body */
+  --text-lg:   1.25rem;   /* 20px — card titles (= base × 1.25) */
+  --text-xl:   1.5625rem; /* 25px — section headers (= lg × 1.25) */
+  --text-2xl:  1.953rem;  /* ~31px — page titles (= xl × 1.25) */
+  --text-3xl:  2.441rem;  /* ~39px — hero / display (= 2xl × 1.25) */
+  --text-4xl:  3.052rem;  /* ~49px — marketing hero (= 3xl × 1.25) */
+  --text-5xl:  3.815rem;  /* ~61px — splash (= 4xl × 1.25) */
 
-  /* ---- Line heights ---- */
-  --leading-tight:   1.15;
-  --leading-snug:    1.3;
-  --leading-normal:  1.5;
-  --leading-relaxed: 1.65;
+  /* ---- Line heights — sedikit lebih lapang, lebih "modern breathable"
+     (leading-normal 1.5→1.6 sesuai rentang 1.5–1.75 yg direkomendasikan
+     utk body text; leading-tight utk heading 1.15→1.2 supaya tidak
+     terlalu rapat di ukuran besar dgn scale baru) ---- */
+  --leading-tight:   1.2;
+  --leading-snug:    1.35;
+  --leading-normal:  1.6;
+  --leading-relaxed: 1.7;
 
-  /* ---- Letter spacing ---- */
-  --tracking-tighter: -0.02em;
-  --tracking-tight:   -0.011em;
+  /* ---- Letter spacing — heading sedikit lebih rapat (tracking-tight
+     -0.011em→-0.02em) utk kesan modern/tegas yg umum di heading besar
+     ---- */
+  --tracking-tighter: -0.03em;
+  --tracking-tight:   -0.02em;
   --tracking-normal:  0em;
   --tracking-wide:    0.02em;
   --tracking-caps:    0.08em;  /* eyebrow / overline uppercase */
