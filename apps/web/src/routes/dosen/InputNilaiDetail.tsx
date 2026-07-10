@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Alert, Button, Card } from '@/ds';
-import { ChevronLeft, Save, CheckCircle2, Upload, Calculator, SlidersHorizontal, RefreshCw } from 'lucide-react';
+import { Alert, Button, Card, Input } from '@/ds';
+import { ChevronLeft, Save, CheckCircle2, Upload, Calculator, SlidersHorizontal, RefreshCw, Search } from 'lucide-react';
 import {
   useDosenKelasDetail, useUpdateNilai, useFinalizeAllNilai, useImportNilai, useUpdateBobotNilai,
   useDosenKelasNilaiSumber, useSinkronNilai,
@@ -149,6 +149,15 @@ export function DosenInputNilaiDetail() {
     return new Date(data.kelas.periodeNilai.selesai) > new Date();
   }, [data]);
 
+  const [q, setQ] = useState('');
+  const peserta = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.peserta ?? [];
+    return (data?.peserta ?? []).filter((p) =>
+      p.mahasiswa.nim.toLowerCase().includes(query) || p.mahasiswa.nama.toLowerCase().includes(query),
+    );
+  }, [data, q]);
+
   if (isLoading) return <p className="muted">Memuat…</p>;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Kelas tidak ditemukan atau Anda bukan pengampu.</Alert>;
 
@@ -246,6 +255,22 @@ export function DosenInputNilaiDetail() {
         </div>
       </Card>
 
+      {data.peserta.length > 0 && (
+        <div className="row" style={{ alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari NIM atau nama…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        </div>
+      )}
+      {data.peserta.length > 0 && peserta.length === 0 && (
+        <p className="muted">Tidak ada mahasiswa yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
+
       <div className="tz-table-wrap" style={{ overflow: 'auto' }}>
         <table className="tz-table" style={{ minWidth: 1100 }}>
           <thead>
@@ -261,7 +286,7 @@ export function DosenInputNilaiDetail() {
             {data.peserta.length === 0 && (
               <tr><td colSpan={11} className="muted center">Belum ada peserta di kelas ini.</td></tr>
             )}
-            {data.peserta.map((p) => {
+            {peserta.map((p) => {
               const r = rows[p.krsId];
               if (!r) return null;
               return (
