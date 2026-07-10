@@ -1,17 +1,18 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Alert, Card } from '@/ds';
+import { Alert, Card, Input } from '@/ds';
 import { useKhs, useTranskrip } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { formatIp } from '@/lib/format';
-import { Printer, Lock, ClipboardCheck } from 'lucide-react';
+import { Printer, Lock, ClipboardCheck, Search } from 'lucide-react';
 import { Button } from '@/ds';
 
 type Tab = 'khs' | 'transkrip';
 
 export function MahasiswaNilai() {
   const [tab, setTab] = useState<Tab>('khs');
+  const [q, setQ] = useState('');
   const khs = useKhs();
   const transkrip = useTranskrip();
   const navigate = useNavigate();
@@ -19,6 +20,18 @@ export function MahasiswaNilai() {
   const hasLockedKhs = khs.data?.semesters.some((s) => s.locked) ?? false;
   const canPrintKhs = (khs.data?.semesters.length ?? 0) > 0 && !hasLockedKhs;
   const canPrintTranskrip = (transkrip.data?.items.length ?? 0) > 0;
+
+  const query = q.trim().toLowerCase();
+  const khsSemesters = useMemo(() => {
+    if (!query) return khs.data?.semesters ?? [];
+    return (khs.data?.semesters ?? [])
+      .map((s) => (s.locked ? s : { ...s, items: s.items.filter((it) => it.namaMK.toLowerCase().includes(query) || it.kodeMK.toLowerCase().includes(query)) }))
+      .filter((s) => s.locked || s.items.length > 0);
+  }, [khs.data, query]);
+  const transkripItems = useMemo(() => {
+    if (!query) return transkrip.data?.items ?? [];
+    return (transkrip.data?.items ?? []).filter((it) => it.namaMK.toLowerCase().includes(query) || it.kodeMK.toLowerCase().includes(query));
+  }, [transkrip.data, query]);
 
   return (
     <div className="stack">
@@ -48,6 +61,17 @@ export function MahasiswaNilai() {
         <button onClick={() => setTab('transkrip')} aria-selected={tab === 'transkrip'}>Transkrip</button>
       </div>
 
+      <div className="row" style={{ alignItems: 'flex-end' }}>
+        <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+          <Input
+            icon={<Search size={16} />}
+            placeholder="Cari mata kuliah…"
+            value={q}
+            onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+          />
+        </div>
+      </div>
+
       {tab === 'khs' && (
         <div className="stack">
           {hasLockedKhs && (
@@ -61,7 +85,10 @@ export function MahasiswaNilai() {
           {khs.data && khs.data.semesters.length === 0 && (
             <Alert variant="info" title="Belum ada nilai">KHS akan muncul setelah dosen menginput nilai.</Alert>
           )}
-          {khs.data?.semesters.map((s) => (
+          {khs.data && khs.data.semesters.length > 0 && khsSemesters.length === 0 && (
+            <p className="muted">Tidak ada mata kuliah yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+          )}
+          {khsSemesters.map((s) => (
             <div key={s.semesterKode} className="stack" style={{ gap: 8 }}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <h3 style={{ margin: 0, color: 'var(--text-strong)' }}>{capFirst(s.semesterNama)} <span className="muted" style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}>({s.semesterKode})</span></h3>
@@ -147,7 +174,10 @@ export function MahasiswaNilai() {
               {transkrip.data?.items.length === 0 && (
                 <tr><td colSpan={7} className="muted center">Belum ada nilai yang difinalisasi.</td></tr>
               )}
-              {transkrip.data?.items.map((it, idx) => (
+              {transkrip.data && transkrip.data.items.length > 0 && transkripItems.length === 0 && (
+                <tr><td colSpan={7} className="muted center">Tidak ada mata kuliah yang cocok dengan &ldquo;{q.trim()}&rdquo;.</td></tr>
+              )}
+              {transkripItems.map((it, idx) => (
                 <tr key={`${it.semesterKode}-${it.kodeMK}-${idx}`}>
                   <td className="mono">{it.semesterKode}</td>
                   <td className="mono">{it.kodeMK}</td>
