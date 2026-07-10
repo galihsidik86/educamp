@@ -147,8 +147,11 @@
   border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
 }
 .tz-card--pad { padding: var(--pad-card); }
-.tz-card--hover { cursor: pointer; transition: box-shadow var(--dur-base) var(--ease-standard), transform var(--dur-base) var(--ease-standard), border-color var(--dur-base) var(--ease-standard); }
-.tz-card--hover:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: var(--action-soft); }
+.tz-card--hover {
+  cursor: pointer;
+  transition: box-shadow var(--transition-base), transform var(--transition-base), border-color var(--transition-base);
+}
+.tz-card--hover:hover { box-shadow: var(--shadow-hover-md); transform: translateY(-2px); border-color: var(--action-soft); }
 .tz-card--hover:active { transform: translateY(0); box-shadow: var(--shadow-sm); transition-duration: 60ms; }
 .tz-card__header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: var(--space-5) var(--space-6); border-bottom: 1px solid var(--border-subtle); }
 .tz-card__title { font-size: var(--text-lg); font-weight: var(--fw-bold); color: var(--text-strong); letter-spacing: -0.01em; }
