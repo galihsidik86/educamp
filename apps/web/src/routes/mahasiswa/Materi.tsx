@@ -24,7 +24,7 @@ export function MahasiswaMateri() {
 
       <div className="stack">
         {data?.items.map((k) => (
-          <Card key={k.kelasId}>
+          <Card key={k.kelasId} hover>
             <div
               className="row"
               style={{ justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}

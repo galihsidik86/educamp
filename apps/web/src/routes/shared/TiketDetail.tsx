@@ -185,7 +185,7 @@ function ReplyThread({ replies }: { replies: TiketReply[] }) {
           ? (r.author?.akademik?.nama ?? 'BAAK')
           : (r.author?.mahasiswa?.nama ?? 'Mahasiswa');
         return (
-          <Card key={r.id} style={isAkademik ? { borderLeft: '3px solid var(--accent-fg)' } : undefined}>
+          <Card key={r.id} style={isAkademik ? { borderLeft: '3px solid var(--accent)' } : undefined}>
             <div className="muted" style={{ fontSize: 'var(--text-xs)' }}>
               <strong>{name}</strong> · {isAkademik ? 'Akademik' : 'Mahasiswa'} · {formatTanggalWaktu(r.createdAt)}
             </div>

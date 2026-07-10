@@ -8,6 +8,7 @@ import {
 import { useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { RowActions } from '@/components/RowActions';
 import { useToast } from '@/components/Toast';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { formatTanggalWaktu } from '@/lib/format';
@@ -158,18 +159,19 @@ export function AkademikUsers() {
                     <td className="num mono">{u._count?.refreshTokens ?? 0}</td>
                     <td className="mono" style={{ fontSize: 'var(--text-xs)' }}>{u.lastLoginAt ? formatTanggalWaktu(u.lastLoginAt) : '—'}</td>
                     <td>
-                      <div className="row" style={{ gap: 4, justifyContent: 'flex-end' }}>
-                        {u.role === 'akademik' && (
-                          <Button size="sm" variant="ghost" leftIcon={<UserCog size={12} />} onClick={() => setSubRoleTarget(u)}>Sub-peran</Button>
-                        )}
-                        <Button size="sm" variant="ghost" leftIcon={<MonitorSmartphone size={12} />} onClick={() => setSelected(u)}>Sesi</Button>
-                        <Button size="sm" variant="ghost" leftIcon={<KeyRound size={12} />} onClick={() => onResetPassword(u)}>Reset pw</Button>
-                        {u.isActive ? (
-                          <Button size="sm" variant="ghost" leftIcon={<ShieldOff size={12} />} onClick={() => onDeactivate(u)}>Nonaktifkan</Button>
-                        ) : (
-                          <Button size="sm" variant="primary" leftIcon={<ShieldCheck size={12} />} onClick={() => onActivate(u)}>Aktifkan</Button>
-                        )}
-                      </div>
+                      <RowActions
+                        label={`Aksi untuk ${u.email}`}
+                        actions={[
+                          ...(u.role === 'akademik'
+                            ? [{ label: 'Sub-peran', icon: <UserCog size={14} />, onClick: () => setSubRoleTarget(u) }]
+                            : []),
+                          { label: 'Sesi', icon: <MonitorSmartphone size={14} />, onClick: () => setSelected(u) },
+                          { label: 'Reset pw', icon: <KeyRound size={14} />, onClick: () => onResetPassword(u) },
+                          u.isActive
+                            ? { label: 'Nonaktifkan', icon: <ShieldOff size={14} />, onClick: () => onDeactivate(u), danger: true }
+                            : { label: 'Aktifkan', icon: <ShieldCheck size={14} />, onClick: () => onActivate(u) },
+                        ]}
+                      />
                     </td>
                   </tr>
                 );

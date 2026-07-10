@@ -130,7 +130,7 @@ function RejectModal({ item, onClose, actions }: {
       <div className="stack" style={{ padding: 'var(--space-4)' }}>
         {err && <Alert variant="danger" title="Gagal">{err}</Alert>}
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Alasan (opsional)</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Alasan (opsional)</label>
           <textarea
             value={catatan}
             onChange={(e) => setCatatan(e.target.value)}
@@ -171,7 +171,7 @@ function CompleteModal({ item, onClose, actions }: {
       <div className="stack" style={{ padding: 'var(--space-4)' }}>
         {err && <Alert variant="danger" title="Gagal">{err}</Alert>}
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Catatan hasil konsultasi</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Catatan hasil konsultasi</label>
           <textarea
             value={catatan}
             onChange={(e) => setCatatan(e.target.value)}

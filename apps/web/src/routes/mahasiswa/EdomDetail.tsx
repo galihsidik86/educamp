@@ -85,9 +85,9 @@ export function MahasiswaEdomDetail() {
                     style={{
                       flex: 1, minWidth: 90, textAlign: 'center',
                       padding: 'var(--space-2)',
-                      background: active ? 'var(--brand-primary, #0c2340)' : 'var(--surface-card)',
+                      background: active ? 'var(--brand)' : 'var(--surface-card)',
                       color: active ? 'white' : 'var(--text-strong)',
-                      border: `1px solid ${active ? 'var(--brand-primary, #0c2340)' : 'var(--border-default)'}`,
+                      border: `1px solid ${active ? 'var(--brand)' : 'var(--border-default)'}`,
                       borderRadius: 'var(--radius-md)',
                       cursor: 'pointer',
                     }}

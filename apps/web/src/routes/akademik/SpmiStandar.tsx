@@ -5,7 +5,7 @@ import type { TextareaHTMLAttributes } from 'react';
 function Textarea({ label, ...rest }: { label?: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <div>
-      {label && <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>{label}</label>}
+      {label && <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>{label}</label>}
       <textarea
         {...rest}
         className="tz-input"
@@ -229,7 +229,7 @@ function StandarCardItem({
     <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-2)' }}>
         <div>
-          <div className="mono" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>{standar.kode}</div>
+          <div className="mono muted" style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.04em' }}>{standar.kode}</div>
           <strong style={{ color: 'var(--text-strong)', display: 'block', marginTop: 2 }}>{standar.nama}</strong>
         </div>
         {last && <Badge variant={STATUS_VARIANT[last.status]} dot>{STATUS_LABEL[last.status]}</Badge>}

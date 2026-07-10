@@ -47,7 +47,7 @@ export function DosenBkd() {
       <div className="stack">
         {data?.items.map((lap) => (
           <Link key={lap.id} to={`/dosen/bkd/${lap.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <Card>
+            <Card hover>
               <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }}>
                 <div style={{ flex: 1 }}>
                   <div className="row" style={{ alignItems: 'center', gap: 'var(--space-2)' }}>

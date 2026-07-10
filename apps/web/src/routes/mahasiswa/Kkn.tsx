@@ -89,7 +89,7 @@ export function MahasiswaKkn() {
           {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
           <div className="row" style={{ gap: 'var(--space-3)' }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Tahun</label>
+              <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Tahun</label>
               <select
                 value={tahun}
                 onChange={(e) => setPeriode(Number(e.target.value), jenis ?? 'Genap')}
@@ -100,7 +100,7 @@ export function MahasiswaKkn() {
               </select>
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Jenis</label>
+              <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Jenis</label>
               <select
                 value={jenis ?? 'Genap'}
                 onChange={(e) => setPeriode(tahun, e.target.value)}

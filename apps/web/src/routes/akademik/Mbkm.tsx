@@ -197,7 +197,7 @@ function EditModal({ item, onClose }: { item: AdminMbkmItem; onClose: () => void
         </div>
         <Input label="Lokasi" value={form.lokasi} onChange={(e) => setForm({ ...form, lokasi: (e.target as HTMLInputElement).value })} />
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Catatan untuk mahasiswa</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Catatan untuk mahasiswa</label>
           <textarea
             value={form.catatan}
             onChange={(e) => setForm({ ...form, catatan: e.target.value })}

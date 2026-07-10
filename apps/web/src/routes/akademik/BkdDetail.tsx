@@ -139,7 +139,7 @@ export function AkademikBkdDetail() {
         <div className="stack" style={{ padding: 'var(--space-4)' }}>
           {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Catatan penolakan</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Catatan penolakan</label>
             <textarea
               value={catatan}
               onChange={(e) => setCatatan(e.target.value)}

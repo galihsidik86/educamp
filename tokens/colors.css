@@ -88,6 +88,11 @@
   --accent-strong:  var(--gold-600);
   --accent-soft:    var(--gold-50);
   --accent-on:      var(--neutral-0);
+  /* Gold sebagai warna TEKS di atas surface terang (eyebrow, asterisk wajib,
+     outline fokus) — --accent & --accent-strong gagal WCAG AA (~2.95:1 /
+     ~4.27:1) di atas putih. --accent-text (gold-700) ≈ 6.3:1, lolos AA.
+     Untuk background/border/glow dekoratif tetap pakai --accent biasa. */
+  --accent-text:    var(--gold-700);
 
   /* Interactive / actions */
   --action:         var(--blue-600);

@@ -183,7 +183,7 @@ function ResponseModal({ item, aksi, onClose, onSubmit, pending }: {
           )}
         </Card>
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>
             {isApprove ? 'Catatan (opsional)' : 'Alasan penolakan'}
           </label>
           <textarea

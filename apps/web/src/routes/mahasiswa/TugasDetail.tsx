@@ -108,7 +108,7 @@ export function MahasiswaTugasDetail() {
           {savedMsg && <Alert variant="success" title="Tersimpan">{savedMsg}</Alert>}
           <Input label="Link jawaban (Drive/GitHub/dll)" value={link} onChange={(e) => setLink((e.target as HTMLInputElement).value)} placeholder="https://drive.google.com/..." />
           <div style={{ marginTop: 'var(--space-3)' }}>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Atau jawaban langsung (teks)</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Atau jawaban langsung (teks)</label>
             <textarea
               value={isi}
               onChange={(e) => setIsi(e.target.value)}

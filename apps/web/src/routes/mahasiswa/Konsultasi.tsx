@@ -102,7 +102,7 @@ export function MahasiswaKonsultasi() {
         <div className="stack" style={{ padding: 'var(--space-4)' }}>
           <Input label="Topik" value={form.topik} onChange={(e) => setForm({ ...form, topik: (e.target as HTMLInputElement).value })} placeholder="Konsultasi pengambilan SKS semester ganjil" />
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Agenda (opsional)</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Agenda (opsional)</label>
             <textarea
               value={form.agenda}
               onChange={(e) => setForm({ ...form, agenda: e.target.value })}

@@ -133,7 +133,7 @@ export function MahasiswaSkripsi() {
           {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
           <Input label="Judul (min. 10 karakter)" value={form.judul} onChange={(e) => setForm({ ...form, judul: (e.target as HTMLInputElement).value })} />
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Abstrak (opsional)</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Abstrak (opsional)</label>
             <textarea
               value={form.abstrak ?? ''}
               onChange={(e) => setForm({ ...form, abstrak: e.target.value })}
@@ -168,7 +168,7 @@ function LinkForm({ item, onSave, onClose }: { item: SkripsiItem; onSave: (patch
     <div className="stack" style={{ padding: 'var(--space-4)', gap: 'var(--space-3)' }}>
       <Input label="Link dokumen / draft skripsi" value={form.linkDokumen} onChange={(e) => setForm({ ...form, linkDokumen: (e.target as HTMLInputElement).value })} placeholder="https://drive.google.com/..." />
       <div>
-        <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Abstrak</label>
+        <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Abstrak</label>
         <textarea
           value={form.abstrak}
           onChange={(e) => setForm({ ...form, abstrak: e.target.value })}

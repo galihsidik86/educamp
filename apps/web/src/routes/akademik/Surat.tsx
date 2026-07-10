@@ -136,7 +136,7 @@ function EditModal({ item, onClose }: { item: AdminSuratItem; onClose: () => voi
         <Input label="Nomor surat (wajib untuk status 'selesai')" value={form.nomorSurat} onChange={(e) => setForm({ ...form, nomorSurat: (e.target as HTMLInputElement).value })} placeholder="mis. 001/SK/AKD/2026" />
 
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Catatan untuk mahasiswa</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Catatan untuk mahasiswa</label>
           <textarea
             value={form.catatan}
             onChange={(e) => setForm({ ...form, catatan: e.target.value })}

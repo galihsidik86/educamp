@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Alert, Button, Card, Input, Select } from '@/ds';
-import { Plus, Pencil, Trash2, FileText, Activity, Layers } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileText, Activity, Layers, ExternalLink } from 'lucide-react';
 import {
   useAdminKategori, useAdminKategoriActions,
   useAdminDokumen, useAdminDokumenActions, useAdminDokumenAkses,
@@ -9,6 +9,7 @@ import {
 import { useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { RowActions } from '@/components/RowActions';
 import { formatTanggal, formatTanggalWaktu, safeHref } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -260,14 +261,19 @@ function DokumenTab() {
                   <td className="num mono">{d.viewCount} / {d.downloadCount}</td>
                   <td className="mono" style={{ fontSize: 'var(--text-xs)' }}>{formatTanggal(d.updatedAt)}</td>
                   <td>
-                    <div className="row" style={{ gap: 4, justifyContent: 'flex-end' }}>
-                      <a href={safeHref(d.fileUrl) ?? undefined} target="_blank" rel="noreferrer">
-                        <Button size="sm" variant="ghost">Buka</Button>
-                      </a>
-                      <Button size="sm" variant="ghost" leftIcon={<Activity size={12} />} onClick={() => setAksesFor(d)}>Akses</Button>
-                      <Button size="sm" variant="ghost" leftIcon={<Pencil size={12} />} onClick={() => openEdit(d)}>Ubah</Button>
-                      <Button size="sm" variant="ghost" leftIcon={<Trash2 size={12} />} onClick={() => onDelete(d)}>Hapus</Button>
-                    </div>
+                    <RowActions
+                      label={`Aksi untuk ${d.judul}`}
+                      actions={[
+                        {
+                          label: 'Buka', icon: <ExternalLink size={14} />,
+                          onClick: () => { const url = safeHref(d.fileUrl); if (url) window.open(url, '_blank', 'noopener,noreferrer'); },
+                          disabled: !safeHref(d.fileUrl),
+                        },
+                        { label: 'Akses', icon: <Activity size={14} />, onClick: () => setAksesFor(d) },
+                        { label: 'Ubah', icon: <Pencil size={14} />, onClick: () => openEdit(d) },
+                        { label: 'Hapus', icon: <Trash2 size={14} />, onClick: () => onDelete(d), danger: true },
+                      ]}
+                    />
                   </td>
                 </tr>
               ))}
@@ -297,7 +303,7 @@ function DokumenTab() {
           </div>
           <Input label="Judul" value={form.judul ?? ''} onChange={(e) => setForm({ ...form, judul: (e.target as HTMLInputElement).value })} placeholder="Panduan Akademik 2025/2026" />
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Deskripsi (opsional)</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Deskripsi (opsional)</label>
             <textarea
               value={form.deskripsi ?? ''}
               onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}

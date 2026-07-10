@@ -29,7 +29,7 @@ const STATUS_VARIANT: Record<StatusAmi, 'neutral' | 'warning' | 'success' | 'dan
 function Textarea({ label, ...rest }: { label?: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <div>
-      {label && <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>{label}</label>}
+      {label && <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>{label}</label>}
       <textarea
         {...rest}
         className="tz-input"
@@ -110,7 +110,7 @@ function AmiCard({ ami, onDelete }: { ami: Ami; onDelete: () => void }) {
     <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div className="mono" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>{ami.kode}</div>
+          <div className="mono muted" style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.04em' }}>{ami.kode}</div>
           <strong style={{ color: 'var(--text-strong)', display: 'block', marginTop: 2 }}>{ami.nama}</strong>
         </div>
         <Badge variant={STATUS_VARIANT[ami.status]} dot>{STATUS_LABEL[ami.status]}</Badge>

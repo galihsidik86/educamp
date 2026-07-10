@@ -149,7 +149,7 @@ function KuesionerModal({ item, onClose }: { item: EdomKuesionerItem; onClose: (
         <div className="stack" style={{ gap: 'var(--space-2)' }}>
           {detail.data?.aspek.map((a) => (
             <div key={a.id} className="row" style={{ alignItems: 'flex-start', gap: 'var(--space-3)', padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)' }}>
-              <div className="mono" style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', minWidth: 24 }}>{a.urutan}</div>
+              <div className="mono muted" style={{ fontSize: 'var(--text-sm)', minWidth: 24 }}>{a.urutan}</div>
               <div style={{ flex: 1 }}>{a.pertanyaan}</div>
               <Button size="sm" variant="ghost" leftIcon={<Trash2 size={12} />} onClick={() => deleteAspek.mutate(a.id)}>Hapus</Button>
             </div>

@@ -161,7 +161,7 @@ export function AkademikKalender() {
         <div className="stack" style={{ padding: 'var(--space-4)' }}>
           <Input label="Judul" value={form.judul} onChange={(e) => setForm({ ...form, judul: (e.target as HTMLInputElement).value })} placeholder="UTS Semester Ganjil 2025/2026" />
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Deskripsi (opsional)</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Deskripsi (opsional)</label>
             <textarea
               value={form.deskripsi ?? ''}
               onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}

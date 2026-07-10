@@ -185,7 +185,7 @@ function CreateModal({ open, onClose }: { open: boolean; onClose: () => void }) 
 
         <Input label="Judul sertifikat" value={form.judul ?? ''} onChange={(e) => setForm({ ...form, judul: (e.target as HTMLInputElement).value })} placeholder="Workshop Pemrograman Lanjut" />
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Deskripsi (opsional)</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Deskripsi (opsional)</label>
           <textarea
             value={form.deskripsi ?? ''}
             onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}
@@ -206,7 +206,7 @@ function CreateModal({ open, onClose }: { open: boolean; onClose: () => void }) 
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Mahasiswa penerima</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Mahasiswa penerima</label>
           {selectedMhs ? (
             <Card>
               <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
@@ -265,7 +265,7 @@ function CabutModal({ sertifikat, onClose }: { sertifikat: SertifikatAdmin; onCl
           QR verifikasi akan return 404. Tindakan dapat dibatalkan dengan tombol "Aktifkan".
         </Alert>
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Alasan pencabutan</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Alasan pencabutan</label>
           <textarea
             value={alasan}
             onChange={(e) => setAlasan(e.target.value)}

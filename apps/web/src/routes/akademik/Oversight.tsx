@@ -183,7 +183,7 @@ function EmptyPanel({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <Card>
       <div style={{ textAlign: 'center', padding: 'var(--space-5)' }}>
-        <span style={{ color: 'var(--text-muted)' }}>{icon}</span>
+        <span className="muted">{icon}</span>
         <p className="muted" style={{ marginTop: 'var(--space-2)' }}>{text}</p>
       </div>
     </Card>

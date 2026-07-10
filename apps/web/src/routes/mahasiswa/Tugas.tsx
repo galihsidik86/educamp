@@ -35,7 +35,7 @@ export function MahasiswaTugas() {
           const overdue = dueIn < 0;
           const due24h = dueIn > 0 && dueIn < 24 * 3600 * 1000;
           return (
-            <Card key={t.id}>
+            <Card key={t.id} hover>
               <div
                 className="row"
                 style={{ justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }}

@@ -24,7 +24,7 @@ const KEP_COLOR: Record<StatusKeputusan, string> = {
 function Textarea({ label, ...rest }: { label?: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <div>
-      {label && <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>{label}</label>}
+      {label && <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>{label}</label>}
       <textarea
         {...rest}
         className="tz-input"
@@ -45,7 +45,7 @@ export function AkademikSpmiRtmDetail() {
 
   return (
     <div className="stack">
-      <Link to="/akademik/spmi/rtm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)', textDecoration: 'none', fontSize: 'var(--text-sm)' }}>
+      <Link to="/akademik/spmi/rtm" className="muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, textDecoration: 'none', fontSize: 'var(--text-sm)' }}>
         <ArrowLeft size={14} /> Kembali ke daftar RTM
       </Link>
 

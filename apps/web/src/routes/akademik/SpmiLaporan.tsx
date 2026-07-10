@@ -173,7 +173,7 @@ function EntityCetakCard({
     <Link to={to} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }} className="spmi-nav-card">
       <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div className="mono" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>{kode}</div>
+          <div className="mono muted" style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.04em' }}>{kode}</div>
           <Badge variant={statusVariant} dot>{status}</Badge>
         </div>
         <strong style={{ color: 'var(--text-strong)', fontSize: 'var(--text-sm)' }}>{judul}</strong>

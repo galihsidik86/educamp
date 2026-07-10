@@ -25,7 +25,7 @@ export function DosenKuisList() {
 
       <div className="stack">
         {data?.kelas.map((k) => (
-          <Card key={k.id}>
+          <Card key={k.id} hover>
             <div
               className="row"
               style={{ justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}

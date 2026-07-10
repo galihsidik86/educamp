@@ -242,7 +242,7 @@ function RejectModal({ item, onClose, onSubmit, pending }: {
         {err && <Alert variant="danger" title="Gagal">{err}</Alert>}
         <div className="muted" style={{ fontSize: 'var(--text-sm)' }}>{item.mahasiswa}</div>
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Alasan penolakan</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Alasan penolakan</label>
           <textarea
             value={catatan}
             onChange={(e) => setCatatan(e.target.value)}

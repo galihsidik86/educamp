@@ -67,7 +67,7 @@ export function MahasiswaTiket() {
       <div className="stack">
         {data?.items.map((t) => (
           <Link key={t.id} to={`/mahasiswa/tiket/${t.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <Card>
+            <Card hover>
               <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }}>
                 <div style={{ flex: 1 }}>
                   <div className="row" style={{ alignItems: 'center', gap: 'var(--space-2)' }}>
@@ -95,7 +95,7 @@ export function MahasiswaTiket() {
           </Select>
           <Input label="Judul singkat" value={form.judul} onChange={(e) => setForm({ ...form, judul: (e.target as HTMLInputElement).value })} placeholder="Tidak bisa input KRS — error 500" />
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Deskripsi lengkap</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Deskripsi lengkap</label>
             <textarea
               value={form.deskripsi}
               onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}

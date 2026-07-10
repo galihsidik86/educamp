@@ -116,17 +116,18 @@ export function DosenAbsensiPertemuan() {
                 onClick={() => setQuery('')}
                 title="Bersihkan pencarian"
                 aria-label="Bersihkan pencarian"
+                className="muted"
                 style={{
                   position: 'absolute', right: 6, bottom: 6,
                   border: 'none', background: 'transparent', cursor: 'pointer',
-                  color: 'var(--text-muted)', padding: 4,
+                  padding: 4,
                 }}
               >
                 <X size={14} />
               </button>
             )}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', paddingBottom: 8 }}>
+          <div className="muted" style={{ fontSize: 'var(--text-xs)', paddingBottom: 8 }}>
             <Search size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
             {query
               ? `${filtered.length} dari ${data.peserta.length} peserta`

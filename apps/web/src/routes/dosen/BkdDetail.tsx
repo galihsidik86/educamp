@@ -186,7 +186,7 @@ export function DosenBkdDetail() {
           </div>
           <Input label="Jenis kegiatan" value={form.jenis} onChange={(e) => setForm({ ...form, jenis: (e.target as HTMLInputElement).value })} placeholder="Panitia Wisuda, Pembina Organisasi, dll" />
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Deskripsi</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Deskripsi</label>
             <textarea
               value={form.deskripsi}
               onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}

@@ -50,7 +50,7 @@ code, kbd, samp, pre { font-family: var(--font-mono); }
   font-weight: var(--fw-bold);
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
-  color: var(--accent-strong);
+  color: var(--accent-text);
 }
 
 .ds-serif { font-family: var(--font-serif); }

@@ -21,7 +21,7 @@ export function VerifikasiSertifikat() {
     <div style={{ minHeight: '100vh', background: 'var(--surface-sunken)', padding: 'var(--space-6) var(--space-4)' }}>
       <div style={{ maxWidth: 680, margin: '0 auto' }} className="stack">
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-4)' }}>
-          <div style={{ fontFamily: 'Spectral, serif', fontSize: 'var(--text-2xl)', fontWeight: 700 }}>
+          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--text-2xl)', fontWeight: 700 }}>
             {namaInstitusi}
           </div>
           <div className="muted" style={{ fontSize: 'var(--text-sm)' }}>Verifikasi Sertifikat Digital</div>

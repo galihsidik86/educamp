@@ -70,7 +70,7 @@ export function AkademikTiket() {
       <div className="stack">
         {data?.items.map((t) => (
           <Link key={t.id} to={`/akademik/tiket/${t.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <Card>
+            <Card hover>
               <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }}>
                 <div style={{ flex: 1 }}>
                   <div className="row" style={{ alignItems: 'center', gap: 'var(--space-2)' }}>

@@ -90,6 +90,62 @@ html, body, #root {
   opacity: 0.7;
 }
 
+/* Filter cepat menu — muncul hanya di sidebar dengan menu banyak
+   (mahasiswa/dosen/akademik), tidak di wali. Mengurangi beban kognitif
+   menyisir ~50 item akademik (UI-AUDIT.md #9). */
+.sidebar__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 var(--space-1) var(--space-3);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  transition: background var(--dur-fast) var(--ease-standard),
+              border-color var(--dur-fast) var(--ease-standard);
+}
+.sidebar__search:focus-within {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(231, 194, 86, 0.5);
+}
+.sidebar__search-icon {
+  position: absolute;
+  left: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+.sidebar__search input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-onbrand);
+  font: inherit;
+  font-size: var(--text-sm);
+  padding: 8px 30px 8px 30px;
+}
+.sidebar__search input::placeholder { color: rgba(255, 255, 255, 0.45); }
+.sidebar__search-clear {
+  position: absolute;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+.sidebar__search-clear:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.sidebar__search-empty {
+  margin: 0 var(--space-3) var(--space-3);
+  font-size: var(--text-xs);
+  opacity: 0.6;
+  line-height: var(--leading-normal);
+}
+
 .sidebar__group-label {
   font-size: var(--text-2xs);
   text-transform: uppercase;
@@ -357,7 +413,7 @@ html, body, #root {
   font-size: var(--text-2xs);
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: var(--fw-bold);
   display: inline-flex;
   align-items: center;
@@ -543,7 +599,7 @@ html, body, #root {
 /* Required indicator: dari merah ke gold accent — tetap kelihatan
    tapi tidak alarming. Asterisk dgn vertical align fine-tune. */
 .tz-req {
-  color: var(--accent) !important;
+  color: var(--accent-text) !important;
   margin-left: 4px !important;
   font-weight: var(--fw-bold);
   font-size: var(--text-sm);
@@ -756,7 +812,7 @@ html, body, #root {
    mono. Tetap inline, hanya polish typography. */
 .tz-card strong[style*="mono"] {
   font-size: var(--text-lg);
-  color: var(--accent-strong);
+  color: var(--accent-text);
   letter-spacing: -0.02em;
 }
 
@@ -831,8 +887,12 @@ html, body, #root {
   background: var(--surface-sunken);
   border-top: 1px solid var(--border-default);
 }
-.tz-table .num,
-.tz-table .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+/* .mono/.num global (bukan cuma di .tz-table) — dipakai luas di luar tabel
+   (KPI dashboard, kartu, halaman cetak dengan tabel non-.tz-table) yang
+   sebelumnya diam-diam tidak dapat font mono/tabular-nums karena rule ini
+   dulu di-scope ke .tz-table saja. Align kanan tetap khusus kolom tabel. */
+.mono,
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .tz-table .num { text-align: right; }
 .tz-table .center { text-align: center; }
 
@@ -1163,7 +1223,7 @@ html, body, #root {
 .spmi-nav-card { display: block; }
 .spmi-nav-card > * { transition: transform .15s ease, box-shadow .2s ease; }
 .spmi-nav-card:hover > * { transform: translateY(-2px); box-shadow: var(--shadow-lg, 0 8px 24px rgba(15,26,58,0.10)); }
-.spmi-nav-card:focus-visible > * { outline: 2px solid var(--accent); outline-offset: 2px; }
+.spmi-nav-card:focus-visible > * { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 
 /* ----- Table row hover (SPMI tables) ----- */
 .tz-table tbody tr { transition: background-color .12s ease; }
@@ -1218,8 +1278,8 @@ html, body, #root {
   height: 54mm;
   border-radius: 4mm;
   background:
-    radial-gradient(ellipse 30mm 20mm at 90% 0%, color-mix(in srgb, var(--accent-fg, gold) 22%, transparent), transparent),
-    linear-gradient(135deg, var(--brand-primary, #0c2340) 0%, color-mix(in srgb, var(--brand-primary, #0c2340) 80%, black) 100%);
+    radial-gradient(ellipse 30mm 20mm at 90% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent),
+    linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 80%, black) 100%);
   color: white;
   display: grid;
   grid-template-rows: auto 1fr auto;
@@ -1264,7 +1324,7 @@ html, body, #root {
   width: 14mm;
   height: 14mm;
   background: white;
-  color: var(--brand-primary, #0c2340);
+  color: var(--brand);
   border-radius: 1mm;
   display: grid;
   place-items: center;
@@ -1364,32 +1424,12 @@ a {
               opacity var(--dur-fast) var(--ease-standard);
 }
 
-/* ----- Card hover lift -----
-   Hanya kartu yang berisi descendant dengan cursor:pointer yang ter-lift.
-   Kartu data statis (KPI, deskripsi) tetap diam.
-   :has() didukung semua browser modern (2023+). */
-.tz-card {
-  transition: border-color var(--dur-fast) var(--ease-standard),
-              box-shadow var(--dur-fast) var(--ease-standard),
-              transform var(--dur-fast) var(--ease-standard);
-}
-.tz-card:has([style*="cursor: pointer"]),
-.tz-card:has([style*="cursor:pointer"]) {
-  cursor: pointer;
-}
-.tz-card:has([style*="cursor: pointer"]):hover,
-.tz-card:has([style*="cursor:pointer"]):hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--action-soft);
-}
-/* Active state: drop kembali (feedback klik) */
-.tz-card:has([style*="cursor: pointer"]):active,
-.tz-card:has([style*="cursor:pointer"]):active {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
-  transition-duration: 60ms;
-}
+/* Card hover-lift kini murni via prop resmi <Card hover> → .tz-card--hover
+   di components/components.css (UI-AUDIT.md #1 & #3: selector
+   :has([style*="cursor: pointer"]) yang menyasar inline style dihapus —
+   rapuh, silently break kalau markup halaman berubah). Halaman yang
+   sebelumnya mengandalkan cursor:pointer inline utk efek ini sudah
+   dimigrasi memakai prop `hover` eksplisit. */
 
 /* ----- Topbar modernization -----
    Brand-aligned: navy border tipis + soft shadow + accent gold di title.
@@ -1609,29 +1649,9 @@ textarea.tz-input {
   overflow: hidden;
 }
 
-/* Shimmer overlay bar — sweep ringan tiap 2.5s utk "alive" feel */
-.tz-bar__fill::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    100deg,
-    transparent 0%,
-    transparent 40%,
-    rgba(255, 255, 255, 0.28) 50%,
-    transparent 60%,
-    transparent 100%);
-  transform: translateX(-100%);
-  animation: bar-shimmer 2.5s var(--ease-in-out) infinite;
-  animation-delay: 600ms; /* setelah width animation selesai */
-}
-@keyframes bar-shimmer {
-  0%   { transform: translateX(-100%); }
-  50%  { transform: translateX(100%); }
-  100% { transform: translateX(100%); }
-}
-
-/* Variants: pakai semantic warna sebagai --bar-color */
+/* Variants: pakai semantic warna sebagai --bar-color
+   (shimmer sweep infinite dihapus — motion overload, UI-AUDIT.md #7;
+   entrance fill-in di bawah tetap dipakai karena cuma sekali jalan) */
 .tz-bar--success .tz-bar__fill { --bar-color: var(--success-solid); }
 .tz-bar--info    .tz-bar__fill { --bar-color: var(--info-solid); }
 .tz-bar--warning .tz-bar__fill { --bar-color: var(--warning-solid); }
@@ -1639,7 +1659,6 @@ textarea.tz-input {
 .tz-bar--neutral .tz-bar__fill {
   --bar-color: var(--neutral-400);
 }
-.tz-bar--neutral .tz-bar__fill::after { display: none; } /* skip shimmer utk neutral */
 
 /* Entrance — bar width tumbuh dari 0 ke pct saat first render */
 .tz-bar__fill[data-pct] {
@@ -1927,6 +1946,55 @@ textarea.tz-input {
 }
 
 /* ============================================================
+   RowActions — menu overflow utk baris tabel dengan >3 aksi
+   ============================================================ */
+.row-actions { position: relative; display: inline-flex; }
+.row-actions__trigger {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px;
+  background: transparent; border: 1px solid transparent; border-radius: var(--radius-md);
+  color: var(--text-muted); cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
+}
+.row-actions__trigger:hover,
+.row-actions__trigger[aria-expanded="true"] {
+  background: var(--surface-sunken);
+  color: var(--text-strong);
+}
+.row-actions__menu {
+  position: absolute; right: 0; top: calc(100% + 4px);
+  z-index: var(--z-dropdown);
+  min-width: 180px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+  display: flex; flex-direction: column; gap: 1px;
+  animation: row-actions-in 120ms var(--ease-out);
+}
+@keyframes row-actions-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.row-actions__item {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; text-align: left;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: transparent; border: none;
+  font-size: var(--text-sm); color: var(--text-body);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
+}
+.row-actions__item:hover:not(:disabled) { background: var(--action-soft); color: var(--action); }
+.row-actions__item--danger { color: var(--danger-fg); }
+.row-actions__item--danger:hover:not(:disabled) { background: var(--danger-surface); color: var(--danger-fg); }
+.row-actions__item:disabled { opacity: 0.5; cursor: not-allowed; }
+.row-actions__item svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+/* ============================================================
    Breadcrumb navigation
    ============================================================ */
 .breadcrumb {
@@ -2011,54 +2079,12 @@ body.kartu-print-mode .route-transition {
 }
 
 /* ============================================================
-   StatCard polish — UUPM Paket A
+   KPI grid — entrance stagger (satu kali saat mount, bukan ambient
+   loop). Identitas visual .tz-stat sendiri (aksen strip, dsb) kini
+   didefinisikan resmi di components/components.css — lihat catatan
+   di sana soal kenapa StatCard tidak diberi hover-lift.
    ============================================================ */
 
-.tz-stat {
-  position: relative;
-  overflow: hidden;
-  transition: transform var(--dur-fast) var(--ease-standard),
-              box-shadow var(--dur-fast) var(--ease-standard),
-              border-color var(--dur-fast) var(--ease-standard);
-}
-
-/* Left accent strip emas — institutional, brand cue */
-.tz-stat::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: var(--space-3);
-  bottom: var(--space-3);
-  width: 3px;
-  background: var(--accent);
-  border-radius: 0 var(--radius-full) var(--radius-full) 0;
-  transition: width var(--dur-fast) var(--ease-standard),
-              top var(--dur-fast) var(--ease-standard),
-              bottom var(--dur-fast) var(--ease-standard);
-}
-
-.tz-stat:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--border-default);
-}
-.tz-stat:hover::before {
-  width: 5px;
-  top: var(--space-2);
-  bottom: var(--space-2);
-}
-
-/* Icon dalam circle dengan gradient brand-soft */
-.tz-stat__icon {
-  background: linear-gradient(135deg, var(--brand-soft) 0%, var(--info-surface) 100%);
-  box-shadow: inset 0 0 0 1px rgba(58, 92, 228, 0.08);
-  transition: transform var(--dur-base) var(--ease-emphasized);
-}
-.tz-stat:hover .tz-stat__icon {
-  transform: scale(1.06) rotate(-3deg);
-}
-
-/* Entrance stagger — KPI grid load animation */
 .kpi-grid > .tz-stat {
   animation: stat-enter var(--dur-slow) var(--ease-out) backwards;
 }
@@ -2077,57 +2103,17 @@ body.kartu-print-mode .route-transition {
 }
 
 /* ============================================================
-   Button polish — UUPM Paket B
+   Button — flat-first (UI-AUDIT.md #1: gradient+shimmer dihapus,
+   kembali ke flat solid resmi DS di components.css. Klik tetap dapat
+   feedback via scale, tanpa efek dekoratif yang tidak resmi di DS).
    ============================================================ */
 
 .tz-btn {
   position: relative;
-  overflow: hidden;
   transition: background var(--dur-fast) var(--ease-standard),
               border-color var(--dur-fast) var(--ease-standard),
               color var(--dur-fast) var(--ease-standard),
-              transform var(--dur-fast) var(--ease-standard),
-              box-shadow var(--dur-fast) var(--ease-standard);
-}
-
-/* Primary: subtle gradient + shimmer on hover */
-.tz-btn--primary {
-  background: linear-gradient(135deg, var(--action) 0%, var(--action-hover) 100%);
-}
-.tz-btn--primary:hover {
-  background: linear-gradient(135deg, var(--action-hover) 0%, var(--action-active) 100%);
-  box-shadow: 0 4px 12px -4px rgba(42, 69, 201, 0.4);
-}
-
-/* Shimmer overlay — diagonal sweep saat hover */
-.tz-btn--primary::after,
-.tz-btn--accent::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    100deg,
-    transparent 0%,
-    transparent 40%,
-    rgba(255, 255, 255, 0.18) 50%,
-    transparent 60%,
-    transparent 100%);
-  transform: translateX(-100%);
-  pointer-events: none;
-  transition: transform var(--dur-slow) var(--ease-out);
-}
-.tz-btn--primary:hover::after,
-.tz-btn--accent:hover::after {
-  transform: translateX(100%);
-}
-
-/* Accent (gold): pakai gradient gold + shimmer juga */
-.tz-btn--accent {
-  background: linear-gradient(135deg, var(--gold-500) 0%, var(--gold-600) 100%);
-}
-.tz-btn--accent:hover {
-  background: linear-gradient(135deg, var(--gold-600) 0%, var(--gold-700) 100%);
-  box-shadow: 0 4px 12px -4px rgba(194, 141, 30, 0.45);
+              transform var(--dur-fast) var(--ease-standard);
 }
 
 /* Active state: scale 0.97 untuk feedback klik */
@@ -2256,12 +2242,9 @@ body.kartu-print-mode .route-transition {
   height: 380px;
   background: radial-gradient(circle, rgba(231, 194, 86, 0.28) 0%, transparent 65%);
   pointer-events: none;
-  animation: hero-glow 8s var(--ease-in-out) infinite;
-}
-
-@keyframes hero-glow {
-  0%, 100% { transform: scale(1);    opacity: 0.75; }
-  50%      { transform: scale(1.12); opacity: 1; }
+  /* Glow gold brand tetap ada, tapi statis — sebelumnya berdenyut infinite
+     8s yang berjalan terus di setiap dashboard (UI-AUDIT.md #7, motion
+     overload). Kesan "tenang-berwibawa" lebih cocok utk institusi. */
 }
 
 .dashboard-hero__content {
@@ -2343,8 +2326,11 @@ body.kartu-print-mode .route-transition {
   50%      { box-shadow: 0 0 0 4px transparent; }
 }
 
-/* Dot indicator: dipakai pill yang berstatus "live" (berjalan, aktif).
-   Di-render lewat ::before di pill yang punya class .pill--dot. */
+/* Dot indicator: dipakai pill yang berstatus "live" (berjalan, aktif,
+   diajukan) — status rutin yang muncul di hampir tiap baris tabel data,
+   jadi sengaja statis (bukan animasi kedip infinite) supaya tidak jadi
+   "kelap-kelip" massal di tabel padat. Beda dgn pill--pulse di atas yang
+   dipakai utk status genuinely mendesak (jatuh_tempo, jarang & sedikit). */
 .pill--dot::before {
   content: '';
   display: inline-block;
@@ -2352,11 +2338,6 @@ body.kartu-print-mode .route-transition {
   border-radius: var(--radius-full);
   background: currentColor;
   margin-right: 2px;
-  animation: pill-dot-blink 1.6s var(--ease-in-out) infinite;
-}
-@keyframes pill-dot-blink {
-  0%, 100% { opacity: 1;   transform: scale(1); }
-  50%      { opacity: 0.4; transform: scale(0.75); }
 }
 
 @media print {

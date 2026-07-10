@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Alert, Button, Input, Select } from '@/ds';
 import { Plus, Pencil, Trash2, KeyRound, Upload, FileText, Calendar } from 'lucide-react';
 import {
@@ -12,6 +11,7 @@ import { formatRupiah } from '@/lib/format';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
+import { RowActions } from '@/components/RowActions';
 import { ApiError } from '@/lib/api';
 import { parseXlsxFile, downloadXlsxTemplate } from '@/lib/xlsx';
 import { Download } from 'lucide-react';
@@ -108,17 +108,16 @@ export function AdminMahasiswaPage() {
                   </>
                 ) : <span className="muted">—</span>}</td>
                 <td>
-                  <div className="row" style={{ gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                    <Link to={`/akademik/mahasiswa/${m.id}/transkrip`} title="Cetak Transkrip">
-                      <Button size="sm" variant="ghost" leftIcon={<FileText size={12} />}>Transkrip</Button>
-                    </Link>
-                    <Link to={`/akademik/mahasiswa/${m.id}/kehadiran`} title="Cetak Kehadiran">
-                      <Button size="sm" variant="ghost" leftIcon={<Calendar size={12} />}>Kehadiran</Button>
-                    </Link>
-                    <Button size="sm" variant="ghost" leftIcon={<Pencil size={12} />} onClick={() => setModal({ mode: 'edit', mhs: m })}>Edit</Button>
-                    <Button size="sm" variant="ghost" leftIcon={<KeyRound size={12} />} onClick={() => onResetPw(m)}>Reset PW</Button>
-                    <Button size="sm" variant="ghost" leftIcon={<Trash2 size={12} />} onClick={() => onDelete(m)}>Hapus</Button>
-                  </div>
+                  <RowActions
+                    label={`Aksi untuk ${m.nama}`}
+                    actions={[
+                      { label: 'Transkrip', icon: <FileText size={14} />, to: `/akademik/mahasiswa/${m.id}/transkrip` },
+                      { label: 'Kehadiran', icon: <Calendar size={14} />, to: `/akademik/mahasiswa/${m.id}/kehadiran` },
+                      { label: 'Edit', icon: <Pencil size={14} />, onClick: () => setModal({ mode: 'edit', mhs: m }) },
+                      { label: 'Reset PW', icon: <KeyRound size={14} />, onClick: () => onResetPw(m) },
+                      { label: 'Hapus', icon: <Trash2 size={14} />, onClick: () => onDelete(m), danger: true },
+                    ]}
+                  />
                 </td>
               </tr>
             ))}

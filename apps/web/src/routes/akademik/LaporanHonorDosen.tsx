@@ -140,7 +140,7 @@ export function AkademikLaporanHonorDosen() {
           {data.items.length === 0 ? (
             <Card>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'var(--space-5)', gap: 'var(--space-2)' }}>
-                <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--surface-sunken)', color: 'var(--text-muted)', display: 'grid', placeItems: 'center' }}>
+                <div className="muted" style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--surface-sunken)', display: 'grid', placeItems: 'center' }}>
                   <FileText size={28} />
                 </div>
                 <strong style={{ color: 'var(--text-strong)' }}>Tidak ada data pertemuan</strong>

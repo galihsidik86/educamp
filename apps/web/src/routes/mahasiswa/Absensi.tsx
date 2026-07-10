@@ -58,7 +58,7 @@ export function MahasiswaAbsensi() {
           const isOpen = open[k.kelasId] ?? false;
           const persen = k.persentaseHadir;
           return (
-            <Card key={k.kelasId}>
+            <Card key={k.kelasId} hover>
               <div
                 className="row"
                 style={{ justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }}

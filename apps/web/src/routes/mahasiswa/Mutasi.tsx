@@ -154,7 +154,7 @@ export function MahasiswaMutasi() {
           )}
 
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Alasan</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Alasan</label>
             <textarea
               value={form.alasan}
               onChange={(e) => setForm({ ...form, alasan: e.target.value })}

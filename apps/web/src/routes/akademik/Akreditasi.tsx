@@ -118,7 +118,7 @@ function KpiCard({ icon, label, value }: { icon: React.ReactNode; label: string;
   return (
     <Card>
       <div className="row" style={{ alignItems: 'center', gap: 'var(--space-3)' }}>
-        <div style={{ color: 'var(--text-muted)' }}>{icon}</div>
+        <div className="muted">{icon}</div>
         <div>
           <div className="muted" style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
           <div className="mono" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, marginTop: 2 }}>{value}</div>

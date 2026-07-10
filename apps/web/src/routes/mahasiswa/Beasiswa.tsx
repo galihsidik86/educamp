@@ -157,7 +157,7 @@ function DaftarModal({ beasiswa, onClose, onSubmit }: {
           <div className="muted" style={{ fontSize: 'var(--text-sm)' }}>{beasiswa.penyelenggara} · {formatRupiah(beasiswa.nominal)}</div>
         </Card>
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>
             Motivasi (minimum 50 karakter — {motivasi.length}/50)
           </label>
           <textarea
@@ -170,7 +170,7 @@ function DaftarModal({ beasiswa, onClose, onSubmit }: {
           />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Link dokumen pendukung (opsional)</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Link dokumen pendukung (opsional)</label>
           <input
             value={linkDokumen}
             onChange={(e) => setLinkDokumen(e.target.value)}

@@ -84,7 +84,7 @@ export function DosenKuisKelas() {
         <div className="stack" style={{ padding: 'var(--space-4)' }}>
           <Input label="Judul" value={form.judul} onChange={(e) => setForm({ ...form, judul: (e.target as HTMLInputElement).value })} placeholder="Kuis Bab 1" />
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Deskripsi (opsional)</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Deskripsi (opsional)</label>
             <textarea
               value={form.deskripsi ?? ''}
               onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}
@@ -130,7 +130,7 @@ export function DosenKuisKelas() {
 
 function KuisCard({ kuis, onOpen }: { kuis: DosenKuisItem; onOpen: () => void }) {
   return (
-    <Card>
+    <Card hover>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={onOpen}>
         <div className="row" style={{ alignItems: 'center', gap: 'var(--space-3)' }}>
           <ClipboardList size={20} className="muted" />

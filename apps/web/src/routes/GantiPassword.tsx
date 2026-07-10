@@ -40,7 +40,7 @@ export function GantiPassword() {
       <div style={{ width: '100%', maxWidth: 480 }}>
         <Card>
           <div style={{ textAlign: 'center', marginBottom: 'var(--space-3)' }}>
-            <KeyRound size={32} style={{ color: 'var(--accent-fg)' }} />
+            <KeyRound size={32} style={{ color: 'var(--accent)' }} />
             <h1 style={{ margin: '8px 0 4px', fontSize: 'var(--text-xl)' }}>Ganti Password</h1>
             <div className="muted" style={{ fontSize: 'var(--text-sm)' }}>
               {isForced

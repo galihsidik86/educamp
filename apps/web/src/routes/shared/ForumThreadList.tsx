@@ -53,7 +53,7 @@ export function ForumKelasDetail() {
 
       <div className="stack">
         {data.items.map((t) => (
-          <Card key={t.id}>
+          <Card key={t.id} hover>
             <div
               className="row"
               style={{ justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
@@ -85,7 +85,7 @@ export function ForumKelasDetail() {
           {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
           <Input label="Judul" value={form.judul} onChange={(e) => setForm({ ...form, judul: (e.target as HTMLInputElement).value })} />
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Isi</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Isi</label>
             <textarea
               value={form.isi}
               onChange={(e) => setForm({ ...form, isi: e.target.value })}

@@ -61,7 +61,7 @@ export function WaliDashboard() {
             <div className="muted" style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
               Profil Mahasiswa
             </div>
-            <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+            <div className="row">
               <div><div className="muted" style={{ fontSize: 'var(--text-xs)' }}>NIM</div><div className="mono">{dashboard.data.mahasiswa.nim}</div></div>
               <div><div className="muted" style={{ fontSize: 'var(--text-xs)' }}>Angkatan</div><div className="mono">{dashboard.data.mahasiswa.angkatan}</div></div>
               <div><div className="muted" style={{ fontSize: 'var(--text-xs)' }}>Status</div><div>{dashboard.data.mahasiswa.status}</div></div>
@@ -124,7 +124,7 @@ function Kpi({ icon, label, value, tone }: { icon: React.ReactNode; label: strin
   const color = tone === 'danger' ? 'var(--danger-fg)' : tone === 'warn' ? 'var(--warning-fg)' : undefined;
   return (
     <Card>
-      <div className="row" style={{ alignItems: 'center', gap: 'var(--space-3)' }}>
+      <div className="row">
         <div style={{ color: color ?? 'var(--text-muted)' }}>{icon}</div>
         <div>
           <div className="muted" style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>

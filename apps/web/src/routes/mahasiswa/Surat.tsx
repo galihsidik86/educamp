@@ -109,7 +109,7 @@ export function MahasiswaSurat() {
           </Select>
           <Input label="Judul (dapat diedit)" value={form.judul} onChange={(e) => setForm({ ...form, judul: (e.target as HTMLInputElement).value })} />
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Keperluan (minimal 10 karakter)</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Keperluan (minimal 10 karakter)</label>
             <textarea
               value={form.keperluan}
               onChange={(e) => setForm({ ...form, keperluan: e.target.value })}

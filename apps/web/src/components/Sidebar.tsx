@@ -5,7 +5,7 @@ import {
   LayoutDashboard, ClipboardList, CalendarDays, GraduationCap, Wallet,
   UserRound, BookOpen, Users, FileText, Briefcase, HeartHandshake, Building2, MapPin,
   ShieldCheck, Layers, Bell, History, CalendarCheck, Megaphone, ClipboardCheck, ScrollText, Award, Gift, Mail, MessageSquare, BrainCircuit, LifeBuoy, FileBadge, UserCog, BarChart3, KeyRound, Library, Cable, BookCheck, Target, TrendingUp, ChevronDown,
-  Home, Settings, FlaskConical, Info, CheckCircle2, Banknote, AlertTriangle,
+  Home, Settings, FlaskConical, Info, CheckCircle2, Banknote, AlertTriangle, Search, X,
 } from 'lucide-react';
 import type { Role, AkademikSubRole } from '@/lib/auth';
 import { useAuth } from '@/lib/auth';
@@ -329,6 +329,19 @@ export function Sidebar({ role, mobileOpen = false, onNavigate }: { role: Role; 
     () => (role === 'akademik' ? filterBySubRole(itemsByRole[role], subRole) : itemsByRole[role]),
     [role, subRole],
   );
+  const totalItemCount = useMemo(() => groups.reduce((n, g) => n + g.items.length, 0), [groups]);
+
+  // Filter cepat menu — hanya tampil kalau menu cukup banyak (mis. akademik
+  // ~50 item) supaya tidak jadi clutter di sidebar yang pendek (wali: 1 item).
+  const [query, setQuery] = useState('');
+  const normalizedQuery = query.trim().toLowerCase();
+  const isFiltering = normalizedQuery.length > 0;
+  const visibleGroups = useMemo(() => {
+    if (!isFiltering) return groups;
+    return groups
+      .map((g) => ({ ...g, items: g.items.filter((it) => it.label.toLowerCase().includes(normalizedQuery)) }))
+      .filter((g) => g.items.length > 0);
+  }, [groups, isFiltering, normalizedQuery]);
   const location = useLocation();
   const inst = useInstitusiPublic();
   const brandPendek = inst.data?.namaPendek || inst.data?.nama || 'STMIK Tazkia';
@@ -345,6 +358,10 @@ export function Sidebar({ role, mobileOpen = false, onNavigate }: { role: Role; 
     }
     return null;
   }, [groups, location.pathname]);
+
+  // Reset filter pencarian tiap pindah halaman — supaya tidak "nyangkut"
+  // menutupi sebagian besar menu di kunjungan berikutnya.
+  useEffect(() => { setQuery(''); }, [location.pathname]);
 
   // Persisten collapsed state — default: semua expanded; user collapse manual
   const [collapsed, setCollapsed] = useState<Set<string>>(() => {
@@ -372,6 +389,14 @@ export function Sidebar({ role, mobileOpen = false, onNavigate }: { role: Role; 
     try { localStorage.setItem(`${STORAGE_KEY}.${role}`, JSON.stringify(Array.from(next))); } catch {/* ignore */}
   };
 
+  // Reset filter saat item diklik — termasuk saat item yang diklik adalah
+  // halaman yang sedang aktif (pathname tidak berubah, jadi efek di atas
+  // tidak jalan) supaya sidebar tidak "nyangkut" dalam keadaan terfilter.
+  const handleItemClick = () => {
+    setQuery('');
+    onNavigate?.();
+  };
+
   return (
     <aside className={`sidebar ${mobileOpen ? 'sidebar--open' : ''}`}>
       <div className="sidebar__brand">
@@ -384,8 +409,30 @@ export function Sidebar({ role, mobileOpen = false, onNavigate }: { role: Role; 
         </div>
       </div>
 
-      {groups.map((g) => {
-        const isCollapsed = collapsed.has(g.id);
+      {totalItemCount > 8 && (
+        <div className="sidebar__search">
+          <Search size={14} className="sidebar__search-icon" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Cari menu…"
+            aria-label="Cari menu"
+          />
+          {query && (
+            <button type="button" className="sidebar__search-clear" aria-label="Bersihkan pencarian" onClick={() => setQuery('')}>
+              <X size={13} />
+            </button>
+          )}
+        </div>
+      )}
+
+      {isFiltering && visibleGroups.length === 0 && (
+        <p className="sidebar__search-empty">Tidak ada menu yang cocok dengan &ldquo;{query.trim()}&rdquo;.</p>
+      )}
+
+      {visibleGroups.map((g) => {
+        const isCollapsed = isFiltering ? false : collapsed.has(g.id);
         // Grup tunggal (cuma 1 item, mis. Beranda) → tampilkan langsung tanpa header
         if (g.items.length === 1 && g.id === 'beranda') {
           const it = g.items[0]!;
@@ -394,7 +441,7 @@ export function Sidebar({ role, mobileOpen = false, onNavigate }: { role: Role; 
               <NavLink
                 to={it.to}
                 end={it.end ?? it.to === `/${role}`}
-                onClick={() => onNavigate?.()}
+                onClick={handleItemClick}
                 className={({ isActive }) =>
                   ['sidebar__item', isActive && 'sidebar__item--active'].filter(Boolean).join(' ')
                 }
@@ -423,7 +470,7 @@ export function Sidebar({ role, mobileOpen = false, onNavigate }: { role: Role; 
                   key={it.to}
                   to={it.to}
                   end={it.end ?? it.to === `/${role}`}
-                  onClick={() => onNavigate?.()}
+                  onClick={handleItemClick}
                   className={({ isActive }) =>
                     ['sidebar__item', isActive && 'sidebar__item--active'].filter(Boolean).join(' ')
                   }

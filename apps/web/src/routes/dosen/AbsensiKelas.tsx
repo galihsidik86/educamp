@@ -368,7 +368,7 @@ function RescheduleModal({ item, onClose, onSubmit, pending }: {
           ))}
         </Select>
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Alasan reschedule</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Alasan reschedule</label>
           <textarea
             value={alasan}
             onChange={(e) => setAlasan(e.target.value)}

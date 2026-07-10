@@ -46,14 +46,14 @@ export function MahasiswaSertifikatCetak() {
 
       <div className="krs-cetak__sheet" style={{ textAlign: 'center', padding: 'var(--space-6)' }}>
         <header style={{ marginBottom: 'var(--space-5)' }}>
-          <div style={{ fontFamily: 'Spectral, serif', fontSize: 'var(--text-xl)', fontWeight: 700 }}>
+          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--text-xl)', fontWeight: 700 }}>
             <NamaInstitusiText />
           </div>
           <div className="muted">{data.mahasiswa.prodi.fakultas.nama}</div>
         </header>
 
         <div style={{ borderTop: '2px solid var(--text-strong)', borderBottom: '2px solid var(--text-strong)', padding: 'var(--space-3) 0', margin: 'var(--space-4) 0' }}>
-          <h1 style={{ fontFamily: 'Spectral, serif', fontSize: 'var(--text-2xl)', fontWeight: 700, margin: 0, letterSpacing: '0.1em' }}>
+          <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--text-2xl)', fontWeight: 700, margin: 0, letterSpacing: '0.1em' }}>
             {JENIS_TITLE[data.jenis]}
           </h1>
           <div className="mono muted" style={{ fontSize: 'var(--text-sm)', marginTop: 'var(--space-2)' }}>
@@ -66,7 +66,7 @@ export function MahasiswaSertifikatCetak() {
         </p>
 
         <div style={{ margin: 'var(--space-4) 0' }}>
-          <h2 style={{ fontFamily: 'Spectral, serif', fontSize: 'var(--text-3xl)', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--text-3xl)', fontWeight: 700, color: 'var(--text-strong)', margin: 0 }}>
             {data.mahasiswa.nama}
           </h2>
           <div className="mono muted" style={{ marginTop: 'var(--space-2)' }}>

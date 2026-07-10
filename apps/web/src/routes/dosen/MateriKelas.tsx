@@ -147,7 +147,7 @@ function BahanAjarModal({ mode, initial, pertemuanOptions, onClose, onSubmit }: 
         <Input label="Judul" value={form.judul} onChange={(e) => setForm({ ...form, judul: (e.target as HTMLInputElement).value })} />
 
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Deskripsi (opsional)</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Deskripsi (opsional)</label>
           <textarea
             value={form.deskripsi ?? ''}
             onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}
@@ -163,7 +163,7 @@ function BahanAjarModal({ mode, initial, pertemuanOptions, onClose, onSubmit }: 
 
         {form.jenis === 'text' && (
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Konten</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Konten</label>
             <textarea
               value={form.konten ?? ''}
               onChange={(e) => setForm({ ...form, konten: e.target.value })}

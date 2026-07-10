@@ -123,7 +123,7 @@ function GradingModal({ peserta, maxNilai, onClose }: { peserta: DosenSubmission
         <Input label={`Nilai (0–${maxNilai})`} type="number" min="0" max={String(maxNilai)} value={nilai} onChange={(e) => setNilai((e.target as HTMLInputElement).value)} />
 
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Catatan untuk mahasiswa (opsional)</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Catatan untuk mahasiswa (opsional)</label>
           <textarea
             value={catatan}
             onChange={(e) => setCatatan(e.target.value)}

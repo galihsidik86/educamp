@@ -133,7 +133,7 @@ function TugasModal({ mode, initial, pertemuanOptions, onClose, onSubmit }: {
     <Modal open onClose={onClose} title={mode === 'create' ? 'Tambah Tugas / Ujian' : 'Edit'} width={640}>
       <div className="stack" style={{ padding: 'var(--space-4)', gap: 'var(--space-3)' }}>
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Jenis</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Jenis</label>
           <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
             {JENIS_OPTIONS.map((j) => (
               <button
@@ -153,7 +153,7 @@ function TugasModal({ mode, initial, pertemuanOptions, onClose, onSubmit }: {
         </div>
         <Input label="Judul" value={form.judul} onChange={(e) => setForm({ ...form, judul: (e.target as HTMLInputElement).value })} />
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Deskripsi (opsional)</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Deskripsi (opsional)</label>
           <textarea
             value={form.deskripsi ?? ''}
             onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}
@@ -168,7 +168,7 @@ function TugasModal({ mode, initial, pertemuanOptions, onClose, onSubmit }: {
         </div>
         <Input label="Link lampiran (opsional)" value={form.linkLampiran ?? ''} onChange={(e) => setForm({ ...form, linkLampiran: (e.target as HTMLInputElement).value })} placeholder="https://..." />
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Terikat pertemuan (opsional)</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Terikat pertemuan (opsional)</label>
           <select
             value={form.pertemuanId ?? ''}
             onChange={(e) => setForm({ ...form, pertemuanId: e.target.value || null })}

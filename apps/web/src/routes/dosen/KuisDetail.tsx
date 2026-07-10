@@ -164,7 +164,7 @@ export function DosenKuisDetail() {
       <Modal open={soalModalOpen} onClose={() => setSoalModalOpen(false)} title={editingSoal ? 'Ubah soal' : 'Tambah soal'} width={700}>
         <div className="stack" style={{ padding: 'var(--space-4)' }}>
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Pertanyaan</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Pertanyaan</label>
             <textarea
               value={soalForm.pertanyaan}
               onChange={(e) => setSoalForm({ ...soalForm, pertanyaan: e.target.value })}

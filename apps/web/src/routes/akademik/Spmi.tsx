@@ -5,6 +5,7 @@ import {
   CheckCircle2, AlertTriangle, Clock, FileText, ArrowRight,
 } from 'lucide-react';
 import { useSpmiDashboard } from '@/lib/queries-spmi';
+import { DashboardHero } from '@/components/DashboardHero';
 
 const KAT_STD_LABEL: Record<string, string> = {
   pendidikan: 'Pendidikan', penelitian: 'Penelitian', pengabdian: 'Pengabdian',
@@ -40,38 +41,11 @@ export function AkademikSpmi() {
 
   return (
     <div className="stack">
-      {/* Hero header — gradient brand */}
-      <div
-        style={{
-          padding: 'var(--space-5) var(--space-5)',
-          borderRadius: 'var(--radius-lg)',
-          background: 'linear-gradient(135deg, var(--brand-navy, #0f1a3a) 0%, #1a2952 100%)',
-          color: '#fff',
-          position: 'relative',
-          overflow: 'hidden',
-          boxShadow: 'var(--shadow-md)',
-        }}
-      >
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute', right: -40, top: -40, width: 280, height: 280,
-            background: 'radial-gradient(circle, rgba(208,166,86,0.22) 0%, transparent 65%)',
-            pointerEvents: 'none',
-          }}
-        />
-        <div style={{ position: 'relative' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.12em', opacity: 0.85 }}>
-            <ShieldCheck size={14} /> Penjaminan Mutu · Permenristekdikti 39/2025
-          </div>
-          <h1 style={{ fontFamily: 'Spectral, serif', fontSize: 'var(--text-3xl)', fontWeight: 700, margin: 'var(--space-2) 0 var(--space-1)' }}>
-            Dashboard SPMI
-          </h1>
-          <p style={{ margin: 0, fontSize: 'var(--text-sm)', opacity: 0.85, maxWidth: 720 }}>
-            Pantau siklus <strong>PPEPP</strong> (Penetapan · Pelaksanaan · Evaluasi · Pengendalian · Peningkatan) — capaian standar mutu, audit internal, tindak lanjut, RTM, dan kepuasan stakeholder.
-          </p>
-        </div>
-      </div>
+      <DashboardHero
+        eyebrow={<><ShieldCheck size={14} style={{ verticalAlign: -2, marginRight: 4 }} />Penjaminan Mutu · Permenristekdikti 39/2025</>}
+        title="Dashboard SPMI"
+        subtitle={<>Pantau siklus <strong>PPEPP</strong> (Penetapan · Pelaksanaan · Evaluasi · Pengendalian · Peningkatan) — capaian standar mutu, audit internal, tindak lanjut, RTM, dan kepuasan stakeholder.</>}
+      />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang halaman.</Alert>}
       {isLoading && <p className="muted">Memuat…</p>}
@@ -346,7 +320,7 @@ function CapaianTile({ icon, label, value, total, color }: { icon: React.ReactNo
 function EmptyMini({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'var(--space-4) 0', gap: 6 }}>
-      <div style={{ color: 'var(--text-muted)', opacity: 0.6 }}>{icon}</div>
+      <div className="muted" style={{ opacity: 0.6 }}>{icon}</div>
       <span className="muted" style={{ fontSize: 'var(--text-sm)' }}>{text}</span>
     </div>
   );

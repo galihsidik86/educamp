@@ -35,7 +35,7 @@ export function VerifikasiIjazah() {
     }}>
       <div style={{ maxWidth: 720, margin: '0 auto' }} className="stack">
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-4)' }}>
-          <div style={{ fontFamily: 'Spectral, serif', fontSize: 'var(--text-2xl)', fontWeight: 700 }}>
+          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--text-2xl)', fontWeight: 700 }}>
             {namaInstitusi}
           </div>
           <div className="muted" style={{ fontSize: 'var(--text-sm)' }}>Verifikasi Keaslian Ijazah</div>

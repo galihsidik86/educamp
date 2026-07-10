@@ -147,14 +147,34 @@
   border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
 }
 .tz-card--pad { padding: var(--pad-card); }
-.tz-card--hover { transition: box-shadow var(--dur-base) var(--ease-standard), transform var(--dur-base) var(--ease-standard); }
-.tz-card--hover:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.tz-card--hover { cursor: pointer; transition: box-shadow var(--dur-base) var(--ease-standard), transform var(--dur-base) var(--ease-standard), border-color var(--dur-base) var(--ease-standard); }
+.tz-card--hover:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: var(--action-soft); }
+.tz-card--hover:active { transform: translateY(0); box-shadow: var(--shadow-sm); transition-duration: 60ms; }
 .tz-card__header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: var(--space-5) var(--space-6); border-bottom: 1px solid var(--border-subtle); }
 .tz-card__title { font-size: var(--text-lg); font-weight: var(--fw-bold); color: var(--text-strong); letter-spacing: -0.01em; }
 .tz-card__body { padding: var(--space-6); }
 
-/* ---------- Stat card ---------- */
-.tz-stat { display: flex; flex-direction: column; gap: 4px; padding: var(--space-5); background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+/* ---------- Stat card ----------
+   StatCard adalah KPI statis (tidak pernah dibungkus Link/onClick di
+   apps/web) — sengaja TANPA hover-lift, supaya tidak menyiratkan
+   "bisa diklik" yang sebenarnya tidak ada (lihat UI-AUDIT.md). */
+.tz-stat {
+  position: relative;
+  overflow: hidden;
+  display: flex; flex-direction: column; gap: 4px;
+  padding: var(--space-5);
+  background: var(--surface-card); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+}
+/* Aksen garis emas kiri — brand cue statis, bukan indikator interaksi */
+.tz-stat::before {
+  content: '';
+  position: absolute;
+  left: 0; top: var(--space-3); bottom: var(--space-3);
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+}
 .tz-stat__top { display: flex; align-items: center; justify-content: space-between; }
 .tz-stat__label { font-size: var(--text-sm); color: var(--text-muted); font-weight: var(--fw-medium); }
 .tz-stat__icon { width: 38px; height: 38px; border-radius: var(--radius-md); display: inline-flex; align-items: center; justify-content: center; background: var(--brand-soft); color: var(--blue-700); }

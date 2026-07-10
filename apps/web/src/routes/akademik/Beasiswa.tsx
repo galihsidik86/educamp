@@ -121,7 +121,7 @@ function BeasiswaModal({ mode, initial, onClose, onSubmit }: {
         </div>
         <Input label="Penyelenggara" value={form.penyelenggara} onChange={(e) => setForm({ ...form, penyelenggara: (e.target as HTMLInputElement).value })} placeholder="Kemendikbud / Tazkia Foundation" />
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Deskripsi (opsional)</label>
+          <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Deskripsi (opsional)</label>
           <textarea
             value={form.deskripsi ?? ''}
             onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}

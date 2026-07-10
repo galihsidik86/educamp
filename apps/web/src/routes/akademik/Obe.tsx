@@ -148,7 +148,7 @@ function CplTab() {
             </div>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Deskripsi CPL</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Deskripsi CPL</label>
             <textarea
               value={form.deskripsi ?? ''}
               onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}
@@ -304,7 +304,7 @@ function CpmkTab() {
             </div>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 4 }}>Deskripsi CPMK</label>
+            <label className="muted" style={{ display: 'block', fontSize: 'var(--text-sm)', marginBottom: 4 }}>Deskripsi CPMK</label>
             <textarea
               value={form.deskripsi ?? ''}
               onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}
