@@ -2261,10 +2261,10 @@ body.kartu-print-mode .route-transition {
   overflow: hidden;
   border-radius: var(--radius-lg);
   background: linear-gradient(135deg, var(--blue-800) 0%, var(--blue-900) 100%);
-  color: white;
+  color: var(--neutral-0);
   padding: var(--space-6) var(--space-7);
   margin-bottom: var(--space-4);
-  box-shadow: 0 4px 24px -4px rgba(15, 24, 58, 0.25);
+  box-shadow: 0 4px 24px -4px color-mix(in oklch, var(--blue-950) 25%, transparent);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2289,7 +2289,7 @@ body.kartu-print-mode .route-transition {
   right: -120px;
   width: 380px;
   height: 380px;
-  background: radial-gradient(circle, rgba(231, 194, 86, 0.28) 0%, transparent 65%);
+  background: radial-gradient(circle, color-mix(in oklch, var(--gold-300) 28%, transparent) 0%, transparent 65%);
   pointer-events: none;
   /* Glow gold brand tetap ada, tapi statis — sebelumnya berdenyut infinite
      8s yang berjalan terus di setiap dashboard (UI-AUDIT.md #7, motion
@@ -2319,14 +2319,14 @@ body.kartu-print-mode .route-transition {
   font-size: clamp(var(--text-xl), 3vw, var(--text-3xl));
   font-weight: var(--fw-semibold);
   line-height: var(--leading-tight);
-  color: white;
+  color: var(--neutral-0);
   letter-spacing: -0.01em;
   text-wrap: balance;
 }
 
 .dashboard-hero__subtitle {
   margin: var(--space-2) 0 0;
-  color: rgba(255, 255, 255, 0.78);
+  color: color-mix(in oklch, var(--neutral-0) 78%, transparent);
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
 }
@@ -2335,12 +2335,12 @@ body.kartu-print-mode .route-transition {
   position: relative;
   z-index: 1;
   padding: var(--space-3) var(--space-4);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: color-mix(in oklch, var(--neutral-0) 8%, transparent);
+  border: 1px solid color-mix(in oklch, var(--neutral-0) 14%, transparent);
   border-radius: var(--radius-md);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.92);
+  color: color-mix(in oklch, var(--neutral-0) 92%, transparent);
   white-space: nowrap;
 }
 
