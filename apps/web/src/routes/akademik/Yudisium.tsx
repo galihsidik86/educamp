@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Button, Card, Input, Select } from '@/ds';
-import { Pencil, ShieldCheck, RefreshCw, Copy } from 'lucide-react';
+import { Pencil, ShieldCheck, RefreshCw, Copy, Search } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import {
   useAdminYudisium, useAdminYudisiumActions, usePeriodeWisuda,
@@ -26,6 +26,15 @@ export function AdminYudisiumPage() {
   const { data, isLoading, error } = useAdminYudisium(filters);
   const periode = usePeriodeWisuda();
   const [editing, setEditing] = useState<AdminYudisiumItem | null>(null);
+  const [q, setQ] = useState('');
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((y) =>
+      y.mahasiswa.nim.toLowerCase().includes(query) || y.mahasiswa.nama.toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   return (
     <div className="stack">
@@ -46,10 +55,23 @@ export function AdminYudisiumPage() {
             {STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
           </Select>
         </div>
+        {data && data.items.length > 0 && (
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari NIM atau nama…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
       </div>
 
       {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && <Alert variant="info" title="Tidak ada hasil">Belum ada pendaftar / sesuaikan filter.</Alert>}
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada mahasiswa yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
 
       <div className="tz-table-wrap">
         <table className="tz-table">
@@ -68,7 +90,7 @@ export function AdminYudisiumPage() {
             </tr>
           </thead>
           <tbody>
-            {data?.items.map((y) => (
+            {items.map((y) => (
               <tr key={y.id}>
                 <td className="mono">{y.periodeWisuda.kode}</td>
                 <td className="mono">{y.mahasiswa.nim}</td>
