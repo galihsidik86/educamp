@@ -27,8 +27,11 @@ export function MahasiswaMateri() {
           <Card key={k.kelasId} hover>
             <div
               className="row"
+              role="button"
+              tabIndex={0}
               style={{ justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
               onClick={() => navigate(`/mahasiswa/materi/${k.kelasId}`)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/mahasiswa/materi/${k.kelasId}`); } }}
             >
               <div className="row" style={{ alignItems: 'center', gap: 'var(--space-3)' }}>
                 <BookOpen size={20} className="muted" />

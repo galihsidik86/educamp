@@ -88,8 +88,11 @@ export function MahasiswaAbsensi() {
             <Card key={k.kelasId} hover>
               <div
                 className="row"
+                role="button"
+                tabIndex={0}
                 style={{ justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }}
                 onClick={() => setOpen((s) => ({ ...s, [k.kelasId]: !isOpen }))}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((s) => ({ ...s, [k.kelasId]: !isOpen })); } }}
               >
                 <div>
                   <div className="mono muted" style={{ fontSize: 'var(--text-xs)' }}>

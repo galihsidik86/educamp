@@ -28,8 +28,11 @@ export function DosenAbsensiList() {
           <Card key={k.id} hover>
             <div
               className="row"
+              role="button"
+              tabIndex={0}
               style={{ justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
               onClick={() => navigate(`/dosen/absensi/${k.id}`)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/dosen/absensi/${k.id}`); } }}
             >
               <div>
                 <div className="mono muted" style={{ fontSize: 'var(--text-xs)' }}>{k.kodeMK} · Kelas {k.kodeKelas}</div>

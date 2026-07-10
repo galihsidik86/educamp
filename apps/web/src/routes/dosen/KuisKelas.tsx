@@ -131,7 +131,14 @@ export function DosenKuisKelas() {
 function KuisCard({ kuis, onOpen }: { kuis: DosenKuisItem; onOpen: () => void }) {
   return (
     <Card hover>
-      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={onOpen}>
+      <div
+        className="row"
+        role="button"
+        tabIndex={0}
+        style={{ justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+        onClick={onOpen}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
+      >
         <div className="row" style={{ alignItems: 'center', gap: 'var(--space-3)' }}>
           <ClipboardList size={20} className="muted" />
           <div>

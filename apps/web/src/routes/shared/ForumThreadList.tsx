@@ -56,8 +56,11 @@ export function ForumKelasDetail() {
           <Card key={t.id} hover>
             <div
               className="row"
+              role="button"
+              tabIndex={0}
               style={{ justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
               onClick={() => navigate(`${basePath}/${kelasId}/${t.id}`)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`${basePath}/${kelasId}/${t.id}`); } }}
             >
               <div style={{ flex: 1 }}>
                 <div className="row" style={{ gap: 8, alignItems: 'center' }}>

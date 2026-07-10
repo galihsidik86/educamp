@@ -28,8 +28,11 @@ export function DosenKuisList() {
           <Card key={k.id} hover>
             <div
               className="row"
+              role="button"
+              tabIndex={0}
               style={{ justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
               onClick={() => navigate(`/dosen/kuis/${k.id}`)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/dosen/kuis/${k.id}`); } }}
             >
               <div className="row" style={{ alignItems: 'center', gap: 'var(--space-3)' }}>
                 <ClipboardList size={20} className="muted" />
