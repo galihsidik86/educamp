@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Alert, Badge, Card, Select } from '@/ds';
-import { FlaskConical, HeartHandshake, MessageSquare } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Alert, Badge, Card, Input, Select } from '@/ds';
+import { FlaskConical, HeartHandshake, MessageSquare, Search } from 'lucide-react';
 import { useOversightKonsultasi, useOversightPenelitian, useOversightPengabdian } from '@/lib/queries-portfolio';
 import { PageHead } from '@/components/PageHead';
 import { formatTanggal } from '@/lib/format';
@@ -58,20 +58,47 @@ function TabBtn({ icon, label, active, onClick }: { icon: React.ReactNode; label
 function KonsultasiPanel() {
   const [status, setStatus] = useState('');
   const { data, isLoading } = useOversightKonsultasi({ status: status || undefined });
+  const [q, setQ] = useState('');
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((k: any) =>
+      k.mahasiswa.nama.toLowerCase().includes(query) ||
+      k.mahasiswa.nim.toLowerCase().includes(query) ||
+      k.dpa.nama.toLowerCase().includes(query) ||
+      k.topik.toLowerCase().includes(query),
+    );
+  }, [data, q]);
+
   return (
     <>
-      <div style={{ minWidth: 180 }}>
-        <Select label="Status" value={status} onChange={(e) => setStatus((e.target as HTMLSelectElement).value)}>
-          <option value="">Semua</option>
-          <option value="diajukan">Diajukan</option>
-          <option value="diterima">Diterima</option>
-          <option value="selesai">Selesai</option>
-          <option value="ditolak">Ditolak</option>
-          <option value="batal">Batal</option>
-        </Select>
+      <div className="row" style={{ gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 180 }}>
+          <Select label="Status" value={status} onChange={(e) => setStatus((e.target as HTMLSelectElement).value)}>
+            <option value="">Semua</option>
+            <option value="diajukan">Diajukan</option>
+            <option value="diterima">Diterima</option>
+            <option value="selesai">Selesai</option>
+            <option value="ditolak">Ditolak</option>
+            <option value="batal">Batal</option>
+          </Select>
+        </div>
+        {data && data.items.length > 0 && (
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari mahasiswa, DPA, atau topik…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
       </div>
       {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && <EmptyPanel icon={<MessageSquare size={28} />} text="Tidak ada konsultasi." />}
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
       {data && data.items.length > 0 && (
         <div className="tz-table-wrap">
           <table className="tz-table">
@@ -79,7 +106,7 @@ function KonsultasiPanel() {
               <tr><th>Tanggal</th><th>Mahasiswa</th><th>DPA</th><th>Topik</th><th>Status</th></tr>
             </thead>
             <tbody>
-              {data.items.map((k: any) => (
+              {items.map((k: any) => (
                 <tr key={k.id}>
                   <td className="mono" style={{ fontSize: 'var(--text-sm)' }}>{formatTanggal(k.waktuMulai)}</td>
                   <td><strong>{k.mahasiswa.nama}</strong><div className="muted mono" style={{ fontSize: 'var(--text-xs)' }}>{k.mahasiswa.nim}</div></td>
@@ -99,19 +126,43 @@ function KonsultasiPanel() {
 function PenelitianPanel() {
   const [status, setStatus] = useState('');
   const { data, isLoading } = useOversightPenelitian({ status: status || undefined });
+  const [q, setQ] = useState('');
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((p: any) =>
+      p.judul.toLowerCase().includes(query) || (p.ketuaDosen?.nama ?? '').toLowerCase().includes(query),
+    );
+  }, [data, q]);
+
   return (
     <>
-      <div style={{ minWidth: 180 }}>
-        <Select label="Status" value={status} onChange={(e) => setStatus((e.target as HTMLSelectElement).value)}>
-          <option value="">Semua</option>
-          <option value="proposal">Proposal</option>
-          <option value="berjalan">Berjalan</option>
-          <option value="selesai">Selesai</option>
-          <option value="batal">Batal</option>
-        </Select>
+      <div className="row" style={{ gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 180 }}>
+          <Select label="Status" value={status} onChange={(e) => setStatus((e.target as HTMLSelectElement).value)}>
+            <option value="">Semua</option>
+            <option value="proposal">Proposal</option>
+            <option value="berjalan">Berjalan</option>
+            <option value="selesai">Selesai</option>
+            <option value="batal">Batal</option>
+          </Select>
+        </div>
+        {data && data.items.length > 0 && (
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari judul atau ketua…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
       </div>
       {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && <EmptyPanel icon={<FlaskConical size={28} />} text="Tidak ada penelitian." />}
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
       {data && data.items.length > 0 && (
         <div className="tz-table-wrap">
           <table className="tz-table">
@@ -119,7 +170,7 @@ function PenelitianPanel() {
               <tr><th>Tahun</th><th>Judul</th><th>Ketua</th><th>Sumber Dana</th><th>Dana</th><th>Status</th><th className="num">Mhs</th></tr>
             </thead>
             <tbody>
-              {data.items.map((p: any) => (
+              {items.map((p: any) => (
                 <tr key={p.id}>
                   <td className="mono">{p.tahun}</td>
                   <td><strong>{p.judul}</strong></td>
@@ -141,19 +192,45 @@ function PenelitianPanel() {
 function PengabdianPanel() {
   const [status, setStatus] = useState('');
   const { data, isLoading } = useOversightPengabdian({ status: status || undefined });
+  const [q, setQ] = useState('');
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((p: any) =>
+      p.judul.toLowerCase().includes(query) ||
+      (p.lokasi ?? '').toLowerCase().includes(query) ||
+      (p.ketuaDosen?.nama ?? '').toLowerCase().includes(query),
+    );
+  }, [data, q]);
+
   return (
     <>
-      <div style={{ minWidth: 180 }}>
-        <Select label="Status" value={status} onChange={(e) => setStatus((e.target as HTMLSelectElement).value)}>
-          <option value="">Semua</option>
-          <option value="proposal">Proposal</option>
-          <option value="berjalan">Berjalan</option>
-          <option value="selesai">Selesai</option>
-          <option value="batal">Batal</option>
-        </Select>
+      <div className="row" style={{ gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 180 }}>
+          <Select label="Status" value={status} onChange={(e) => setStatus((e.target as HTMLSelectElement).value)}>
+            <option value="">Semua</option>
+            <option value="proposal">Proposal</option>
+            <option value="berjalan">Berjalan</option>
+            <option value="selesai">Selesai</option>
+            <option value="batal">Batal</option>
+          </Select>
+        </div>
+        {data && data.items.length > 0 && (
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari judul, lokasi, atau ketua…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
       </div>
       {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && <EmptyPanel icon={<HeartHandshake size={28} />} text="Tidak ada pengabdian." />}
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
       {data && data.items.length > 0 && (
         <div className="tz-table-wrap">
           <table className="tz-table">
@@ -161,7 +238,7 @@ function PengabdianPanel() {
               <tr><th>Tahun</th><th>Judul</th><th>Lokasi</th><th>Ketua</th><th>Status</th><th className="num">Mhs</th></tr>
             </thead>
             <tbody>
-              {data.items.map((p: any) => (
+              {items.map((p: any) => (
                 <tr key={p.id}>
                   <td className="mono">{p.tahun}</td>
                   <td><strong>{p.judul}</strong></td>
