@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Alert, Card, Select } from '@/ds';
-import { Printer } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Alert, Card, Input, Select } from '@/ds';
+import { Printer, Search } from 'lucide-react';
 import { Button } from '@/ds';
 import { useLaporanKehadiran, useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
@@ -9,6 +9,15 @@ export function AkademikLaporanKehadiran() {
   const [filters, setFilters] = useState({ prodiId: '' });
   const { data, isLoading, error } = useLaporanKehadiran(filters);
   const prodi = useProdi();
+  const [q, setQ] = useState('');
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((k) =>
+      k.kodeMK.toLowerCase().includes(query) || k.namaMK.toLowerCase().includes(query) || k.dosen.toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   if (isLoading) return <p className="muted">Memuat…</p>;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
@@ -41,7 +50,20 @@ export function AkademikLaporanKehadiran() {
             {prodi.data?.items.map((p) => <option key={p.id} value={p.id}>{p.nama}</option>)}
           </Select>
         </div>
+        {data.items.length > 0 && (
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari kode/nama MK atau dosen…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
       </div>
+      {data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada kelas yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
 
       <div className="tz-table-wrap">
         <table className="tz-table">
@@ -66,7 +88,7 @@ export function AkademikLaporanKehadiran() {
             {data.items.length === 0 && (
               <tr><td colSpan={13} className="muted center">Tidak ada kelas.</td></tr>
             )}
-            {data.items.map((k) => (
+            {items.map((k) => (
               <tr key={k.kelasId}>
                 <td className="mono">{k.kodeMK}</td>
                 <td>{k.namaMK}</td>
