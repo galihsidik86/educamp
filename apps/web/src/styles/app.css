@@ -932,7 +932,7 @@ html, body, #root {
   letter-spacing: var(--tracking-caps);
   color: var(--text-muted);
   font-weight: var(--fw-bold);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--border-default);
   background: var(--surface-sunken);
   /* Sticky header — header tetap visible saat scroll vertikal di
@@ -943,24 +943,25 @@ html, body, #root {
   z-index: 1;
 }
 .tz-table tbody td {
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-body);
   vertical-align: middle;
 }
-/* Zebra striping super-subtle (2% tint) — bantu mata melacak baris di
-   tabel panjang tanpa terlalu busy. */
-.tz-table tbody tr:nth-child(even) td {
+/* Zebra striping super-subtle (2% tint) — default ON, tapi opsional:
+   tambahkan class .tz-table--flat di tabel yang tidak ingin zebra
+   (mis. tabel pendek/ringkasan dimana striping tidak menambah nilai). */
+.tz-table:not(.tz-table--flat) tbody tr:nth-child(even) td {
   background: color-mix(in oklch, var(--surface-card) 98%, var(--neutral-500));
 }
 .tz-table tbody tr {
-  transition: background var(--dur-fast) var(--ease-standard);
+  transition: background var(--transition-fast);
 }
 .tz-table tbody tr:hover td {
   background: var(--action-soft);
 }
 .tz-table tfoot td {
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-4) var(--space-5);
   font-weight: var(--fw-semibold);
   background: var(--surface-sunken);
   border-top: 1px solid var(--border-default);
@@ -1280,10 +1281,12 @@ html, body, #root {
   }
 }
 
-/* status pill */
+/* status pill — soft background + border per varian (di bawah), dot
+   indikator opsional (.pill--dot). Padding sedikit lebih lega drpd
+   sebelumnya (2px→--space-1) supaya lebih nyaman dibaca. */
 .pill {
   display: inline-flex; align-items: center; gap: var(--space-1);
-  padding: 2px var(--space-2);
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-full);
   font-size: var(--text-2xs);
   font-weight: var(--fw-medium);
@@ -1303,14 +1306,9 @@ html, body, #root {
 .spmi-nav-card:hover > * { transform: translateY(-2px); box-shadow: var(--shadow-lg, 0 8px 24px rgba(15,26,58,0.10)); }
 .spmi-nav-card:focus-visible > * { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 
-/* ----- Table row hover (SPMI tables) ----- */
-.tz-table tbody tr { transition: background-color .12s ease; }
-.tz-table tbody tr {
-  transition: background var(--dur-fast) var(--ease-standard);
-}
-.tz-table tbody tr:hover {
-  background: var(--action-soft);
-}
+/* (row hover/transition tabel — satu sumber kebenaran di §"Tabel data"
+   di atas; 3 deklarasi duplikat di sini dihapus, termasuk satu yang
+   hardcode ".12s ease" alih-alih token) */
 
 /* ----- Print ----- */
 /* Sembunyikan chrome aplikasi; biarkan area konten tercetak rapi. */
@@ -1439,13 +1437,6 @@ html, body, #root {
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* Pill: micro-transition untuk filter aktif/non-aktif */
-.pill {
-  transition: background var(--dur-fast) var(--ease-standard),
-              color var(--dur-fast) var(--ease-standard),
-              border-color var(--dur-fast) var(--ease-standard);
 }
 
 /* Empty state — polish utk muted text di tabel
@@ -2353,11 +2344,10 @@ body.kartu-print-mode .route-transition {
    ============================================================ */
 
 .pill {
-  /* tambah transform ke transition list yang sudah ada di atas */
-  transition: background var(--dur-fast) var(--ease-standard),
-              color var(--dur-fast) var(--ease-standard),
-              border-color var(--dur-fast) var(--ease-standard),
-              transform var(--dur-fast) var(--ease-standard);
+  transition: background var(--transition-fast),
+              color var(--transition-fast),
+              border-color var(--transition-fast),
+              transform var(--transition-fast);
 }
 .pill:hover {
   transform: translateY(-1px) scale(1.02);
