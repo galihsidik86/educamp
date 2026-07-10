@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useKrs, usePenawaran, useKrsActions, type KrsItem } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { formatTanggalWaktu, capitalize } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -156,7 +157,7 @@ export function MahasiswaKrs() {
                 </tr>
               </thead>
               <tbody>
-                {penawaran.isLoading && <tr><td colSpan={9} className="muted center">Memuat…</td></tr>}
+                {penawaran.isLoading && <TableSkeletonRows cols={9} rows={5} />}
                 {kelasSorted.map((k) => {
                   const dipilih = sudahDipilih.has(k.id);
                   const penuh = k.terisi >= k.kapasitas;

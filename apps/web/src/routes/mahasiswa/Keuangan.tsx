@@ -6,6 +6,7 @@ import { useKeuangan, useKeuanganActions, type Tagihan, type UploadBuktiBody } f
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { formatRupiah, formatTanggal, formatTanggalWaktu, formatStatus } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -50,7 +51,7 @@ export function MahasiswaKeuangan() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={9} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={9} rows={5} />}
             {data?.items.length === 0 && <tr><td colSpan={9} className="muted center">Belum ada tagihan.</td></tr>}
             {data?.items.map((t) => (
               <tr key={t.id}>

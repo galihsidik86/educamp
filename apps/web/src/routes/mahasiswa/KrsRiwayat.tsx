@@ -5,6 +5,7 @@ import { Button, Card, Input } from '@/ds';
 import { useKrsRiwayat } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
+import { Skeleton } from '@/components/Skeleton';
 
 export function MahasiswaKrsRiwayat() {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ export function MahasiswaKrsRiwayat() {
         }
       />
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.semesters.length === 0 && (
         <Card>
           <p className="muted" style={{ margin: 0 }}>Belum ada riwayat KRS.</p>

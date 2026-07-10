@@ -4,6 +4,7 @@ import { Alert, Button, Card, Input } from '@/ds';
 import { ChevronDown, ChevronRight, Printer, CalendarClock, KeyRound, Search } from 'lucide-react';
 import { useMahasiswaAbsensi } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
+import { Skeleton } from '@/components/Skeleton';
 import { formatTanggalWaktu, formatTanggal, capitalize } from '@/lib/format';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -57,7 +58,7 @@ export function MahasiswaAbsensi() {
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada kelas">
           Anda belum memiliki kelas dengan KRS disetujui di semester aktif.

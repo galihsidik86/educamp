@@ -4,6 +4,7 @@ import { Alert, Card, Input } from '@/ds';
 import { useKhs, useTranskrip } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
+import { Skeleton, TableSkeletonRows } from '@/components/Skeleton';
 import { formatIp } from '@/lib/format';
 import { Printer, Lock, ClipboardCheck, Search } from 'lucide-react';
 import { Button } from '@/ds';
@@ -81,7 +82,7 @@ export function MahasiswaNilai() {
               <Link to="/mahasiswa/edom" style={{ color: 'var(--text-link)', fontWeight: 'var(--fw-semibold)' }}>Isi EDOM sekarang →</Link>
             </Alert>
           )}
-          {khs.isLoading && <Card><p className="muted" style={{ margin: 0 }}>Memuat KHS…</p></Card>}
+          {khs.isLoading && <Card><Skeleton variant="card" height={140} count={2} /></Card>}
           {khs.data && khs.data.semesters.length === 0 && (
             <Alert variant="info" title="Belum ada nilai">KHS akan muncul setelah dosen menginput nilai.</Alert>
           )}
@@ -170,7 +171,7 @@ export function MahasiswaNilai() {
               </tr>
             </thead>
             <tbody>
-              {transkrip.isLoading && <tr><td colSpan={7} className="muted center">Memuat…</td></tr>}
+              {transkrip.isLoading && <TableSkeletonRows cols={7} rows={5} />}
               {transkrip.data?.items.length === 0 && (
                 <tr><td colSpan={7} className="muted center">Belum ada nilai yang difinalisasi.</td></tr>
               )}

@@ -5,6 +5,7 @@ import { useMbkm, useMbkmActions, type JenisMbkm, type MbkmDaftarInput, type Mbk
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
+import { Skeleton } from '@/components/Skeleton';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -63,7 +64,7 @@ export function MahasiswaMbkm() {
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
-      {isLoading && <Card><p className="muted" style={{ margin: 0 }}>Memuat…</p></Card>}
+      {isLoading && <Card><Skeleton variant="card" height={140} count={2} /></Card>}
 
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada program MBKM">
