@@ -1,13 +1,25 @@
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Alert } from '@/ds';
+import { Alert, Input } from '@/ds';
 import { useBimbingan } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Search } from 'lucide-react';
 
 export function DosenBimbingan() {
   const { data, isLoading, error } = useBimbingan();
   const perluValidasi = data?.items.filter((i) => i.perluValidasi).length ?? 0;
+  const [q, setQ] = useState('');
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((m) =>
+      m.nim.toLowerCase().includes(query) ||
+      m.nama.toLowerCase().includes(query) ||
+      m.prodi.nama.toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   return (
     <div className="stack">
@@ -23,6 +35,22 @@ export function DosenBimbingan() {
         <Alert variant="warning" title={`${perluValidasi} mahasiswa menunggu validasi KRS`}>
           Periksa KRS yang berstatus "diajukan" — setujui atau tolak dengan catatan.
         </Alert>
+      )}
+
+      {data && data.items.length > 0 && (
+        <div className="row" style={{ alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari NIM, nama, atau prodi…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        </div>
+      )}
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada mahasiswa yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
       )}
 
       <div className="tz-table-wrap">
@@ -42,7 +70,7 @@ export function DosenBimbingan() {
             {data?.items.length === 0 && (
               <tr><td colSpan={8} className="muted center">Belum ada mahasiswa bimbingan.</td></tr>
             )}
-            {data?.items.map((m) => (
+            {items.map((m) => (
               <tr key={m.id}>
                 <td className="mono">{m.nim}</td>
                 <td>{m.nama}</td>
