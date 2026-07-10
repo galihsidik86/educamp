@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Alert, Button, Card, Input } from '@/ds';
-import { ChevronLeft, Plus, Pencil, Trash2, Eye, BarChart3 } from 'lucide-react';
+import { ChevronLeft, Plus, Pencil, Trash2, Eye, BarChart3, Search } from 'lucide-react';
 import {
   useDosenKuisDetail, useDosenKuisActions, useDosenKuisHasil,
   type SoalInput,
@@ -214,11 +214,37 @@ export function DosenKuisDetail() {
 
 function KuisHasilTable({ kuisId }: { kuisId: string }) {
   const { data, isLoading, error } = useDosenKuisHasil(kuisId);
+  const [q, setQ] = useState('');
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((it) =>
+      it.nim.toLowerCase().includes(query) || it.nama.toLowerCase().includes(query),
+    );
+  }, [data, q]);
+
   if (isLoading) return <p className="muted">Memuat…</p>;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
 
   return (
-    <div className="tz-table-wrap">
+    <div className="stack">
+      {data.items.length > 0 && (
+        <div className="row" style={{ alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari NIM atau nama…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        </div>
+      )}
+      {data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada peserta yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
+      <div className="tz-table-wrap">
       <table className="tz-table">
         <thead>
           <tr>
@@ -229,7 +255,7 @@ function KuisHasilTable({ kuisId }: { kuisId: string }) {
         </thead>
         <tbody>
           {data.items.length === 0 && <tr><td colSpan={6} className="muted center">Belum ada peserta.</td></tr>}
-          {data.items.map((it) => (
+          {items.map((it) => (
             <tr key={it.mahasiswaId}>
               <td className="mono">{it.nim}</td>
               <td>{it.nama}</td>
@@ -241,6 +267,7 @@ function KuisHasilTable({ kuisId }: { kuisId: string }) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

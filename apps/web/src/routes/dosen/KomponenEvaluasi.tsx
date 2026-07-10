@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Alert, Badge, Button, Input, Select } from '@/ds';
-import { Plus, Pencil, Trash2, Save, ArrowLeft, ListPlus } from 'lucide-react';
+import { Plus, Pencil, Trash2, Save, ArrowLeft, ListPlus, Search } from 'lucide-react';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { ApiError } from '@/lib/api';
@@ -265,6 +265,7 @@ function NilaiKomponenMatrixTable({ kelasId, onMsg, saveAction }: {
   // Local edits — { [krsId]: { [komponenId]: value } }
   const [edits, setEdits] = useState<Record<string, Record<string, number | null>>>({});
   const [busy, setBusy] = useState(false);
+  const [q, setQ] = useState('');
 
   // Reset edits when matrix data refreshes
   useEffect(() => { setEdits({}); }, [matrix.data?.komponen.length, matrix.data?.rows.length]);
@@ -317,6 +318,11 @@ function NilaiKomponenMatrixTable({ kelasId, onMsg, saveAction }: {
     return <Alert variant="info" title="Belum ada mahasiswa">Belum ada mahasiswa yang KRS-nya disetujui di kelas ini.</Alert>;
   }
 
+  const query = q.trim().toLowerCase();
+  const rows = query
+    ? matrix.data.rows.filter((row) => row.mahasiswa.nim.toLowerCase().includes(query) || row.mahasiswa.nama.toLowerCase().includes(query))
+    : matrix.data.rows;
+
   return (
     <div className="stack">
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
@@ -327,6 +333,20 @@ function NilaiKomponenMatrixTable({ kelasId, onMsg, saveAction }: {
           {busy ? 'Menyimpan…' : `Simpan ${dirty ? '(ada perubahan)' : ''}`}
         </Button>
       </div>
+
+      <div className="row" style={{ alignItems: 'flex-end' }}>
+        <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+          <Input
+            icon={<Search size={16} />}
+            placeholder="Cari NIM atau nama…"
+            value={q}
+            onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+          />
+        </div>
+      </div>
+      {rows.length === 0 && (
+        <p className="muted">Tidak ada mahasiswa yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
 
       <div className="tz-table-wrap" style={{ overflowX: 'auto' }}>
         <table className="tz-table">
@@ -343,7 +363,7 @@ function NilaiKomponenMatrixTable({ kelasId, onMsg, saveAction }: {
             </tr>
           </thead>
           <tbody>
-            {matrix.data.rows.map((row) => (
+            {rows.map((row) => (
               <tr key={row.krsId}>
                 <td className="mono" style={{ position: 'sticky', left: 0, background: 'var(--surface-card)' }}>{row.mahasiswa.nim}</td>
                 <td style={{ position: 'sticky', left: 80, background: 'var(--surface-card)' }}>{row.mahasiswa.nama}</td>
