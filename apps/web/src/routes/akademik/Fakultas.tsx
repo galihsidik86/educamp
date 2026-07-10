@@ -5,6 +5,7 @@ import { useFakultas, useFakultasActions, type Fakultas, type FakultasInput } fr
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { ExcelImportModal } from '@/components/ExcelImportModal';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { ApiError } from '@/lib/api';
 
 export function AdminFakultas() {
@@ -49,7 +50,7 @@ export function AdminFakultas() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={4} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={4} rows={5} />}
             {data?.items.length === 0 && <tr><td colSpan={4} className="muted center">Belum ada fakultas.</td></tr>}
             {data?.items.map((f) => (
               <tr key={f.id}>

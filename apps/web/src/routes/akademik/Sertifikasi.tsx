@@ -5,6 +5,7 @@ import { useAdminSertifikasi, useAdminSertifikasiActions, type SertifikasiAdmin 
 import { PageHead } from '@/components/PageHead';
 import { formatTanggal, safeHref } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { TableSkeletonRows } from '@/components/Skeleton';
 
 const JENIS_LABEL: Record<string, string> = {
   bahasa: 'Bahasa', kompetensi: 'Kompetensi', pelatihan: 'Pelatihan', lain: 'Lain',
@@ -50,7 +51,6 @@ export function AkademikSertifikasi() {
         <Button variant="primary" size="sm" leftIcon={<Search size={14} />} onClick={() => setActiveQ(q)}>Cari</Button>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && (
         <Card>
           <div style={{ textAlign: 'center', padding: 'var(--space-5)' }}>
@@ -59,7 +59,7 @@ export function AkademikSertifikasi() {
           </div>
         </Card>
       )}
-      {data && data.items.length > 0 && (
+      {(isLoading || (data && data.items.length > 0)) && (
         <div className="tz-table-wrap">
           <table className="tz-table">
             <thead>
@@ -74,7 +74,8 @@ export function AkademikSertifikasi() {
               </tr>
             </thead>
             <tbody>
-              {data.items.map((s) => (
+              {isLoading && <TableSkeletonRows cols={7} rows={5} />}
+              {data?.items.map((s) => (
                 <tr key={s.id}>
                   <td>
                     <div><strong>{s.mahasiswa.nama}</strong></div>

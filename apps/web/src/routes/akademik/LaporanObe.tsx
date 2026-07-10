@@ -4,6 +4,7 @@ import { Target, TrendingUp } from 'lucide-react';
 import { useLaporanObe, type AspekCpl } from '@/lib/queries-obe';
 import { useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
+import { Skeleton } from '@/components/Skeleton';
 
 const ASPEK_LABEL: Record<AspekCpl, string> = {
   sikap: 'Sikap',
@@ -45,7 +46,7 @@ export function LaporanObe() {
         <Alert variant="info" title="Pilih prodi">Pilih prodi untuk melihat laporan capaian CPL.</Alert>
       )}
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && (
         <>

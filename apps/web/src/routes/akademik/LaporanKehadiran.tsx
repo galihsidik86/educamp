@@ -4,6 +4,7 @@ import { Printer, Search } from 'lucide-react';
 import { Button } from '@/ds';
 import { useLaporanKehadiran, useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 export function AkademikLaporanKehadiran() {
   const [filters, setFilters] = useState({ prodiId: '' });
@@ -19,7 +20,7 @@ export function AkademikLaporanKehadiran() {
     );
   }, [data, q]);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
 
   const r = data.ringkasan;

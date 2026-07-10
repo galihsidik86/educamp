@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { useAuditLog, type AuditEntry, type AuditFilters } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { formatTanggalWaktu, formatStatus } from '@/lib/format';
 
 const ACTIONS = [
@@ -74,7 +75,7 @@ export function AdminAuditLog() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={7} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={7} rows={5} />}
             {data?.items.length === 0 && <tr><td colSpan={7} className="muted center">Tidak ada catatan.</td></tr>}
             {data?.items.map((r) => (
               <tr key={r.id}>

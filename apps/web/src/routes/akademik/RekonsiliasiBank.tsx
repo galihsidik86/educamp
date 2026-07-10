@@ -5,6 +5,7 @@ import { useRekonsiliasi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { formatRupiah, formatTanggal, formatStatus } from '@/lib/format';
 import { tokenStore } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 function ymd(d: Date): string { return d.toISOString().slice(0, 10); }
 
@@ -111,7 +112,7 @@ export function AkademikRekonsiliasiBank() {
         </div>
       </Card>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && (
         <>

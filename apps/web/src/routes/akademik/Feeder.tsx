@@ -8,6 +8,7 @@ import {
 import { PageHead } from '@/components/PageHead';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton, TableSkeletonRows, PageLoadingSkeleton } from '@/components/Skeleton';
 
 const STATUS_LABEL: Record<FeederStatus, string> = {
   pending: 'Pending', processing: 'Processing', success: 'Sukses', failed: 'Gagal', skipped: 'Skipped (dry-run)',
@@ -85,7 +86,7 @@ function ConfigTab() {
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
       {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
       {info && <Alert variant="info" title="Info">{info}</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && (
         <Card>
@@ -206,7 +207,6 @@ function QueueTab() {
         )}
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length > 0 && items.length === 0 && (
         <p className="muted">Tidak ada item yang cocok dengan &ldquo;{search.trim()}&rdquo;.</p>
       )}
@@ -218,6 +218,7 @@ function QueueTab() {
               <tr><th>Waktu</th><th>Entity</th><th>Op</th><th>Status</th><th className="num">Attempts</th><th>Pesan / Error</th><th></th></tr>
             </thead>
             <tbody>
+              {isLoading && <TableSkeletonRows cols={7} rows={5} />}
               {data?.items.length === 0 && <tr><td colSpan={7} className="muted center">Tidak ada item.</td></tr>}
               {items.map((q) => (
                 <tr key={q.id}>
@@ -264,7 +265,7 @@ function LogTab() {
   }, [data, search]);
 
   if (error) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
 
   return (
     <div className="stack">

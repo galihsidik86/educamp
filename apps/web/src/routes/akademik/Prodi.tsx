@@ -5,6 +5,7 @@ import { useProdi, useProdiActions, useFakultas, type Prodi, type ProdiInput } f
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { ExcelImportModal } from '@/components/ExcelImportModal';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { formatRupiah } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -55,7 +56,7 @@ export function AdminProdi() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={10} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={10} rows={5} />}
             {data?.items.length === 0 && <tr><td colSpan={10} className="muted center">Belum ada prodi.</td></tr>}
             {data?.items.map((p) => (
               <tr key={p.id}>

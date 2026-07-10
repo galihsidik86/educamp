@@ -4,6 +4,7 @@ import { Alert, Card, Input } from '@/ds';
 import { ChevronLeft, Search } from 'lucide-react';
 import { useEdomRekap } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 export function AkademikEdomRekap() {
   const { id } = useParams<{ id: string }>();
@@ -20,7 +21,7 @@ export function AkademikEdomRekap() {
     );
   }, [data, q]);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
 
   return (

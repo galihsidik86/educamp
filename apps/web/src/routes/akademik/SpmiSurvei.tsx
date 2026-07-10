@@ -22,6 +22,7 @@ import {
 } from '@/lib/queries-spmi';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { ApiError } from '@/lib/api';
 
 const KATEGORI: Array<{ v: KategoriSurvei; label: string }> = [
@@ -91,7 +92,6 @@ export function AkademikSpmiSurvei() {
         )}
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && (
         <Card>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'var(--space-5)', gap: 'var(--space-2)' }}>
@@ -115,7 +115,7 @@ export function AkademikSpmiSurvei() {
       {data && data.items.length > 0 && items.length === 0 && (
         <p className="muted">Tidak ada survei yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
       )}
-      {data && data.items.length > 0 && (
+      {(isLoading || (data && data.items.length > 0)) && (
         <div className="tz-table-wrap">
           <table className="tz-table">
             <thead>
@@ -130,6 +130,7 @@ export function AkademikSpmiSurvei() {
               </tr>
             </thead>
             <tbody>
+              {isLoading && <TableSkeletonRows cols={7} rows={5} />}
               {items.map((s) => (
                 <tr key={s.id}>
                   <td className="mono"><strong>{s.kode}</strong></td>

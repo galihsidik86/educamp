@@ -4,6 +4,7 @@ import { Plus, Trash2, ClipboardEdit, Wallet } from 'lucide-react';
 import { useKategoriUkt, useKategoriUktActions, useProdiRef, type KategoriUkt } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { formatRupiah } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -41,7 +42,6 @@ export function AkademikTarifUkt() {
         </div>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && (
         <Card>
           <div style={{ textAlign: 'center', padding: 'var(--space-5)' }}>
@@ -50,7 +50,7 @@ export function AkademikTarifUkt() {
           </div>
         </Card>
       )}
-      {data && data.items.length > 0 && (
+      {(isLoading || (data && data.items.length > 0)) && (
         <div className="tz-table-wrap">
           <table className="tz-table">
             <thead>
@@ -65,7 +65,8 @@ export function AkademikTarifUkt() {
               </tr>
             </thead>
             <tbody>
-              {data.items.map((k) => (
+              {isLoading && <TableSkeletonRows cols={7} rows={5} />}
+              {data?.items.map((k) => (
                 <tr key={k.id}>
                   <td className="mono" style={{ fontSize: 'var(--text-sm)' }}>{k.prodi.kode}<div className="muted" style={{ fontSize: 'var(--text-xs)' }}>{k.prodi.nama}</div></td>
                   <td className="mono"><strong>{k.kode}</strong></td>

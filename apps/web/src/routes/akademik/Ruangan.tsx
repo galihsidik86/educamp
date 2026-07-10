@@ -6,6 +6,7 @@ import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { ExcelImportModal } from '@/components/ExcelImportModal';
 import { ApiError } from '@/lib/api';
+import { TableSkeletonRows } from '@/components/Skeleton';
 
 export function AkademikRuangan() {
   const { data, isLoading, error } = useRuangan();
@@ -43,8 +44,6 @@ export function AkademikRuangan() {
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
       {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
 
-      {isLoading && <p className="muted">Memuat…</p>}
-
       {data && data.items.length === 0 && (
         <Card>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'var(--space-5)', gap: 'var(--space-2)' }}>
@@ -57,7 +56,7 @@ export function AkademikRuangan() {
         </Card>
       )}
 
-      {data && data.items.length > 0 && (
+      {(isLoading || (data && data.items.length > 0)) && (
         <div className="tz-table-wrap">
           <table className="tz-table">
             <thead>
@@ -71,7 +70,8 @@ export function AkademikRuangan() {
               </tr>
             </thead>
             <tbody>
-              {data.items.map((r) => (
+              {isLoading && <TableSkeletonRows cols={6} rows={5} />}
+              {data?.items.map((r) => (
                 <tr key={r.id}>
                   <td className="mono"><strong>{r.kode}</strong></td>
                   <td>{r.nama}</td>

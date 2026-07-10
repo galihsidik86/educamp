@@ -3,6 +3,7 @@ import { Alert, Card, Select } from '@/ds';
 import { GraduationCap, Users, BarChart3, Award, Activity, ClipboardList } from 'lucide-react';
 import { useAkreditasi, useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
+import { Skeleton } from '@/components/Skeleton';
 
 const STATUS_LABEL: Record<string, string> = {
   aktif: 'Aktif',
@@ -36,7 +37,7 @@ export function AkademikAkreditasi() {
         </div>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && (
         <>

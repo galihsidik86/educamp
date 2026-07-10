@@ -5,6 +5,7 @@ import { useAdminDosen, useDosenActions, useProdi, type AdminDosen, type CreateD
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { ExcelImportModal } from '@/components/ExcelImportModal';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { ApiError } from '@/lib/api';
 import { formatStatus } from '@/lib/format';
 
@@ -71,7 +72,7 @@ export function AdminDosenPage() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={9} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={9} rows={5} />}
             {data?.items.map((d) => (
               <tr key={d.id}>
                 <td className="mono">{d.nidn}</td>

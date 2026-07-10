@@ -9,6 +9,7 @@ import {
 import { Modal } from '@/components/Modal';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
+import { PageLoadingSkeleton, TableSkeletonRows } from '@/components/Skeleton';
 import { capitalize } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -92,7 +93,7 @@ export function AdminValidasiKrsList() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={9} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={9} rows={5} />}
             {data?.items.length === 0 && <tr><td colSpan={9} className="muted center">Tidak ada data.</td></tr>}
             {items.map((m) => (
               <tr key={m.id}>
@@ -138,7 +139,7 @@ export function AdminValidasiKrsDetail() {
   const [actOk, setActOk] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Mahasiswa tidak ditemukan.</Alert>;
 
   const diajukan = data.items.filter((i) => i.status === 'diajukan');

@@ -9,6 +9,7 @@ import { useProdi, useMataKuliah } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { ApiError } from '@/lib/api';
+import { Skeleton, TableSkeletonRows } from '@/components/Skeleton';
 
 const ASPEK_LABEL: Record<AspekCpl, string> = {
   sikap: 'Sikap',
@@ -97,7 +98,7 @@ function CplTab() {
         <Button variant="primary" size="sm" leftIcon={<Plus size={14} />} onClick={openCreate}>Tambah CPL</Button>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {(Object.keys(grouped) as AspekCpl[]).map((aspek) => grouped[aspek].length > 0 && (
         <Card key={aspek}>
@@ -253,7 +254,6 @@ function CpmkTab() {
         )}
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length > 0 && items.length === 0 && (
         <p className="muted">Tidak ada CPMK yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
       )}
@@ -273,6 +273,7 @@ function CpmkTab() {
               </tr>
             </thead>
             <tbody>
+              {isLoading && <TableSkeletonRows cols={7} rows={5} />}
               {data?.items.length === 0 && <tr><td colSpan={7} className="muted center">Belum ada CPMK.</td></tr>}
               {items.map((c) => (
                 <tr key={c.id} style={{ opacity: c.isAktif ? 1 : 0.6 }}>

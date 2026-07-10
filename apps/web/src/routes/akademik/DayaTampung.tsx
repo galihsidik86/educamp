@@ -3,6 +3,7 @@ import { Alert, Button, Input, Select } from '@/ds';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { ApiError } from '@/lib/api';
 import {
   useDayaTampung, useDayaTampungActions, useProdi, usePeriode,
@@ -79,7 +80,7 @@ export function DayaTampungPage() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={8} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={8} rows={5} />}
             {data?.items.length === 0 && <tr><td colSpan={8} className="muted center">Belum ada data.</td></tr>}
             {data?.items.map((d) => (
               <tr key={d.id}>

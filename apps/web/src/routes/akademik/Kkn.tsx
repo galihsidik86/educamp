@@ -7,6 +7,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { TableSkeletonRows } from '@/components/Skeleton';
 
 const STATUS = ['pendaftaran', 'ditugaskan', 'berjalan', 'selesai'] as const;
 
@@ -64,7 +65,6 @@ export function AdminKknPage() {
         )}
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada pendaftaran">Belum ada mahasiswa yang mendaftar KKN.</Alert>
       )}
@@ -89,6 +89,7 @@ export function AdminKknPage() {
             </tr>
           </thead>
           <tbody>
+            {isLoading && <TableSkeletonRows cols={10} rows={5} />}
             {items.map((k) => (
               <tr key={k.id}>
                 <td className="mono">{k.periode}</td>

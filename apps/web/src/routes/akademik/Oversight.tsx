@@ -4,6 +4,7 @@ import { FlaskConical, HeartHandshake, MessageSquare, Search } from 'lucide-reac
 import { useOversightKonsultasi, useOversightPenelitian, useOversightPengabdian } from '@/lib/queries-portfolio';
 import { PageHead } from '@/components/PageHead';
 import { formatTanggal } from '@/lib/format';
+import { TableSkeletonRows } from '@/components/Skeleton';
 
 type Tab = 'konsultasi' | 'penelitian' | 'pengabdian';
 
@@ -94,18 +95,18 @@ function KonsultasiPanel() {
           </div>
         )}
       </div>
-      {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && <EmptyPanel icon={<MessageSquare size={28} />} text="Tidak ada konsultasi." />}
       {data && data.items.length > 0 && items.length === 0 && (
         <p className="muted">Tidak ada yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
       )}
-      {data && data.items.length > 0 && (
+      {(isLoading || (data && data.items.length > 0)) && (
         <div className="tz-table-wrap">
           <table className="tz-table">
             <thead>
               <tr><th>Tanggal</th><th>Mahasiswa</th><th>DPA</th><th>Topik</th><th>Status</th></tr>
             </thead>
             <tbody>
+              {isLoading && <TableSkeletonRows cols={5} rows={5} />}
               {items.map((k: any) => (
                 <tr key={k.id}>
                   <td className="mono" style={{ fontSize: 'var(--text-sm)' }}>{formatTanggal(k.waktuMulai)}</td>
@@ -158,18 +159,18 @@ function PenelitianPanel() {
           </div>
         )}
       </div>
-      {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && <EmptyPanel icon={<FlaskConical size={28} />} text="Tidak ada penelitian." />}
       {data && data.items.length > 0 && items.length === 0 && (
         <p className="muted">Tidak ada yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
       )}
-      {data && data.items.length > 0 && (
+      {(isLoading || (data && data.items.length > 0)) && (
         <div className="tz-table-wrap">
           <table className="tz-table">
             <thead>
               <tr><th>Tahun</th><th>Judul</th><th>Ketua</th><th>Sumber Dana</th><th>Dana</th><th>Status</th><th className="num">Mhs</th></tr>
             </thead>
             <tbody>
+              {isLoading && <TableSkeletonRows cols={7} rows={5} />}
               {items.map((p: any) => (
                 <tr key={p.id}>
                   <td className="mono">{p.tahun}</td>
@@ -226,18 +227,18 @@ function PengabdianPanel() {
           </div>
         )}
       </div>
-      {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && <EmptyPanel icon={<HeartHandshake size={28} />} text="Tidak ada pengabdian." />}
       {data && data.items.length > 0 && items.length === 0 && (
         <p className="muted">Tidak ada yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
       )}
-      {data && data.items.length > 0 && (
+      {(isLoading || (data && data.items.length > 0)) && (
         <div className="tz-table-wrap">
           <table className="tz-table">
             <thead>
               <tr><th>Tahun</th><th>Judul</th><th>Lokasi</th><th>Ketua</th><th>Status</th><th className="num">Mhs</th></tr>
             </thead>
             <tbody>
+              {isLoading && <TableSkeletonRows cols={6} rows={5} />}
               {items.map((p: any) => (
                 <tr key={p.id}>
                   <td className="mono">{p.tahun}</td>

@@ -9,6 +9,7 @@ import {
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { formatIp, formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -67,7 +68,6 @@ export function AdminYudisiumPage() {
         )}
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && <Alert variant="info" title="Tidak ada hasil">Belum ada pendaftar / sesuaikan filter.</Alert>}
       {data && data.items.length > 0 && items.length === 0 && (
         <p className="muted">Tidak ada mahasiswa yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
@@ -90,6 +90,7 @@ export function AdminYudisiumPage() {
             </tr>
           </thead>
           <tbody>
+            {isLoading && <TableSkeletonRows cols={10} rows={5} />}
             {items.map((y) => (
               <tr key={y.id}>
                 <td className="mono">{y.periodeWisuda.kode}</td>

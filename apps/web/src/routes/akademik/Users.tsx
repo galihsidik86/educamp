@@ -9,6 +9,7 @@ import { useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { RowActions } from '@/components/RowActions';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { useToast } from '@/components/Toast';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { formatTanggalWaktu } from '@/lib/format';
@@ -108,8 +109,6 @@ export function AkademikUsers() {
         </div>
       </Card>
 
-      {isLoading && <p className="muted">Memuat…</p>}
-
       <Card>
         <div className="tz-table-wrap">
           <table className="tz-table">
@@ -124,6 +123,7 @@ export function AkademikUsers() {
               </tr>
             </thead>
             <tbody>
+              {isLoading && <TableSkeletonRows cols={6} rows={5} />}
               {data?.items.length === 0 && <tr><td colSpan={6} className="muted center">Tidak ada user.</td></tr>}
               {data?.items.map((u) => {
                 const idn = u.mahasiswa?.nim ?? u.dosen?.nidn ?? null;

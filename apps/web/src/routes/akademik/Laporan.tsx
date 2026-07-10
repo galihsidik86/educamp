@@ -4,11 +4,12 @@ import { Button } from '@/ds';
 import { useLaporan } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { formatStatus } from '@/lib/format';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 export function AkademikLaporan() {
   const { data, isLoading, error } = useLaporan();
 
-  if (isLoading) return <p className="muted">Memuat laporan…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
 
   return (

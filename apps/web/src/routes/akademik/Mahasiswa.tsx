@@ -15,6 +15,7 @@ import { RowActions } from '@/components/RowActions';
 import { ApiError } from '@/lib/api';
 import { parseXlsxFile, downloadXlsxTemplate } from '@/lib/xlsx';
 import { Download } from 'lucide-react';
+import { TableSkeletonRows } from '@/components/Skeleton';
 
 const STATUS = ['aktif', 'cuti', 'lulus', 'drop_out', 'mengundurkan_diri'];
 
@@ -90,7 +91,7 @@ export function AdminMahasiswaPage() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={9} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={9} rows={5} />}
             {data?.items.length === 0 && <tr><td colSpan={9} className="muted center">Tidak ada data.</td></tr>}
             {data?.items.map((m) => (
               <tr key={m.id}>

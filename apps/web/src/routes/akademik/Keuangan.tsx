@@ -10,6 +10,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
 import { formatRupiah, formatTanggal, formatStatus } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { TableSkeletonRows } from '@/components/Skeleton';
 
 const JENIS = ['ukt', 'uang_pangkal', 'praktikum', 'wisuda', 'ujian', 'lainnya'] as const;
 const JENIS_LABEL: Record<(typeof JENIS)[number], string> = {
@@ -77,7 +78,7 @@ export function AdminKeuangan() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={10} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={10} rows={5} />}
             {data?.items.length === 0 && <tr><td colSpan={10} className="muted center">Tidak ada tagihan.</td></tr>}
             {data?.items.map((t) => (
               <tr key={t.id}>

@@ -8,6 +8,7 @@ import {
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -50,7 +51,6 @@ export function AdminSkripsiPage() {
         </div>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Tidak ada hasil">Sesuaikan filter atau belum ada pengajuan.</Alert>
       )}
@@ -69,6 +69,7 @@ export function AdminSkripsiPage() {
             </tr>
           </thead>
           <tbody>
+            {isLoading && <TableSkeletonRows cols={7} rows={5} />}
             {data?.items.map((s) => (
               <tr key={s.id}>
                 <td className="mono">{s.mahasiswa.nim}</td>

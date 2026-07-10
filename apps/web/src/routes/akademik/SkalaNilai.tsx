@@ -6,6 +6,7 @@ import { PageHead } from '@/components/PageHead';
 import { useToast } from '@/components/Toast';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const DEFAULTS: SkalaNilaiBody = {
   minA: 85, minAB: 75, minB: 70, minBC: 65, minC: 56, minD: 40,
@@ -133,7 +134,7 @@ export function AdminSkalaNilai() {
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
       {err && <Alert variant="danger" title="Gagal">{err}</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       <Alert variant="info" title="Catatan">
         <ul style={{ margin: 0, paddingLeft: 'var(--space-4)' }}>

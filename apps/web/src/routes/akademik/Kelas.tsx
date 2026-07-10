@@ -12,6 +12,7 @@ import { Modal } from '@/components/Modal';
 import { ExcelImportModal } from '@/components/ExcelImportModal';
 import { ApiError } from '@/lib/api';
 import { capitalize } from '@/lib/format';
+import { TableSkeletonRows } from '@/components/Skeleton';
 
 const HARI = ['', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu'] as const;
 
@@ -110,7 +111,7 @@ export function AdminKelas() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={9} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={9} rows={5} />}
             {data?.items.length === 0 && <tr><td colSpan={9} className="muted center">Belum ada kelas.</td></tr>}
             {items.map((k) => (
               <tr key={k.id}>
@@ -221,7 +222,7 @@ function TeamModal({ kelas, onClose }: { kelas: Kelas; onClose: () => void }) {
               <tr><th>NIDN</th><th>Nama</th><th>Prodi</th><th>Peran</th><th></th></tr>
             </thead>
             <tbody>
-              {team.isLoading && <tr><td colSpan={5} className="muted center">Memuat…</td></tr>}
+              {team.isLoading && <TableSkeletonRows cols={5} rows={5} />}
               {team.data?.items.length === 0 && <tr><td colSpan={5} className="muted center">Belum ada anggota team.</td></tr>}
               {team.data?.items.map((t) => {
                 const cross = t.prodi && mkProdiKode && t.prodi.kode !== mkProdiKode;

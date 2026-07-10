@@ -3,6 +3,7 @@ import { Alert, Badge, Button, Input, Select } from '@/ds';
 import { Plus, Pencil, Trash2, Users, Search } from 'lucide-react';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { ApiError } from '@/lib/api';
 import {
   useAktivitasMhs, useAktivitasMhsActions, useAdminMahasiswa, useAdminDosen, usePeriode,
@@ -139,7 +140,7 @@ export function AktivitasMhsPage() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={9} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={9} rows={5} />}
             {data?.items.length === 0 && <tr><td colSpan={9} className="muted center">Belum ada aktivitas.</td></tr>}
             {items.map((a) => (
               <tr key={a.id}>

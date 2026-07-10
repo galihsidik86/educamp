@@ -6,6 +6,7 @@ import { useLaporanHonorDosen, useAdminDosen, useProdi } from '@/lib/queries-aka
 import { api } from '@/lib/api';
 import { PageHead } from '@/components/PageHead';
 import { formatTanggal } from '@/lib/format';
+import { Skeleton } from '@/components/Skeleton';
 
 /** YYYY-MM-DD untuk input type="date". */
 function ymd(d: Date): string {
@@ -124,7 +125,7 @@ export function AkademikLaporanHonorDosen() {
       </Card>
 
       {error && <Alert variant="danger" title="Gagal memuat">{(error as any)?.message ?? 'Coba ulangi.'}</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && (
         <>

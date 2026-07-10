@@ -7,6 +7,7 @@ import { Modal } from '@/components/Modal';
 import { ApiError } from '@/lib/api';
 import { formatStatus } from '@/lib/format';
 import { parseXlsxFile, downloadXlsxTemplate } from '@/lib/xlsx';
+import { TableSkeletonRows } from '@/components/Skeleton';
 
 const JENIS = ['wajib_universitas', 'wajib_prodi', 'pilihan'] as const;
 const MK_EXPECTED_HEADERS = ['kode', 'nama', 'sks', 'prodiKode'] as const;
@@ -63,7 +64,7 @@ export function AdminMataKuliah() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={9} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={9} rows={5} />}
             {data?.items.length === 0 && <tr><td colSpan={9} className="muted center">Tidak ada data.</td></tr>}
             {data?.items.map((m) => (
               <tr key={m.id}>

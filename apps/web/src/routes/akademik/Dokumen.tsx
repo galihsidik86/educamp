@@ -10,6 +10,7 @@ import { useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { RowActions } from '@/components/RowActions';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { formatTanggal, formatTanggalWaktu, safeHref } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -77,7 +78,6 @@ function KategoriTab() {
       </div>
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
       {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada kategori">Buat minimal 1 kategori (mis. "Panduan Akademik") sebelum menambah dokumen.</Alert>
       )}
@@ -96,6 +96,7 @@ function KategoriTab() {
               </tr>
             </thead>
             <tbody>
+              {isLoading && <TableSkeletonRows cols={6} rows={5} />}
               {data?.items.map((k) => (
                 <tr key={k.id}>
                   <td className="num mono">{k.urutan}</td>

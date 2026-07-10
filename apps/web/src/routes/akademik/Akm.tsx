@@ -3,6 +3,7 @@ import { Alert, Badge, Button, Input, Select } from '@/ds';
 import { Sparkles, Pencil, Trash2, RefreshCw } from 'lucide-react';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { ApiError } from '@/lib/api';
 import {
   useAkm, useAkmActions, useProdi, usePeriode,
@@ -150,7 +151,7 @@ export function AkmPage() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={10} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={10} rows={5} />}
             {data?.items.length === 0 && (
               <tr><td colSpan={10} className="muted center">Belum ada AKM. Klik 'Generate' untuk menghitung dari Krs+Nilai.</td></tr>
             )}

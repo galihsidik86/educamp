@@ -8,6 +8,7 @@ import {
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -84,7 +85,6 @@ export function AdminMbkmPage() {
         )}
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada pengajuan">Belum ada mahasiswa yang mendaftar MBKM.</Alert>
       )}
@@ -108,6 +108,7 @@ export function AdminMbkmPage() {
             </tr>
           </thead>
           <tbody>
+            {isLoading && <TableSkeletonRows cols={9} rows={5} />}
             {items.map((m) => (
               <tr key={m.id}>
                 <td className="mono">{m.periode}</td>

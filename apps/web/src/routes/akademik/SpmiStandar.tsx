@@ -22,6 +22,7 @@ import {
 import { useProdiRef as useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { Skeleton } from '@/components/Skeleton';
 import { ApiError } from '@/lib/api';
 
 const KATEGORI: Array<{ v: KategoriStandar; label: string }> = [
@@ -97,7 +98,7 @@ export function AkademikSpmiStandar() {
         </div>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && data.items.length === 0 && (
         <Card>

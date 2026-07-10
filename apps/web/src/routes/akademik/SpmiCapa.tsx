@@ -4,6 +4,7 @@ import { Alert, Badge, Card, Input, Select } from '@/ds';
 import { AlertTriangle, Wrench, CheckCircle2, Search } from 'lucide-react';
 import { useCapaList, type StatusCapa } from '@/lib/queries-spmi';
 import { PageHead } from '@/components/PageHead';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { formatTanggal } from '@/lib/format';
 
 const CAPA_LABEL: Record<StatusCapa, string> = {
@@ -72,7 +73,6 @@ export function AkademikSpmiCapa() {
         )}
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && (
         <Card>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'var(--space-5)', gap: 'var(--space-2)' }}>
@@ -93,7 +93,7 @@ export function AkademikSpmiCapa() {
       {data && data.items.length > 0 && items.length === 0 && (
         <p className="muted">Tidak ada CAPA yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
       )}
-      {data && data.items.length > 0 && (
+      {(isLoading || (data && data.items.length > 0)) && (
         <div className="tz-table-wrap">
           <table className="tz-table">
             <thead>
@@ -107,6 +107,7 @@ export function AkademikSpmiCapa() {
               </tr>
             </thead>
             <tbody>
+              {isLoading && <TableSkeletonRows cols={6} rows={5} />}
               {items.map((c) => {
                 const isOverdue = new Date(c.targetSelesai) < new Date() && c.status !== 'closed' && c.status !== 'ditolak';
                 return (

@@ -8,6 +8,7 @@ import { safeHref } from '@/lib/format';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 import { ApiError } from '@/lib/api';
 
 const KATEGORI_INFO: Record<KategoriBkd, { label: string; icon: React.ReactNode }> = {
@@ -37,7 +38,7 @@ export function AkademikBkdDetail() {
     } catch (e) { setActErr(e instanceof ApiError ? e.message : 'Gagal hapus'); }
   };
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Laporan tidak ditemukan.</Alert>;
 
   const approve = async () => {
