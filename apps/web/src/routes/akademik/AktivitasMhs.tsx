@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Alert, Badge, Button, Input, Select } from '@/ds';
-import { Plus, Pencil, Trash2, Users } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users, Search } from 'lucide-react';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { ApiError } from '@/lib/api';
@@ -53,6 +53,15 @@ export function AktivitasMhsPage() {
   const actions = useAktivitasMhsActions();
   const [modal, setModal] = useState<{ mode: 'create' } | { mode: 'edit'; item: AktivitasMhsListItem } | { mode: 'peserta'; item: AktivitasMhsListItem } | null>(null);
   const [msg, setMsg] = useState<{ type: 'success' | 'danger'; text: string } | null>(null);
+  const [q, setQ] = useState('');
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((a) =>
+      a.nama.toLowerCase().includes(query) || (a.mitra ?? '').toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   const onDelete = async (id: string) => {
     if (!confirm('Hapus aktivitas ini? Peserta & pembimbing akan ikut terhapus.')) return;
@@ -99,7 +108,20 @@ export function AktivitasMhsPage() {
           <input type="checkbox" checked={filters.isMbkm} onChange={(e) => setFilters({ ...filters, isMbkm: e.target.checked })} />
           <span style={{ fontSize: 'var(--text-sm)' }}>Hanya MBKM</span>
         </label>
+        {data && data.items.length > 0 && (
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari nama aktivitas atau mitra…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
       </div>
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada aktivitas yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
 
       <div className="tz-table-wrap">
         <table className="tz-table">
@@ -119,7 +141,7 @@ export function AktivitasMhsPage() {
           <tbody>
             {isLoading && <tr><td colSpan={9} className="muted center">Memuat…</td></tr>}
             {data?.items.length === 0 && <tr><td colSpan={9} className="muted center">Belum ada aktivitas.</td></tr>}
-            {data?.items.map((a) => (
+            {items.map((a) => (
               <tr key={a.id}>
                 <td>
                   <strong>{a.nama}</strong>
