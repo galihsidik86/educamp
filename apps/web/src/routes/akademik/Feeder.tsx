@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Button, Card, Input, Select } from '@/ds';
-import { Cable, RefreshCw, Play, AlertCircle, CheckCircle2, Clock, Activity } from 'lucide-react';
+import { Cable, RefreshCw, Play, AlertCircle, CheckCircle2, Clock, Activity, Search } from 'lucide-react';
 import {
   useFeederConfig, useFeederStats, useFeederQueue, useFeederLog, useFeederActions,
   type FeederStatus, type FeederConfigInput,
@@ -141,6 +141,17 @@ function QueueTab() {
   const actions = useFeederActions();
   const [actErr, setActErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+
+  const items = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((it) =>
+      it.entity.toLowerCase().includes(query) ||
+      it.operation.toLowerCase().includes(query) ||
+      (it.lastError ?? '').toLowerCase().includes(query),
+    );
+  }, [data, search]);
 
   const runWorker = async () => {
     setActErr(null); setInfo(null);
@@ -183,9 +194,22 @@ function QueueTab() {
         <Button variant="primary" size="sm" leftIcon={<Play size={14} />} onClick={runWorker} disabled={actions.processQueue.isPending}>
           {actions.processQueue.isPending ? 'Memproses…' : 'Proses antrian'}
         </Button>
+        {data && data.items.length > 0 && (
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari entity, op, atau error…"
+              value={search}
+              onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
       </div>
 
       {isLoading && <p className="muted">Memuat…</p>}
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada item yang cocok dengan &ldquo;{search.trim()}&rdquo;.</p>
+      )}
 
       <Card>
         <div className="tz-table-wrap">
@@ -195,7 +219,7 @@ function QueueTab() {
             </thead>
             <tbody>
               {data?.items.length === 0 && <tr><td colSpan={7} className="muted center">Tidak ada item.</td></tr>}
-              {data?.items.map((q) => (
+              {items.map((q) => (
                 <tr key={q.id}>
                   <td className="mono" style={{ fontSize: 'var(--text-xs)' }}>{formatTanggalWaktu(q.createdAt)}</td>
                   <td className="mono">{q.entity}</td>
@@ -226,12 +250,40 @@ function QueueTab() {
 
 function LogTab() {
   const { data, isLoading, error } = useFeederLog();
+  const [search, setSearch] = useState('');
+
+  const items = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((l) =>
+      l.entity.toLowerCase().includes(query) ||
+      l.operation.toLowerCase().includes(query) ||
+      (l.feederId ?? '').toLowerCase().includes(query) ||
+      (l.message ?? '').toLowerCase().includes(query),
+    );
+  }, [data, search]);
 
   if (error) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
   if (isLoading) return <p className="muted">Memuat…</p>;
 
   return (
-    <Card>
+    <div className="stack">
+      {data && data.items.length > 0 && (
+        <div className="row" style={{ alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari entity, op, feederId, atau pesan…"
+              value={search}
+              onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        </div>
+      )}
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada riwayat yang cocok dengan &ldquo;{search.trim()}&rdquo;.</p>
+      )}
+      <Card>
       <div className="tz-table-wrap">
         <table className="tz-table">
           <thead>
@@ -239,7 +291,7 @@ function LogTab() {
           </thead>
           <tbody>
             {data?.items.length === 0 && <tr><td colSpan={7} className="muted center">Belum ada riwayat sync.</td></tr>}
-            {data?.items.map((l) => (
+            {items.map((l) => (
               <tr key={l.id}>
                 <td className="mono" style={{ fontSize: 'var(--text-xs)' }}>{formatTanggalWaktu(l.createdAt)}</td>
                 <td className="mono">{l.entity}</td>
@@ -253,7 +305,8 @@ function LogTab() {
           </tbody>
         </table>
       </div>
-    </Card>
+      </Card>
+    </div>
   );
 }
 
