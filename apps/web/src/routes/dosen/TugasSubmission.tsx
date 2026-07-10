@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Alert, Button, Card, Input } from '@/ds';
-import { ChevronLeft, Save, ExternalLink } from 'lucide-react';
+import { ChevronLeft, Save, ExternalLink, Search } from 'lucide-react';
 import { useDosenTugasSubmission, useDosenTugasActions, type DosenSubmissionItem } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
@@ -13,6 +13,15 @@ export function DosenTugasSubmission() {
   const { kelasId, tugasId } = useParams<{ kelasId: string; tugasId: string }>();
   const { data, isLoading } = useDosenTugasSubmission(tugasId);
   const [grading, setGrading] = useState<DosenSubmissionItem | null>(null);
+  const [q, setQ] = useState('');
+
+  const peserta = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.peserta ?? [];
+    return (data?.peserta ?? []).filter((p) =>
+      p.nim.toLowerCase().includes(query) || p.nama.toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   if (isLoading) return <p className="muted">Memuat…</p>;
   if (!data) return <Alert variant="danger" title="Gagal memuat">Tugas tidak ditemukan.</Alert>;
@@ -29,6 +38,22 @@ export function DosenTugasSubmission() {
         subtitle={`Deadline ${formatTanggalWaktu(data.tugas.deadline)} · Max nilai ${data.tugas.maxNilai}`}
       />
 
+      {data.peserta.length > 0 && (
+        <div className="row" style={{ alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari NIM atau nama…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        </div>
+      )}
+      {data.peserta.length > 0 && peserta.length === 0 && (
+        <p className="muted">Tidak ada mahasiswa yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
+
       <div className="tz-table-wrap">
         <table className="tz-table">
           <thead>
@@ -44,7 +69,7 @@ export function DosenTugasSubmission() {
           </thead>
           <tbody>
             {data.peserta.length === 0 && <tr><td colSpan={7} className="muted center">Belum ada peserta KRS disetujui.</td></tr>}
-            {data.peserta.map((p, i) => (
+            {peserta.map((p, i) => (
               <tr key={p.mahasiswaId}>
                 <td className="num mono">{i + 1}</td>
                 <td className="mono">{p.nim}</td>
