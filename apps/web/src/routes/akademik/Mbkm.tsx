@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Button, Card, Input, Select } from '@/ds';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, Search } from 'lucide-react';
 import {
   useAdminMbkm, useAdminMbkmActions, useAdminDosen, useMataKuliah,
   type AdminMbkmItem,
@@ -28,6 +28,18 @@ export function AdminMbkmPage() {
   const { data, isLoading, error } = useAdminMbkm(filters);
   const [editing, setEditing] = useState<AdminMbkmItem | null>(null);
   const { remove } = useAdminMbkmActions();
+  const [q, setQ] = useState('');
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((m) =>
+      m.mahasiswa.nim.toLowerCase().includes(query) ||
+      m.mahasiswa.nama.toLowerCase().includes(query) ||
+      m.namaProgram.toLowerCase().includes(query) ||
+      (m.mitra ?? '').toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   const onDelete = async (m: AdminMbkmItem) => {
     if (!confirm(`Hapus MBKM ${m.mahasiswa.nim} (${m.namaProgram})?`)) return;
@@ -60,11 +72,24 @@ export function AdminMbkmPage() {
             {Object.entries(JENIS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </Select>
         </div>
+        {data && data.items.length > 0 && (
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari NIM, nama, program, atau mitra…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
       </div>
 
       {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada pengajuan">Belum ada mahasiswa yang mendaftar MBKM.</Alert>
+      )}
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
       )}
 
       <div className="tz-table-wrap">
@@ -83,7 +108,7 @@ export function AdminMbkmPage() {
             </tr>
           </thead>
           <tbody>
-            {data?.items.map((m) => (
+            {items.map((m) => (
               <tr key={m.id}>
                 <td className="mono">{m.periode}</td>
                 <td className="mono">{m.mahasiswa.nim}</td>
