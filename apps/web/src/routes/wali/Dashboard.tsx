@@ -5,6 +5,7 @@ import { Users, GraduationCap, Wallet, CalendarCheck, ChevronRight, BookOpen } f
 import { useWaliProfil, useWaliDashboard } from '@/lib/queries-wali';
 import { PageHead } from '@/components/PageHead';
 import { DashboardHero } from '@/components/DashboardHero';
+import { PageLoadingSkeleton, Skeleton } from '@/components/Skeleton';
 import { formatRupiah } from '@/lib/format';
 
 export function WaliDashboard() {
@@ -19,7 +20,7 @@ export function WaliDashboard() {
 
   const dashboard = useWaliDashboard(selectedId);
 
-  if (profil.isLoading) return <p className="muted">Memuat…</p>;
+  if (profil.isLoading) return <PageLoadingSkeleton />;
   if (profil.error || !profil.data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
   if (profil.data.anak.length === 0) {
     return (
@@ -45,7 +46,7 @@ export function WaliDashboard() {
         ) : anak ? <>NIM {anak.nim}</> : undefined}
       />
 
-      {dashboard.isLoading && <p className="muted">Memuat dashboard…</p>}
+      {dashboard.isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {dashboard.data && (
         <>

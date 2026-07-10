@@ -4,6 +4,7 @@ import { Alert, Card, Input } from '@/ds';
 import { ChevronLeft, Search } from 'lucide-react';
 import { useWaliTranskrip } from '@/lib/queries-wali';
 import { PageHead } from '@/components/PageHead';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 export function WaliTranskrip() {
   const { mahasiswaId } = useParams<{ mahasiswaId: string }>();
@@ -11,7 +12,7 @@ export function WaliTranskrip() {
   const [q, setQ] = useState('');
   const query = q.trim().toLowerCase();
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
 
   // Group by semester (stats dihitung dari data lengkap agar IP/IPK tidak berubah saat difilter)
