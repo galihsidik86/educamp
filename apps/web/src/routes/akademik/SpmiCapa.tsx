@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Alert, Badge, Card, Select } from '@/ds';
-import { AlertTriangle, Wrench, CheckCircle2 } from 'lucide-react';
+import { Alert, Badge, Card, Input, Select } from '@/ds';
+import { AlertTriangle, Wrench, CheckCircle2, Search } from 'lucide-react';
 import { useCapaList, type StatusCapa } from '@/lib/queries-spmi';
 import { PageHead } from '@/components/PageHead';
 import { formatTanggal } from '@/lib/format';
@@ -21,6 +21,18 @@ export function AkademikSpmiCapa() {
     status: status || undefined,
     overdue: overdue || undefined,
   });
+  const [q, setQ] = useState('');
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((c) =>
+      (c.temuan?.kode ?? '').toLowerCase().includes(query) ||
+      (c.temuan?.deskripsi ?? '').toLowerCase().includes(query) ||
+      (c.picDosen?.nama ?? '').toLowerCase().includes(query) ||
+      (c.picUser?.akademik?.nama ?? '').toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   return (
     <div className="stack">
@@ -48,6 +60,16 @@ export function AkademikSpmiCapa() {
           <AlertTriangle size={14} style={{ color: 'var(--danger-fg)' }} />
           <span>Hanya yang overdue</span>
         </label>
+        {data && data.items.length > 0 && (
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari temuan atau PIC…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
       </div>
 
       {isLoading && <p className="muted">Memuat…</p>}
@@ -68,6 +90,9 @@ export function AkademikSpmiCapa() {
           </div>
         </Card>
       )}
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada CAPA yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
       {data && data.items.length > 0 && (
         <div className="tz-table-wrap">
           <table className="tz-table">
@@ -82,7 +107,7 @@ export function AkademikSpmiCapa() {
               </tr>
             </thead>
             <tbody>
-              {data.items.map((c) => {
+              {items.map((c) => {
                 const isOverdue = new Date(c.targetSelesai) < new Date() && c.status !== 'closed' && c.status !== 'ditolak';
                 return (
                   <tr key={c.id}>
