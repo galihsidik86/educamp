@@ -1,17 +1,20 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Alert, Card } from '@/ds';
-import { ChevronLeft } from 'lucide-react';
+import { Alert, Card, Input } from '@/ds';
+import { ChevronLeft, Search } from 'lucide-react';
 import { useWaliTranskrip } from '@/lib/queries-wali';
 import { PageHead } from '@/components/PageHead';
 
 export function WaliTranskrip() {
   const { mahasiswaId } = useParams<{ mahasiswaId: string }>();
   const { data, isLoading, error } = useWaliTranskrip(mahasiswaId);
+  const [q, setQ] = useState('');
+  const query = q.trim().toLowerCase();
 
   if (isLoading) return <p className="muted">Memuat…</p>;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
 
-  // Group by semester
+  // Group by semester (stats dihitung dari data lengkap agar IP/IPK tidak berubah saat difilter)
   const grouped = data.items.reduce<Record<string, typeof data.items>>((acc, it) => {
     if (!acc[it.semester]) acc[it.semester] = [];
     acc[it.semester]!.push(it);
@@ -32,6 +35,22 @@ export function WaliTranskrip() {
         <Alert variant="info" title="Belum ada nilai">Belum ada mata kuliah dengan nilai final.</Alert>
       )}
 
+      {data.items.length > 0 && (
+        <div className="row" style={{ alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari mata kuliah…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        </div>
+      )}
+      {query && !data.items.some((it) => it.namaMK.toLowerCase().includes(query) || it.kodeMK.toLowerCase().includes(query)) && (
+        <p className="muted">Tidak ada mata kuliah yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
+
       {Object.keys(grouped).sort().map((sem) => {
         const semItems = grouped[sem]!;
         const semSks = semItems.reduce((s, i) => s + i.sks, 0);
@@ -40,6 +59,11 @@ export function WaliTranskrip() {
         cumSks += semSks;
         cumBobot += semBobot;
         const ipk = cumSks > 0 ? cumBobot / cumSks : 0;
+        const visibleItems = query
+          ? semItems.filter((it) => it.namaMK.toLowerCase().includes(query) || it.kodeMK.toLowerCase().includes(query))
+          : semItems;
+
+        if (query && visibleItems.length === 0) return null;
 
         return (
           <Card key={sem}>
@@ -57,7 +81,7 @@ export function WaliTranskrip() {
                   <tr><th>Kode MK</th><th>Mata Kuliah</th><th className="num">SKS</th><th className="center">Nilai</th><th className="num">Bobot</th></tr>
                 </thead>
                 <tbody>
-                  {semItems.map((it, i) => (
+                  {visibleItems.map((it, i) => (
                     <tr key={i}>
                       <td className="mono">{it.kodeMK}</td>
                       <td>{it.namaMK}</td>
