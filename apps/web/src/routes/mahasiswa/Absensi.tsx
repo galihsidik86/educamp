@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Button, Card } from '@/ds';
-import { ChevronDown, ChevronRight, Printer, CalendarClock, KeyRound } from 'lucide-react';
+import { Alert, Button, Card, Input } from '@/ds';
+import { ChevronDown, ChevronRight, Printer, CalendarClock, KeyRound, Search } from 'lucide-react';
 import { useMahasiswaAbsensi } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
 import { formatTanggalWaktu, formatTanggal, capitalize } from '@/lib/format';
@@ -13,8 +13,19 @@ const STATUS_LABEL: Record<string, string> = {
 export function MahasiswaAbsensi() {
   const { data, isLoading, error } = useMahasiswaAbsensi();
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [q, setQ] = useState('');
   const navigate = useNavigate();
   const canPrint = (data?.items.length ?? 0) > 0;
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((k) =>
+      k.namaMK.toLowerCase().includes(query) ||
+      k.kodeMK.toLowerCase().includes(query) ||
+      k.dosen.toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   return (
     <div className="stack">
@@ -53,8 +64,24 @@ export function MahasiswaAbsensi() {
         </Alert>
       )}
 
+      {data && data.items.length > 0 && (
+        <div className="row" style={{ alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari mata kuliah atau dosen…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        </div>
+      )}
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada kelas yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
+
       <div className="stack">
-        {data?.items.map((k) => {
+        {items.map((k) => {
           const isOpen = open[k.kelasId] ?? false;
           const persen = k.persentaseHadir;
           return (
