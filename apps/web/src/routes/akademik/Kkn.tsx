@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Button, Card, Input, Select } from '@/ds';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Search } from 'lucide-react';
 import { useAdminKkn, useAdminKknActions, useAdminDosen, type AdminKknItem, type AdminKknPatch } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
@@ -15,6 +15,17 @@ export function AdminKknPage() {
   const { data, isLoading, error } = useAdminKkn(filters);
   const [editing, setEditing] = useState<AdminKknItem | null>(null);
   const { update, remove } = useAdminKknActions();
+  const [q, setQ] = useState('');
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((k) =>
+      k.mahasiswa.nim.toLowerCase().includes(query) ||
+      k.mahasiswa.nama.toLowerCase().includes(query) ||
+      k.lokasi.toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   const onDelete = async (k: AdminKknItem) => {
     if (!confirm(`Hapus KKN ${k.mahasiswa.nim} (${k.periode})?`)) return;
@@ -41,11 +52,24 @@ export function AdminKknPage() {
             {STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
           </Select>
         </div>
+        {data && data.items.length > 0 && (
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari NIM, nama, atau lokasi…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
       </div>
 
       {isLoading && <p className="muted">Memuat…</p>}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada pendaftaran">Belum ada mahasiswa yang mendaftar KKN.</Alert>
+      )}
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada KKN yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
       )}
 
       <div className="tz-table-wrap">
@@ -65,7 +89,7 @@ export function AdminKknPage() {
             </tr>
           </thead>
           <tbody>
-            {data?.items.map((k) => (
+            {items.map((k) => (
               <tr key={k.id}>
                 <td className="mono">{k.periode}</td>
                 <td className="mono">{k.mahasiswa.nim}</td>
