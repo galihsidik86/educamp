@@ -6,20 +6,24 @@
 
 /* ---------- Button ---------- */
 .tz-btn {
+  position: relative;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   font-family: var(--font-sans); font-weight: var(--fw-semibold);
   font-size: var(--text-base); line-height: 1;
   border: 1px solid transparent; border-radius: var(--radius-md);
   padding: 0 var(--space-4); height: 42px;
   cursor: pointer; white-space: nowrap; text-decoration: none;
-  transition: background var(--dur-fast) var(--ease-standard),
-              color var(--dur-fast) var(--ease-standard),
-              border-color var(--dur-fast) var(--ease-standard),
-              box-shadow var(--dur-fast) var(--ease-standard),
-              transform var(--dur-fast) var(--ease-standard);
+  transition: background var(--transition-fast),
+              color var(--transition-fast),
+              border-color var(--transition-fast),
+              box-shadow var(--transition-fast),
+              transform var(--transition-fast);
 }
 .tz-btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
-.tz-btn:active { transform: translateY(0.5px); }
+/* Feedback klik — satu sumber kebenaran (dulu ada versi ganda di app.css
+   dgn efek translateY(0.5px) yg kalah cascade & jadi dead code; sekarang
+   dikonsolidasi di sini). */
+.tz-btn:active:not(:disabled) { transform: scale(0.97); transition-duration: 60ms; }
 .tz-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .tz-btn--sm { height: 34px; font-size: var(--text-sm); padding: 0 var(--space-3); border-radius: var(--radius-sm); }
 .tz-btn--lg { height: 50px; font-size: var(--text-md); padding: 0 var(--space-6); }
@@ -48,7 +52,7 @@
   display: inline-flex; align-items: center; justify-content: center;
   width: 42px; height: 42px; border-radius: var(--radius-md);
   border: 1px solid transparent; background: transparent; color: var(--text-body);
-  cursor: pointer; transition: background var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
+  cursor: pointer; transition: background var(--transition-fast), color var(--transition-fast);
 }
 .tz-iconbtn:hover { background: var(--surface-sunken); color: var(--text-strong); }
 .tz-iconbtn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }

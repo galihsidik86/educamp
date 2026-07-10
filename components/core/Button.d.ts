@@ -10,6 +10,8 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   size?: 'sm' | 'md' | 'lg';
   /** Stretch to full container width. */
   block?: boolean;
+  /** Show spinner in place of the label and block interaction (implies disabled). */
+  loading?: boolean;
   /** Icon node rendered before the label (e.g. a Lucide <i>). */
   leftIcon?: React.ReactNode;
   /** Icon node rendered after the label. */

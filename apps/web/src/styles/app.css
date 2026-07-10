@@ -2155,27 +2155,20 @@ body.kartu-print-mode .route-transition {
    Button — flat-first (UI-AUDIT.md #1: gradient+shimmer dihapus,
    kembali ke flat solid resmi DS di components.css. Klik tetap dapat
    feedback via scale, tanpa efek dekoratif yang tidak resmi di DS).
+   Base .tz-btn/.tz-btn:active sekarang tunggal di components/components.css
+   — versi ganda di sini (efek beda, jadi dead code krn cascade) dihapus.
    ============================================================ */
 
-.tz-btn {
-  position: relative;
-  transition: background var(--dur-fast) var(--ease-standard),
-              border-color var(--dur-fast) var(--ease-standard),
-              color var(--dur-fast) var(--ease-standard),
-              transform var(--dur-fast) var(--ease-standard);
-}
-
-/* Active state: scale 0.97 untuk feedback klik */
-.tz-btn:active {
-  transform: scale(0.97);
-  transition-duration: 60ms;
-}
-
-/* Loading state: opt-in via class — pakai spinner CSS-only */
+/* Loading state — sekarang benar2 dipakai lewat prop `loading` di
+   Button.jsx (sebelumnya class ini ada tapi tak pernah di-attach).
+   disabled asli tetap diset (semantik & keyboard benar) tapi opacity
+   dimming default :disabled di-override supaya spinner tetap full
+   opacity & jelas terlihat. */
 .tz-btn--loading {
   pointer-events: none;
   color: transparent !important;
 }
+.tz-btn--loading:disabled { opacity: 1; }
 .tz-btn--loading::before {
   content: '';
   position: absolute;
@@ -2187,6 +2180,12 @@ body.kartu-print-mode .route-transition {
   border-right-color: transparent;
   color: var(--text-inverse);
   animation: btn-spin 700ms linear infinite;
+}
+/* Varian dgn background terang (secondary/ghost) butuh warna spinner
+   gelap — --text-inverse (putih) akan nyaris tak kelihatan di sana. */
+.tz-btn--secondary.tz-btn--loading::before,
+.tz-btn--ghost.tz-btn--loading::before {
+  color: var(--action);
 }
 @keyframes btn-spin {
   to { transform: rotate(360deg); }
