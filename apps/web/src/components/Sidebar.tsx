@@ -465,20 +465,22 @@ export function Sidebar({ role, mobileOpen = false, onNavigate }: { role: Role; 
               <ChevronDown size={14} className="sidebar__group-chevron" />
             </button>
             <div className="sidebar__group-content">
-              {g.items.map((it) => (
-                <NavLink
-                  key={it.to}
-                  to={it.to}
-                  end={it.end ?? it.to === `/${role}`}
-                  onClick={handleItemClick}
-                  className={({ isActive }) =>
-                    ['sidebar__item', isActive && 'sidebar__item--active'].filter(Boolean).join(' ')
-                  }
-                >
-                  {it.icon}
-                  <span>{it.label}</span>
-                </NavLink>
-              ))}
+              <div className="sidebar__group-inner">
+                {g.items.map((it) => (
+                  <NavLink
+                    key={it.to}
+                    to={it.to}
+                    end={it.end ?? it.to === `/${role}`}
+                    onClick={handleItemClick}
+                    className={({ isActive }) =>
+                      ['sidebar__item', isActive && 'sidebar__item--active'].filter(Boolean).join(' ')
+                    }
+                  >
+                    {it.icon}
+                    <span>{it.label}</span>
+                  </NavLink>
+                ))}
+              </div>
             </div>
           </div>
         );

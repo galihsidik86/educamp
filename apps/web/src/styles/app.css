@@ -7,7 +7,7 @@
 html, body, #root {
   height: 100%;
   margin: 0;
-  background: var(--surface-page);
+  background: var(--surface);
   color: var(--text-body);
   font-family: var(--font-sans);
   font-size: var(--text-base);
@@ -19,6 +19,7 @@ html, body, #root {
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
   min-height: 100vh;
+  background: var(--surface);
 }
 
 .app__main {
@@ -37,8 +38,10 @@ html, body, #root {
 /* ----- Sidebar ----- */
 
 .sidebar {
+  /* Navy lebih gelap (blue-900→950) — redesign shell: identitas lebih
+     tegas/kontras drpd blue-800→900 sebelumnya. */
   background:
-    linear-gradient(180deg, var(--blue-800) 0%, var(--blue-900) 100%);
+    linear-gradient(180deg, var(--blue-900) 0%, var(--blue-950) 100%);
   color: var(--text-onbrand);
   padding: var(--space-6) var(--space-4);
   display: flex;
@@ -68,9 +71,9 @@ html, body, #root {
 }
 
 .sidebar__brand-mark {
-  width: 36px; height: 36px;
+  width: 40px; height: 40px;
   border-radius: var(--radius-md);
-  background: rgba(255,255,255,0.08);
+  background: color-mix(in oklch, var(--neutral-0) 10%, transparent);
   display: grid; place-items: center;
 }
 
@@ -98,20 +101,20 @@ html, body, #root {
   display: flex;
   align-items: center;
   margin: 0 var(--space-1) var(--space-3);
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: color-mix(in oklch, var(--neutral-0) 7%, transparent);
+  border: 1px solid color-mix(in oklch, var(--neutral-0) 12%, transparent);
   border-radius: var(--radius-md);
-  transition: background var(--dur-fast) var(--ease-standard),
-              border-color var(--dur-fast) var(--ease-standard);
+  transition: background var(--transition-fast),
+              border-color var(--transition-fast);
 }
 .sidebar__search:focus-within {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(231, 194, 86, 0.5);
+  background: color-mix(in oklch, var(--neutral-0) 10%, transparent);
+  border-color: color-mix(in oklch, var(--gold-300) 50%, transparent);
 }
 .sidebar__search-icon {
   position: absolute;
   left: 10px;
-  color: rgba(255, 255, 255, 0.5);
+  color: color-mix(in oklch, var(--neutral-0) 50%, transparent);
   pointer-events: none;
 }
 .sidebar__search input {
@@ -124,7 +127,7 @@ html, body, #root {
   font-size: var(--text-sm);
   padding: 8px 30px 8px 30px;
 }
-.sidebar__search input::placeholder { color: rgba(255, 255, 255, 0.45); }
+.sidebar__search input::placeholder { color: color-mix(in oklch, var(--neutral-0) 45%, transparent); }
 .sidebar__search-clear {
   position: absolute;
   right: 6px;
@@ -135,10 +138,14 @@ html, body, #root {
   background: transparent;
   border: none;
   border-radius: var(--radius-sm);
-  color: rgba(255, 255, 255, 0.6);
+  color: color-mix(in oklch, var(--neutral-0) 60%, transparent);
   cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
-.sidebar__search-clear:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.sidebar__search-clear:hover {
+  background: color-mix(in oklch, var(--neutral-0) 10%, transparent);
+  color: var(--neutral-0);
+}
 .sidebar__search-empty {
   margin: 0 var(--space-3) var(--space-3);
   font-size: var(--text-xs);
@@ -171,28 +178,43 @@ html, body, #root {
   opacity: 0.7;
   cursor: pointer;
   border-radius: var(--radius-md);
-  transition: background var(--dur-fast) var(--ease-standard), opacity var(--dur-fast) var(--ease-standard);
+  transition: background var(--transition-fast), opacity var(--transition-fast);
 }
-.sidebar__group-header:hover { background: rgba(255,255,255,0.05); opacity: 0.95; }
+.sidebar__group-header:hover {
+  background: color-mix(in oklch, var(--neutral-0) 5%, transparent);
+  opacity: 0.95;
+}
 .sidebar__group-header-icon {
   width: 22px; height: 22px;
   display: grid; place-items: center;
   border-radius: var(--radius-sm);
-  background: rgba(208,166,86,0.18);
+  background: color-mix(in oklch, var(--accent) 18%, transparent);
   color: var(--accent);
 }
 .sidebar__group-label-text { flex: 1; text-align: left; }
 .sidebar__group-chevron {
-  transition: transform var(--dur-fast) var(--ease-standard);
+  transition: transform var(--transition-fast);
 }
 .sidebar__group--collapsed .sidebar__group-chevron { transform: rotate(-90deg); }
+
+/* Collapse mulus via grid-template-rows 1fr↔0fr — animasi height:auto yang
+   sesungguhnya (bukan tebakan max-height fix 2000px yang bikin durasi
+   terasa timpang antara grup pendek vs panjang). .sidebar__group-inner
+   adalah grid item tunggal yg diklip (min-height:0 + overflow:hidden). */
 .sidebar__group-content {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--transition-base), opacity var(--transition-base);
+}
+.sidebar__group--collapsed .sidebar__group-content {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+.sidebar__group-inner {
   display: flex; flex-direction: column;
   overflow: hidden;
-  max-height: 2000px;
-  transition: max-height .25s ease, opacity .2s ease;
+  min-height: 0;
 }
-.sidebar__group--collapsed .sidebar__group-content { max-height: 0; opacity: 0; }
 .sidebar__group-content .sidebar__item { padding-left: calc(var(--space-3) + 6px); }
 
 .sidebar__item {
@@ -203,22 +225,25 @@ html, body, #root {
   text-decoration: none;
   font-size: var(--text-sm);
   cursor: pointer;
-  transition: background var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
+  transition: background var(--transition-fast), color var(--transition-fast);
   position: relative;
 }
 
 .sidebar__item:hover {
-  background: rgba(255,255,255,0.06);
+  background: color-mix(in oklch, var(--neutral-0) 6%, transparent);
 }
 
+/* Item aktif — pill gold-tint jelas + indikator bar di kiri, supaya
+   langsung kebaca item mana yg aktif tanpa perlu baca teks (redesign
+   shell #1: "item aktif yang jelas"). */
 .sidebar__item--active {
-  background: rgba(208,166,86,0.18);
-  color: #fff;
-  font-weight: 600;
+  background: color-mix(in oklch, var(--accent) 22%, transparent);
+  color: var(--neutral-0);
+  font-weight: var(--fw-semibold);
 }
 .sidebar__item--active::before {
   content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
-  width: 3px; border-radius: 2px;
+  width: 3px; border-radius: var(--radius-full);
   background: var(--accent);
 }
 
@@ -232,9 +257,12 @@ html, body, #root {
 /* ----- Topbar ----- */
 
 .topbar {
+  /* Redesign shell #2: topbar "lebih ringan" — putih bersih + shadow
+     lembut dari token elevation (bukan border+shadow ganda spt sblmnya,
+     bukan glass/blur — sesuai CLAUDE.md "no glassmorphism"). */
   height: var(--topbar-h);
-  border-bottom: 1px solid var(--border-subtle);
   background: var(--surface-card);
+  box-shadow: var(--shadow-xs);
   display: flex; align-items: center;
   padding: 0 var(--page-gutter);
   gap: var(--space-4);
@@ -243,8 +271,57 @@ html, body, #root {
 
 .topbar__title { font-weight: var(--fw-semibold); color: var(--text-strong); }
 .topbar__spacer { flex: 1; }
-.topbar__user { display: flex; align-items: center; gap: var(--space-3); }
+.topbar__actions { display: flex; align-items: center; gap: var(--space-2); }
+
+/* User menu — avatar jadi trigger dropdown (Profil/Keluar), gantikan
+   tombol "Keluar" yg selalu tampil terpisah → topbar lebih ringan +
+   pola "user menu dengan avatar" yg umum di app modern. */
+.topbar__user { position: relative; }
+.topbar__user-trigger {
+  display: flex; align-items: center; gap: var(--space-3);
+  background: transparent; border: none; cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+  margin: 0 calc(-1 * var(--space-2));
+  border-radius: var(--radius-md);
+  color: inherit; font: inherit; text-align: left;
+  transition: background var(--transition-fast);
+}
+.topbar__user-trigger:hover,
+.topbar__user-trigger[aria-expanded="true"] { background: var(--surface-sunken); }
 .topbar__user-info { display: flex; flex-direction: column; line-height: 1.2; }
+.topbar__user-chevron {
+  color: var(--text-muted);
+  transition: transform var(--transition-fast);
+  flex-shrink: 0;
+}
+.topbar__user-trigger[aria-expanded="true"] .topbar__user-chevron { transform: rotate(180deg); }
+
+.topbar__user-menu {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  min-width: 200px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-2);
+  display: flex; flex-direction: column; gap: 2px;
+  z-index: var(--z-dropdown);
+  animation: row-actions-in var(--transition-fast);
+}
+.topbar__user-menu-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  width: 100%; text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: transparent; border: none;
+  font-size: var(--text-sm); color: var(--text-body);
+  text-decoration: none; cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.topbar__user-menu-item:hover { background: var(--action-soft); color: var(--action); }
+.topbar__user-menu-item--danger { color: var(--danger-fg); }
+.topbar__user-menu-item--danger:hover { background: var(--danger-surface); color: var(--danger-fg); }
+.topbar__user-menu-divider { height: 1px; background: var(--border-subtle); margin: var(--space-1) 0; }
 
 /* Hamburger — hanya tampak di mobile */
 .topbar__menu {
@@ -253,6 +330,7 @@ html, body, #root {
   padding: 6px; border-radius: var(--radius-md);
   color: var(--text-body);
   align-items: center; justify-content: center;
+  transition: background var(--transition-fast);
 }
 .topbar__menu:hover { background: var(--surface-sunken); }
 
@@ -260,9 +338,9 @@ html, body, #root {
 .sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 24, 58, 0.45);
+  background: color-mix(in oklch, var(--blue-950) 45%, transparent);
   z-index: calc(var(--z-modal) - 1);
-  animation: fadeIn 200ms var(--ease-standard);
+  animation: fadeIn var(--transition-base);
 }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -353,9 +431,9 @@ html, body, #root {
   .topbar__title { font-size: var(--text-sm); }
   .topbar { padding: 0 var(--space-4); gap: var(--space-2); }
 
-  /* Sembunyikan info user & "Keluar" — sudah ada di menu drawer/profil */
+  /* Sembunyikan teks nama/email di mobile (hemat ruang) — avatar+chevron
+     tetap tampil & tetap membuka dropdown user menu (Profil/Keluar). */
   .topbar__user-info { display: none; }
-  .topbar__logout { display: none !important; }
 
   /* Konten utama: padding lebih ramping di mobile */
   .app__content { padding: var(--space-4); }
@@ -1431,20 +1509,6 @@ a {
    sebelumnya mengandalkan cursor:pointer inline utk efek ini sudah
    dimigrasi memakai prop `hover` eksplisit. */
 
-/* ----- Topbar modernization -----
-   Brand-aligned: navy border tipis + soft shadow + accent gold di title.
-   No glassmorphism (sesuai CLAUDE.md). */
-.topbar {
-  /* override border-bottom yang ada di .topbar di atas dengan shadow yang
-     terasa lebih "elevated" tapi tetap kalem. */
-  box-shadow:
-    0 1px 0 var(--border-subtle),
-    0 4px 16px -8px rgba(23, 38, 87, 0.08);
-  /* mempertahankan border-bottom: 1px solid var(--border-subtle) — masih oke
-     karena box-shadow di-stack di bawahnya. Untuk hindari double line, kita
-     boleh keep keduanya: border kelihatan hairline, shadow kasih depth. */
-}
-
 /* Title kanan: small gold accent line — eyebrow brand */
 .topbar__title {
   position: relative;
@@ -1462,30 +1526,17 @@ a {
   transform: translateY(-50%);
 }
 
-/* User area: vertical divider sebelum logout */
-.topbar__logout {
-  position: relative;
-}
-.topbar__logout::before {
-  content: '';
-  position: absolute;
-  left: calc(-1 * var(--space-3) / 2);
-  top: 25%;
-  height: 50%;
-  width: 1px;
-  background: var(--border-default);
-}
-
-/* Avatar dapat subtle brand ring saat hover area */
-.topbar__user:hover .tz-avatar {
+/* Avatar dapat subtle brand ring saat trigger user menu di-hover/dibuka */
+.topbar__user-trigger:hover .tz-avatar,
+.topbar__user-trigger[aria-expanded="true"] .tz-avatar {
   box-shadow: 0 0 0 2px var(--brand-soft);
-  transition: box-shadow var(--dur-fast) var(--ease-standard);
+  transition: box-shadow var(--transition-fast);
 }
 
 /* Notification bell — polish hover state */
 .notif-bell {
-  transition: background var(--dur-fast) var(--ease-standard),
-              transform var(--dur-fast) var(--ease-standard);
+  transition: background var(--transition-fast),
+              transform var(--transition-fast);
 }
 .notif-bell:hover {
   background: var(--surface-sunken);
@@ -1498,10 +1549,10 @@ a {
 
 /* Item: tambah subtle x-translate saat hover untuk affordance */
 .sidebar__item {
-  transition: background var(--dur-fast) var(--ease-standard),
-              color var(--dur-fast) var(--ease-standard),
-              transform var(--dur-fast) var(--ease-standard),
-              padding var(--dur-fast) var(--ease-standard);
+  transition: background var(--transition-fast),
+              color var(--transition-fast),
+              transform var(--transition-fast),
+              padding var(--transition-fast);
 }
 .sidebar__item:hover:not(.sidebar__item--active) {
   transform: translateX(2px);
@@ -1509,8 +1560,8 @@ a {
 
 /* Active item gold bar: animated entry — width grow + glow */
 .sidebar__item--active::before {
-  transition: width var(--dur-base) var(--ease-emphasized),
-              box-shadow var(--dur-base) var(--ease-standard);
+  transition: width var(--transition-base) var(--ease-emphasized),
+              box-shadow var(--transition-base);
   box-shadow: 0 0 8px var(--accent);
 }
 
@@ -1518,7 +1569,7 @@ a {
 .sidebar__item--active > svg,
 .sidebar__item--active > [class*="lucide"] {
   color: var(--gold-300);
-  filter: drop-shadow(0 0 4px rgba(231, 194, 86, 0.4));
+  filter: drop-shadow(0 0 4px color-mix(in oklch, var(--gold-300) 40%, transparent));
 }
 
 /* Brand mark — soft gold radial glow di dalam, brand-aligned */
@@ -1531,7 +1582,7 @@ a {
   position: absolute;
   inset: -50%;
   background: radial-gradient(circle at center,
-    rgba(231, 194, 86, 0.18) 0%,
+    color-mix(in oklch, var(--gold-300) 18%, transparent) 0%,
     transparent 60%);
   pointer-events: none;
 }
@@ -1547,16 +1598,16 @@ a {
 /* Custom scrollbar di sidebar — slim, brand-tinted */
 .sidebar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: color-mix(in oklch, var(--neutral-0) 15%, transparent) transparent;
 }
 .sidebar::-webkit-scrollbar { width: 6px; }
 .sidebar::-webkit-scrollbar-track { background: transparent; }
 .sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: color-mix(in oklch, var(--neutral-0) 12%, transparent);
   border-radius: var(--radius-full);
 }
 .sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(231, 194, 86, 0.4);
+  background: color-mix(in oklch, var(--gold-300) 40%, transparent);
 }
 
 /* ============================================================
@@ -2013,8 +2064,7 @@ textarea.tz-input {
   border-radius: var(--radius-sm);
   color: var(--text-muted);
   text-decoration: none;
-  transition: background var(--dur-fast) var(--ease-standard),
-              color var(--dur-fast) var(--ease-standard);
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 .breadcrumb__home:hover {
   background: var(--surface-sunken);
@@ -2034,8 +2084,7 @@ textarea.tz-input {
   text-decoration: none;
   padding: 2px 4px;
   border-radius: var(--radius-xs);
-  transition: color var(--dur-fast) var(--ease-standard),
-              background var(--dur-fast) var(--ease-standard);
+  transition: color var(--transition-fast), background var(--transition-fast);
 }
 .breadcrumb__link:hover {
   color: var(--action);
