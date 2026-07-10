@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Alert, Button, Card, Select } from '@/ds';
-import { ChevronLeft, ChevronRight, CheckCircle2, XCircle, Plus, Trash2 } from 'lucide-react';
+import { Alert, Button, Card, Input, Select } from '@/ds';
+import { ChevronLeft, ChevronRight, CheckCircle2, XCircle, Plus, Trash2, Search } from 'lucide-react';
 import {
   useAkademikKrs, useAkademikKrsDetail, useAkademikValidasiKrs,
   useProdi, useKelasAdmin, useAkademikKrsItemActions,
@@ -17,6 +17,15 @@ export function AdminValidasiKrsList() {
   const { data, isLoading, error } = useAkademikKrs(filters);
   const prodi = useProdi();
   const perlu = data?.items.filter((i) => i.perluValidasi).length ?? 0;
+  const [q, setQ] = useState('');
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((m) =>
+      m.nim.toLowerCase().includes(query) || m.nama.toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   return (
     <div className="stack">
@@ -56,7 +65,20 @@ export function AdminValidasiKrsList() {
             {prodi.data?.items.map((p) => <option key={p.id} value={p.id}>{p.nama}</option>)}
           </Select>
         </div>
+        {data && data.items.length > 0 && (
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari NIM atau nama…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
       </div>
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada mahasiswa yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
 
       <div className="tz-table-wrap">
         <table className="tz-table">
@@ -72,7 +94,7 @@ export function AdminValidasiKrsList() {
           <tbody>
             {isLoading && <tr><td colSpan={9} className="muted center">Memuat…</td></tr>}
             {data?.items.length === 0 && <tr><td colSpan={9} className="muted center">Tidak ada data.</td></tr>}
-            {data?.items.map((m) => (
+            {items.map((m) => (
               <tr key={m.id}>
                 <td className="mono">{m.nim}</td>
                 <td>{m.nama}</td>
