@@ -123,7 +123,7 @@
   /* Text */
   --text-strong:   var(--neutral-900);
   --text-body:     var(--neutral-700);
-  --text-muted:    var(--neutral-500);
+  --text-muted:    var(--neutral-600);
   --text-subtle:   var(--neutral-400);
   --text-inverse:  var(--neutral-0);
   --text-onbrand:  color-mix(in oklch, var(--neutral-0) 92%, var(--blue-200));

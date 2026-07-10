@@ -110,7 +110,9 @@ html, body, #root {
 .sidebar__search:focus-within {
   background: color-mix(in oklch, var(--neutral-0) 10%, transparent);
   border-color: color-mix(in oklch, var(--gold-300) 50%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--gold-300) 35%, transparent);
 }
+.sidebar__search input:focus-visible { outline: none; }
 .sidebar__search-icon {
   position: absolute;
   left: 10px;
@@ -455,7 +457,7 @@ html, body, #root {
   grid-template-columns: 1fr 1fr;
   gap: var(--gap-card);
 }
-@media (max-width: 760px) {
+@media (max-width: 800px) {
   .grid-2col { grid-template-columns: 1fr; }
 }
 
@@ -1312,7 +1314,7 @@ html, body, #root {
 .spmi-nav-card { display: block; }
 .spmi-nav-card > * { transition: transform .15s ease, box-shadow .2s ease; }
 .spmi-nav-card:hover > * { transform: translateY(-2px); box-shadow: var(--shadow-lg, 0 8px 24px rgba(15,26,58,0.10)); }
-.spmi-nav-card:focus-visible > * { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.spmi-nav-card:focus-visible > * { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-sm); }
 
 /* (row hover/transition tabel — satu sumber kebenaran di §"Tabel data"
    di atas; 3 deklarasi duplikat di sini dihapus, termasuk satu yang
