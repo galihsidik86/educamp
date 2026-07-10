@@ -639,7 +639,9 @@ html, body, #root {
   display: flex;
   gap: 4px;
   padding: 4px;
-  background: var(--surface-muted);
+  /* was var(--surface-muted) — token itu tidak pernah didefinisikan di
+     tokens/, jadi diam-diam resolve ke kosong. Ganti ke token nyata. */
+  background: var(--surface-sunken);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-3);
@@ -657,17 +659,20 @@ html, body, #root {
   font-weight: var(--fw-medium);
   color: var(--text-muted);
   cursor: pointer;
-  transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+  transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
 }
 .modal-tabs__btn:hover:not(:disabled) {
   color: var(--text-body);
-  background: var(--surface-elev);
+  /* was var(--surface-elev) — juga tidak pernah didefinisikan */
+  background: var(--surface-card);
 }
 .modal-tabs__btn--active {
   background: var(--surface-card);
   color: var(--brand);
   font-weight: var(--fw-bold);
-  box-shadow: var(--shadow-1);
+  /* was var(--shadow-1) — juga tidak pernah didefinisikan, tab aktif
+     diam-diam tanpa shadow sama sekali */
+  box-shadow: var(--shadow-sm);
 }
 .modal-tabs__btn:disabled {
   opacity: .5;
@@ -1143,7 +1148,12 @@ html, body, #root {
    ============================================================ */
 .modal-overlay {
   position: fixed; inset: 0;
-  background: rgba(15, 24, 58, 0.45);
+  background: color-mix(in oklch, var(--blue-950) 45%, transparent);
+  /* Blur halus di BACKDROP saja (bukan permukaan modal-card, yang tetap
+     solid var(--surface-card)) — beda dgn glassmorphism (yang mem-blur
+     kartu itu sendiri), jadi tidak melanggar larangan glass di CLAUDE.md. */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: var(--z-modal);
   display: grid;
   place-items: center;
@@ -1190,9 +1200,7 @@ html, body, #root {
   width: 32px; height: 32px;
   border-radius: var(--radius-md);
   display: inline-flex; align-items: center; justify-content: center;
-  transition: background var(--dur-fast) var(--ease-standard),
-              color var(--dur-fast) var(--ease-standard),
-              transform var(--dur-fast) var(--ease-standard);
+  transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 }
 .modal-card__close:hover {
   background: var(--surface-sunken);
@@ -1757,7 +1765,6 @@ textarea.tz-input {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-2);
-  padding-top: var(--space-2);
   border-top: 1px solid var(--border-subtle);
   margin-top: var(--space-2);
   padding-top: var(--space-3);
