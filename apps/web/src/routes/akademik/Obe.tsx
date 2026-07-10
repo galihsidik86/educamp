@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Button, Card, Input, Select } from '@/ds';
-import { Plus, Pencil, Trash2, Target, Link2, ChevronRight, Sparkles } from 'lucide-react';
+import { Plus, Pencil, Trash2, Target, Link2, ChevronRight, Sparkles, Search } from 'lucide-react';
 import {
   useCpl, useCplActions, useCpmk, useCpmkActions,
   type Cpl, type Cpmk, type CplInput, type CpmkInput, type AspekCpl,
@@ -182,6 +182,17 @@ function CpmkTab() {
   const [form, setForm] = useState<Partial<CpmkInput>>({ bobotPenilaian: 1.0, ambangTercapai: 56, urutan: 0, isAktif: true });
   const [actErr, setActErr] = useState<string | null>(null);
   const [mapFor, setMapFor] = useState<Cpmk | null>(null);
+  const [q, setQ] = useState('');
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((c) =>
+      c.kode.toLowerCase().includes(query) ||
+      c.deskripsi.toLowerCase().includes(query) ||
+      (c.mataKuliah?.kode ?? '').toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   const openCreate = () => {
     setEditing(null);
@@ -230,9 +241,22 @@ function CpmkTab() {
           </Select>
         </div>
         <Button variant="primary" size="sm" leftIcon={<Plus size={14} />} onClick={openCreate}>Tambah CPMK</Button>
+        {data && data.items.length > 0 && (
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari kode atau deskripsi…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
       </div>
 
       {isLoading && <p className="muted">Memuat…</p>}
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada CPMK yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
 
       <Card>
         <div className="tz-table-wrap">
@@ -250,7 +274,7 @@ function CpmkTab() {
             </thead>
             <tbody>
               {data?.items.length === 0 && <tr><td colSpan={7} className="muted center">Belum ada CPMK.</td></tr>}
-              {data?.items.map((c) => (
+              {items.map((c) => (
                 <tr key={c.id} style={{ opacity: c.isAktif ? 1 : 0.6 }}>
                   <td className="mono" style={{ fontSize: 'var(--text-xs)' }}>{c.mataKuliah?.kode}</td>
                   <td className="mono"><strong>{c.kode}</strong></td>
