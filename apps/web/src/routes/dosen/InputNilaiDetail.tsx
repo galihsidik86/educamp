@@ -13,6 +13,7 @@ import { Modal } from '@/components/Modal';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 import { capitalize, formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -158,7 +159,7 @@ export function DosenInputNilaiDetail() {
     );
   }, [data, q]);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Kelas tidak ditemukan atau Anda bukan pengampu.</Alert>;
 
   const k = data.kelas;

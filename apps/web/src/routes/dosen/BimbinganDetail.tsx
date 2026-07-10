@@ -5,6 +5,7 @@ import { ChevronLeft, CheckCircle2, XCircle } from 'lucide-react';
 import { useBimbinganDetail, useValidasiKrs } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 import { capitalize } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -16,7 +17,7 @@ export function DosenBimbinganDetail() {
   const [actionErr, setActionErr] = useState<string | null>(null);
   const [actionOk, setActionOk] = useState<string | null>(null);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Mahasiswa tidak ditemukan atau bukan bimbingan Anda.</Alert>;
 
   const diajukan = data.items.filter((i) => i.status === 'diajukan');

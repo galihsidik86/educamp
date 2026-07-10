@@ -9,6 +9,7 @@ import {
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { useConfirm } from '@/components/ConfirmDialog';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -26,7 +27,7 @@ export function DosenKuisDetail() {
   const [soalForm, setSoalForm] = useState<SoalInput>(EMPTY_SOAL);
   const [actErr, setActErr] = useState<string | null>(null);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Kuis tidak ditemukan.</Alert>;
 
   const openAddSoal = () => {
@@ -224,7 +225,7 @@ function KuisHasilTable({ kuisId }: { kuisId: string }) {
     );
   }, [data, q]);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
 
   return (

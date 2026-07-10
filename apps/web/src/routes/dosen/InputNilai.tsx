@@ -2,6 +2,7 @@ import { Alert, Card } from '@/ds';
 import { Link } from 'react-router-dom';
 import { useDosenKelas } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { capitalize } from '@/lib/format';
 import { ChevronRight } from 'lucide-react';
 
@@ -28,7 +29,7 @@ export function DosenInputNilaiList() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={7} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={7} rows={5} />}
             {data?.kelas.length === 0 && (
               <tr><td colSpan={7} className="muted center">Belum ada kelas yang Anda ampu.</td></tr>
             )}

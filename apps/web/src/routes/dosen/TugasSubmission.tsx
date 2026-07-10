@@ -6,6 +6,7 @@ import { useDosenTugasSubmission, useDosenTugasActions, type DosenSubmissionItem
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -23,7 +24,7 @@ export function DosenTugasSubmission() {
     );
   }, [data, q]);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (!data) return <Alert variant="danger" title="Gagal memuat">Tugas tidak ditemukan.</Alert>;
 
   return (

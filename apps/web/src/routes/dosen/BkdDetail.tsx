@@ -6,6 +6,7 @@ import { useDosenBkdDetail, useDosenBkdActions, type BkdItem, type BkdItemInput,
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 import { ApiError } from '@/lib/api';
 
 const KATEGORI_INFO: Record<KategoriBkd, { label: string; icon: React.ReactNode; targetSks: string }> = {
@@ -26,7 +27,7 @@ export function DosenBkdDetail() {
   const [form, setForm] = useState<BkdItemInput>(EMPTY);
   const [actErr, setActErr] = useState<string | null>(null);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Laporan tidak ditemukan.</Alert>;
 
   const isEditable = data.status === 'draft';

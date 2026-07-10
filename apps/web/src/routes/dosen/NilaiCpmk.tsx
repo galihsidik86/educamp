@@ -4,6 +4,7 @@ import { Alert, Button, Card, Input } from '@/ds';
 import { ChevronLeft, Save, Sparkles, Search } from 'lucide-react';
 import { useDosenCpmk, useDosenCpmkActions } from '@/lib/queries-obe';
 import { PageHead } from '@/components/PageHead';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 import { ApiError } from '@/lib/api';
 
 export function DosenNilaiCpmk() {
@@ -37,7 +38,7 @@ export function DosenNilaiCpmk() {
     );
   }, [data, q]);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
 
   const setCell = (krsId: string, cpmkId: string, value: string) => {

@@ -6,6 +6,7 @@ import { useDosenPertemuan, useDosenAbsensiActions, useDosenKehadiranRekap, useD
 import { PageHead } from '@/components/PageHead';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { Modal } from '@/components/Modal';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 import { formatTanggalWaktu, formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -85,7 +86,7 @@ export function DosenAbsensiKelas() {
     catch (e) { setActErr(e instanceof ApiError ? e.message : 'Gagal'); }
   };
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (!data) return <Alert variant="danger" title="Gagal memuat">Kelas tidak ditemukan.</Alert>;
 
   return (

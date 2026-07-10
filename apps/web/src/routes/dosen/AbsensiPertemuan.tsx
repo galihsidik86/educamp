@@ -6,6 +6,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useDosenAbsensiPertemuan, useDosenAbsensiActions, useDosenPinStatus, type AbsensiStatus } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
 import { useConfirm } from '@/components/ConfirmDialog';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -78,7 +79,7 @@ export function DosenAbsensiPertemuan() {
     }
   };
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (!data) return <Alert variant="danger" title="Gagal memuat">Pertemuan tidak ditemukan.</Alert>;
 
   return (

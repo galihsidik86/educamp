@@ -3,6 +3,7 @@ import { Alert, Card } from '@/ds';
 import { Users, AlertTriangle, Activity, BookCheck, Award, ChevronRight } from 'lucide-react';
 import { useDpaDashboard } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
+import { Skeleton } from '@/components/Skeleton';
 
 const STATUS_LABEL: Record<string, string> = {
   aktif: 'Aktif', cuti: 'Cuti', lulus: 'Lulus', drop_out: 'Drop out', mengundurkan_diri: 'Mengundurkan diri',
@@ -20,7 +21,7 @@ export function DosenBimbinganDashboard() {
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && data.ringkasan.totalMahasiswa === 0 && (
         <Alert variant="info" title="Belum ada bimbingan">Anda belum ditetapkan sebagai DPA mahasiswa manapun.</Alert>

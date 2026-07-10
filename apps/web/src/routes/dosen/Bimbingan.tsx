@@ -4,6 +4,7 @@ import { Alert, Input } from '@/ds';
 import { useBimbingan } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { ChevronRight, Search } from 'lucide-react';
 
 export function DosenBimbingan() {
@@ -66,7 +67,7 @@ export function DosenBimbingan() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={8} className="muted center">Memuat…</td></tr>}
+            {isLoading && <TableSkeletonRows cols={8} rows={5} />}
             {data?.items.length === 0 && (
               <tr><td colSpan={8} className="muted center">Belum ada mahasiswa bimbingan.</td></tr>
             )}

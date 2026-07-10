@@ -4,6 +4,7 @@ import { Alert, Badge, Button, Input, Select } from '@/ds';
 import { Plus, Pencil, Trash2, Save, ArrowLeft, ListPlus, Search } from 'lucide-react';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
+import { PageLoadingSkeleton, TableSkeletonRows } from '@/components/Skeleton';
 import { ApiError } from '@/lib/api';
 import {
   useKomponenEvaluasi, useKomponenActions, useNilaiKomponen, useNilaiKomponenActions,
@@ -101,7 +102,7 @@ export function KomponenEvaluasiPage() {
                 </tr>
               </thead>
               <tbody>
-                {komponen.isLoading && <tr><td colSpan={7} className="muted center">Memuat…</td></tr>}
+                {komponen.isLoading && <TableSkeletonRows cols={7} rows={5} />}
                 {komponen.data?.items.length === 0 && (
                   <tr><td colSpan={7} className="muted center">Belum ada komponen. Klik 'Tambah Komponen'.</td></tr>
                 )}
@@ -304,7 +305,7 @@ function NilaiKomponenMatrixTable({ kelasId, onMsg, saveAction }: {
     } finally { setBusy(false); }
   };
 
-  if (matrix.isLoading) return <p className="muted">Memuat matrix nilai…</p>;
+  if (matrix.isLoading) return <PageLoadingSkeleton />;
   if (!matrix.data) return null;
 
   if (matrix.data.komponen.length === 0) {
