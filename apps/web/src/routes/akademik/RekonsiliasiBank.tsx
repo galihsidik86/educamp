@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Alert, Badge, Button, Card, Input, Select } from '@/ds';
-import { Download, Calendar, Banknote, Wallet } from 'lucide-react';
+import { Download, Calendar, Banknote, Wallet, Search } from 'lucide-react';
 import { useRekonsiliasi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { formatRupiah, formatTanggal, formatStatus } from '@/lib/format';
@@ -34,6 +34,17 @@ export function AkademikRekonsiliasiBank() {
     setDari(ymd(lm));
     setSampai(ymd(lme));
   };
+
+  const [q, setQ] = useState('');
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((p) =>
+      p.mahasiswa.nim.toLowerCase().includes(query) ||
+      p.mahasiswa.nama.toLowerCase().includes(query) ||
+      (p.noReferensi ?? '').toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   const csvUrl = useMemo(() => {
     const qs = new URLSearchParams({ dari, sampai, format: 'csv' });
@@ -138,7 +149,21 @@ export function AkademikRekonsiliasiBank() {
               </div>
             </Card>
           ) : (
-            <div className="tz-table-wrap">
+            <>
+              <div className="row" style={{ alignItems: 'flex-end' }}>
+                <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+                  <Input
+                    icon={<Search size={16} />}
+                    placeholder="Cari NIM, nama, atau no. referensi…"
+                    value={q}
+                    onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+                  />
+                </div>
+              </div>
+              {items.length === 0 && (
+                <p className="muted">Tidak ada transaksi yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+              )}
+              <div className="tz-table-wrap">
               <table className="tz-table">
                 <thead>
                   <tr>
@@ -154,7 +179,7 @@ export function AkademikRekonsiliasiBank() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.items.map((p) => (
+                  {items.map((p) => (
                     <tr key={p.id}>
                       <td className="mono" style={{ fontSize: 'var(--text-sm)' }}>{formatTanggal(p.tanggalBayar)}</td>
                       <td className="mono" style={{ fontSize: 'var(--text-xs)' }}>{p.noReferensi ?? '—'}</td>
@@ -178,7 +203,8 @@ export function AkademikRekonsiliasiBank() {
                   </tr>
                 </tfoot>
               </table>
-            </div>
+              </div>
+            </>
           )}
         </>
       )}
