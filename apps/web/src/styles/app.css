@@ -2203,12 +2203,16 @@ body.kartu-print-mode .route-transition {
 .empty-state__icon {
   display: grid;
   place-items: center;
-  width: 64px; height: 64px;
+  width: 72px; height: 72px;
   border-radius: var(--radius-full);
-  background: var(--brand-soft);
+  /* Gradient chip halus — pola yang sama dgn .tz-stat__icon, dipakai
+     ulang biar konsisten (bukan bikin formula gradient baru). */
+  background: linear-gradient(135deg, var(--brand-soft) 0%, var(--info-surface) 100%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--action) 8%, transparent);
   color: var(--action);
   margin-bottom: var(--space-2);
 }
+.empty-state__icon svg { width: 30px; height: 30px; }
 .empty-state__title {
   margin: 0;
   font-size: var(--text-lg);
