@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Button, Card, Input, Select } from '@/ds';
 import type { TextareaHTMLAttributes } from 'react';
 
@@ -14,7 +14,7 @@ function Textarea({ label, ...rest }: { label?: string } & TextareaHTMLAttribute
     </div>
   );
 }
-import { Plus, Copy, Trash2, BarChart3, MessageSquare } from 'lucide-react';
+import { Plus, Copy, Trash2, BarChart3, MessageSquare, Search } from 'lucide-react';
 import { Badge } from '@/ds';
 import {
   useSurveiList, useSurveiActions, useSurveiDetail, useSurveiHasil,
@@ -44,6 +44,15 @@ export function AkademikSpmiSurvei() {
   const [detailFor, setDetailFor] = useState<string | null>(null);
   const [hasilFor, setHasilFor] = useState<string | null>(null);
   const [actErr, setActErr] = useState<string | null>(null);
+  const [q, setQ] = useState('');
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.items ?? [];
+    return (data?.items ?? []).filter((s) =>
+      s.kode.toLowerCase().includes(query) || s.judul.toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   return (
     <div className="stack">
@@ -70,6 +79,16 @@ export function AkademikSpmiSurvei() {
             <option value="ditutup">Ditutup</option>
           </Select>
         </div>
+        {data && data.items.length > 0 && (
+          <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+            <Input
+              icon={<Search size={16} />}
+              placeholder="Cari kode atau judul…"
+              value={q}
+              onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
       </div>
 
       {isLoading && <p className="muted">Memuat…</p>}
@@ -93,6 +112,9 @@ export function AkademikSpmiSurvei() {
           </div>
         </Card>
       )}
+      {data && data.items.length > 0 && items.length === 0 && (
+        <p className="muted">Tidak ada survei yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+      )}
       {data && data.items.length > 0 && (
         <div className="tz-table-wrap">
           <table className="tz-table">
@@ -108,7 +130,7 @@ export function AkademikSpmiSurvei() {
               </tr>
             </thead>
             <tbody>
-              {data.items.map((s) => (
+              {items.map((s) => (
                 <tr key={s.id}>
                   <td className="mono"><strong>{s.kode}</strong></td>
                   <td>{s.judul}</td>
