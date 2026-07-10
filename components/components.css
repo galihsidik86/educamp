@@ -76,14 +76,19 @@
   color: var(--text-strong); background: var(--surface-card);
   border: 1px solid var(--border-strong); border-radius: var(--radius-md);
   padding: 0 var(--space-4); box-shadow: var(--shadow-inset);
-  transition: border-color var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
 }
 .tz-inputwrap--icon .tz-input { padding-left: 38px; }
 .tz-input::placeholder { color: var(--text-subtle); }
 .tz-input:hover, .tz-select:hover { border-color: var(--neutral-400); }
 .tz-input:focus, .tz-select:focus { outline: none; border-color: var(--action); box-shadow: var(--shadow-focus); }
 .tz-input:disabled, .tz-select:disabled { background: var(--surface-sunken); color: var(--text-muted); cursor: not-allowed; }
-.tz-field--invalid .tz-input, .tz-field--invalid .tz-select { border-color: var(--danger-solid); }
+/* Error state — border tegas (perlu jelas terlihat) tapi background field
+   diberi tint merah yg sangat lembut (4%), bukan merah solid/alarming. */
+.tz-field--invalid .tz-input, .tz-field--invalid .tz-select {
+  border-color: var(--danger-solid);
+  background: color-mix(in oklch, var(--danger-solid) 4%, var(--surface-card));
+}
 .tz-field--invalid .tz-input:focus { box-shadow: 0 0 0 3px color-mix(in oklch, var(--danger-solid) 30%, transparent); }
 .tz-select {
   appearance: none; padding-right: 38px; cursor: pointer;
@@ -97,7 +102,7 @@
 .tz-check__box {
   width: 20px; height: 20px; border-radius: var(--radius-xs); border: 1.5px solid var(--border-strong);
   background: var(--surface-card); display: inline-flex; align-items: center; justify-content: center;
-  color: #fff; transition: all var(--dur-fast) var(--ease-standard); flex: 0 0 auto;
+  color: #fff; transition: background var(--transition-fast), border-color var(--transition-fast); flex: 0 0 auto;
 }
 .tz-check__box svg { width: 14px; height: 14px; opacity: 0; }
 .tz-check input:checked + .tz-check__box { background: var(--action); border-color: var(--action); }
@@ -109,9 +114,12 @@
 .tz-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
 .tz-switch__track {
   width: 40px; height: 23px; border-radius: 999px; background: var(--neutral-300);
-  position: relative; transition: background var(--dur-base) var(--ease-standard); flex: 0 0 auto;
+  position: relative; transition: background var(--transition-base); flex: 0 0 auto;
 }
 .tz-switch__thumb {
+  /* Thumb sengaja pakai --ease-emphasized (bukan --transition-base yg
+     standard) utk kesan "springy" saat toggle — beda dari micro-interaction
+     biasa. */
   position: absolute; top: 2.5px; left: 2.5px; width: 18px; height: 18px; border-radius: 50%;
   background: #fff; box-shadow: var(--shadow-sm); transition: transform var(--dur-base) var(--ease-emphasized);
 }
