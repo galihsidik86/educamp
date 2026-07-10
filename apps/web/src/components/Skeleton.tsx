@@ -34,3 +34,29 @@ export function Skeleton({
     </span>
   );
 }
+
+/** Placeholder baris <tr> untuk isi <tbody> tabel yang sedang memuat data. */
+export function TableSkeletonRows({ cols, rows = 5 }: { cols: number; rows?: number }) {
+  return (
+    <>
+      {Array.from({ length: rows }).map((_, r) => (
+        <tr key={r} aria-hidden="true">
+          {Array.from({ length: cols }).map((__, c) => (
+            <td key={c}><Skeleton variant="text" /></td>
+          ))}
+        </tr>
+      ))}
+    </>
+  );
+}
+
+/** Placeholder untuk halaman penuh yang masih memuat (menggantikan early-return <p>Memuat…</p>). */
+export function PageLoadingSkeleton() {
+  return (
+    <div className="stack">
+      <Skeleton variant="text" width={180} height={12} />
+      <Skeleton variant="text" width={280} height={30} />
+      <Skeleton variant="card" height={140} count={3} />
+    </div>
+  );
+}

@@ -5,6 +5,7 @@ import { useHeregistrasi, useHeregistrasiAktif, useHeregistrasiActions, type Her
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
+import { TableSkeletonRows } from '@/components/Skeleton';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -79,6 +80,7 @@ export function MahasiswaHeregistrasi() {
             </tr>
           </thead>
           <tbody>
+            {list.isLoading && <TableSkeletonRows cols={6} rows={3} />}
             {list.data?.items.length === 0 && <tr><td colSpan={6} className="muted center">Belum ada riwayat.</td></tr>}
             {list.data?.items.map((h) => (
               <tr key={h.id}>
