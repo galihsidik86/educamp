@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Alert, Button, Card } from '@/ds';
-import { ChevronLeft, Save, Sparkles } from 'lucide-react';
+import { Alert, Button, Card, Input } from '@/ds';
+import { ChevronLeft, Save, Sparkles, Search } from 'lucide-react';
 import { useDosenCpmk, useDosenCpmkActions } from '@/lib/queries-obe';
 import { PageHead } from '@/components/PageHead';
 import { ApiError } from '@/lib/api';
@@ -27,6 +27,15 @@ export function DosenNilaiCpmk() {
     }
     setGrid(init);
   }, [data]);
+
+  const [q, setQ] = useState('');
+  const peserta = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return data?.peserta ?? [];
+    return (data?.peserta ?? []).filter((p) =>
+      p.nim.toLowerCase().includes(query) || p.nama.toLowerCase().includes(query),
+    );
+  }, [data, q]);
 
   if (isLoading) return <p className="muted">Memuat…</p>;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
@@ -107,6 +116,22 @@ export function DosenNilaiCpmk() {
             </div>
           </Card>
 
+          {data.peserta.length > 0 && (
+            <div className="row" style={{ alignItems: 'flex-end' }}>
+              <div style={{ flex: 1, minWidth: 240, maxWidth: 340 }}>
+                <Input
+                  icon={<Search size={16} />}
+                  placeholder="Cari NIM atau nama…"
+                  value={q}
+                  onChange={(e) => setQ((e.target as HTMLInputElement).value)}
+                />
+              </div>
+            </div>
+          )}
+          {data.peserta.length > 0 && peserta.length === 0 && (
+            <p className="muted">Tidak ada mahasiswa yang cocok dengan &ldquo;{q.trim()}&rdquo;.</p>
+          )}
+
           <div className="tz-table-wrap">
             <table className="tz-table">
               <thead>
@@ -120,7 +145,7 @@ export function DosenNilaiCpmk() {
                 {data.peserta.length === 0 && (
                   <tr><td colSpan={2 + data.cpmk.length} className="muted center">Belum ada peserta KRS disetujui.</td></tr>
                 )}
-                {data.peserta.map((p) => (
+                {peserta.map((p) => (
                   <tr key={p.krsId}>
                     <td className="mono">{p.nim}</td>
                     <td>{p.nama}</td>
@@ -144,7 +169,7 @@ export function DosenNilaiCpmk() {
                               textAlign: 'center',
                               border: `1px solid ${isBad ? 'var(--danger-fg)' : isOk ? 'var(--success-fg)' : 'var(--border-default)'}`,
                               borderRadius: 'var(--radius-sm)',
-                              background: 'var(--surface-default)',
+                              background: 'var(--surface-card)',
                               fontWeight: 600,
                             }}
                           />
