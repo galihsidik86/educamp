@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Button, Card, Input } from '@/ds';
 import { Plus, Trash2, ClipboardEdit, MapPin, FileUp } from 'lucide-react';
 import { useRuangan, useRuanganActions, type Ruangan } from '@/lib/queries-akademik';
@@ -142,6 +142,18 @@ function RuanganModal({ open, onClose, onSubmit, initial, title }: {
     lantai: initial?.lantai != null ? String(initial.lantai) : '',
     kapasitas: initial?.kapasitas != null ? String(initial.kapasitas) : '0',
   });
+
+  useEffect(() => {
+    if (!open) return;
+    setForm({
+      kode: initial?.kode ?? '',
+      nama: initial?.nama ?? '',
+      gedung: initial?.gedung ?? '',
+      lantai: initial?.lantai != null ? String(initial.lantai) : '',
+      kapasitas: initial?.kapasitas != null ? String(initial.kapasitas) : '0',
+    });
+  }, [open, initial]);
+
   if (!open) return null;
   return (
     <Modal open={open} onClose={onClose} title={title} width={520}>

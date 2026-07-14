@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Badge, Button, Card, Input, ProgressBar, Select } from '@/ds';
 import type { TextareaHTMLAttributes } from 'react';
 
@@ -282,6 +282,11 @@ function StandarFormModal({
 }) {
   const prodi = useProdi();
   const [body, setBody] = useState<Partial<StandarMutu>>(initial ?? { kategori: 'pendidikan', sumberData: 'manual', isAktif: true });
+
+  useEffect(() => {
+    if (!open) return;
+    setBody(initial ?? { kategori: 'pendidikan', sumberData: 'manual', isAktif: true });
+  }, [open, initial]);
 
   if (!open) return null;
   return (

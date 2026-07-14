@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Badge, Button, Card, Input, Select } from '@/ds';
 import { Plus, Trash2, ClipboardEdit, Wallet } from 'lucide-react';
 import { useKategoriUkt, useKategoriUktActions, useProdiRef, type KategoriUkt } from '@/lib/queries-akademik';
@@ -127,6 +127,19 @@ function KategoriUktModal({ open, onClose, onSubmit, initial, title }: {
     deskripsi: initial?.deskripsi ?? '',
     isAktif: initial?.isAktif ?? true,
   });
+
+  useEffect(() => {
+    if (!open) return;
+    setForm({
+      prodiId: initial?.prodiId ?? '',
+      kode: initial?.kode ?? '',
+      nama: initial?.nama ?? '',
+      nominalSemester: initial?.nominalSemester != null ? String(initial.nominalSemester) : '',
+      deskripsi: initial?.deskripsi ?? '',
+      isAktif: initial?.isAktif ?? true,
+    });
+  }, [open, initial]);
+
   if (!open) return null;
   return (
     <Modal open={open} onClose={onClose} title={title} width={560}>

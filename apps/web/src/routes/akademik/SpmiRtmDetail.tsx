@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Alert, Button, Card, Input, Select } from '@/ds';
 import { Plus, Trash2, ArrowLeft, ClipboardEdit, CheckCircle2 } from 'lucide-react';
@@ -197,6 +197,10 @@ export function AkademikSpmiRtmDetail() {
 function NotulenModal({ rtmId, initial, onClose, onErr }: { rtmId: string; initial: string | null; onClose: () => void; onErr: (s: string) => void }) {
   const actions = useRtmActions();
   const [notulen, setNotulen] = useState(initial ?? '');
+
+  useEffect(() => {
+    if (initial !== null) setNotulen(initial);
+  }, [initial]);
 
   if (initial === null) return null;
   return (
