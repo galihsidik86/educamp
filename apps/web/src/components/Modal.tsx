@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 type Props = { open: boolean; onClose: () => void; title: string; children: ReactNode; width?: number };
 
@@ -34,7 +35,15 @@ export function Modal({ open, onClose, title, children, width = 560 }: Props) {
 
   if (!render) return null;
 
-  return (
+  // Portal ke document.body — .modal-overlay pakai position:fixed dan HARUS
+  // dipusatkan relatif ke viewport, bukan ke ancestor manapun. Kalau dirender
+  // di tempat (nested di dalam .route-transition, yang punya `transform` di
+  // keyframe animasinya), transform pada ancestor itu diam-diam membuat
+  // ancestor tsb jadi containing block untuk elemen fixed — modal jadi
+  // ter-center relatif ke tinggi seluruh konten halaman (termasuk tabel
+  // panjang), bukan ke viewport yang terlihat. Portal menghindari masalah
+  // ini sepenuhnya, untuk ancestor manapun sekarang atau nanti.
+  return createPortal(
     <div
       className={`modal-overlay${closing ? ' modal-overlay--closing' : ''}`}
       onClick={onClose}
@@ -50,6 +59,7 @@ export function Modal({ open, onClose, title, children, width = 560 }: Props) {
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
