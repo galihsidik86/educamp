@@ -24,6 +24,9 @@ const schema = z.object({
   SMTP_PASS: z.string().optional(),
   SMTP_SECURE: z.coerce.boolean().default(false),
   MAIL_FROM: z.string().default('SIAKAD Tazkia <no-reply@tazkia.ac.id>'),
+  // Telegram — opsional. Kalau tidak di-set, notifikasi admin akan di-log ke console.
+  TELEGRAM_BOT_TOKEN: z.string().optional(),
+  TELEGRAM_ADMIN_CHAT_ID: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);

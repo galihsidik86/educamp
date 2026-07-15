@@ -47,6 +47,13 @@ WEB_PORT=80
 
 `CORS_ORIGINS` tidak perlu diset spesifik — browser hit `/api/*` same-origin via nginx; bisa biarkan default.
 
+**Telegram (opsional)** — notifikasi admin (mis. dipakai oleh runbook autofix helpdesk). Kalau kosong, notifikasi cukup di-log ke console:
+
+```dotenv
+TELEGRAM_BOT_TOKEN=<token dari @BotFather>
+TELEGRAM_ADMIN_CHAT_ID=<chat id, cek via getUpdates>
+```
+
 Lindungi file:
 
 ```bash
@@ -71,7 +78,8 @@ Healthcheck akan menunjukkan `healthy` ketika MySQL siap, API merespons `/health
 
 ## Step 3 — migrasi & seed pertama
 
-Migrasi Prisma sudah otomatis jalan saat container API start (`prisma migrate deploy`).
+Skema Prisma otomatis di-sync saat container API start (`prisma db push --accept-data-loss`
+— bukan `migrate deploy`; lihat komentar di `apps/api/Dockerfile` dan `scripts/deploy-vps.sh`).
 Untuk **seed data awal** (1× pada server kosong):
 
 ```bash
@@ -155,7 +163,7 @@ docker compose -f docker-compose.prod.yml build api web
 docker compose -f docker-compose.prod.yml up -d api web
 ```
 
-API akan auto-run `prisma migrate deploy` saat start (idempoten).
+API akan auto-run `prisma db push --accept-data-loss` saat start (idempoten selama tidak ada perubahan skema yang menghapus kolom/tabel berisi data).
 
 ### Backup database
 
