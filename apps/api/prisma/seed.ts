@@ -329,7 +329,7 @@ async function main() {
   const createdMks = await Promise.all(
     mks.map((mk) =>
       prisma.mataKuliah.upsert({
-        where: { kode: mk.kode },
+        where: { prodiId_kode: { prodiId: prodiTI.id, kode: mk.kode } },
         update: {},
         create: {
           kode: mk.kode,
@@ -451,7 +451,7 @@ async function main() {
 
   for (const mk of mksPrev) {
     const m = await prisma.mataKuliah.upsert({
-      where: { kode: mk.kode },
+      where: { prodiId_kode: { prodiId: prodiTI.id, kode: mk.kode } },
       update: {},
       create: {
         kode: mk.kode, nama: mk.nama, sks: mk.sks, sksTeori: mk.sks,
@@ -485,8 +485,8 @@ async function main() {
     { utama: 'IF-3104', prasyarat: 'IF-2201', nilaiMinimal: null }, // Pemrograman Web ← Algoritma (lulus)
   ];
   for (const p of prasyaratData) {
-    const utama = await prisma.mataKuliah.findUnique({ where: { kode: p.utama } });
-    const prereq = await prisma.mataKuliah.findUnique({ where: { kode: p.prasyarat } });
+    const utama = await prisma.mataKuliah.findUnique({ where: { prodiId_kode: { prodiId: prodiTI.id, kode: p.utama } } });
+    const prereq = await prisma.mataKuliah.findUnique({ where: { prodiId_kode: { prodiId: prodiTI.id, kode: p.prasyarat } } });
     if (!utama || !prereq) continue;
     await prisma.prasyarat.upsert({
       where: { mkUtamaId_mkPrasyaratId: { mkUtamaId: utama.id, mkPrasyaratId: prereq.id } },

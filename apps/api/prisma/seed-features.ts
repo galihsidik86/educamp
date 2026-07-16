@@ -935,7 +935,7 @@ export async function seedFeatures(prisma: PrismaClient) {
   const cplMap: Record<string, string> = Object.fromEntries(cplList.map((c) => [c.kode, c.id]));
 
   // CPMK untuk MK IF-3101 (RPL)
-  const mkRpl = await prisma.mataKuliah.findUnique({ where: { kode: 'IF-3101' } });
+  const mkRpl = await prisma.mataKuliah.findUnique({ where: { prodiId_kode: { prodiId: prodiTI.id, kode: 'IF-3101' } } });
   if (mkRpl) {
     const cpmkData = [
       { kode: 'CPMK-RPL-1', deskripsi: 'Menerapkan SDLC pada studi kasus nyata' },
