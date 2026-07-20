@@ -1,5 +1,19 @@
 # Deploy SIAKAD ke Domainesia (CloudLinux Node.js Selector)
 
+> # ⚠️ DOKUMEN USANG — JANGAN DIIKUTI
+>
+> **Setup cPanel ini sudah tidak dipakai dan tidak melayani `stmik.sosmartpro.com`.**
+>
+> Diverifikasi 2026-07-20: domain tersebut me-resolve ke VPS **`202.134.242.202`**, di mana **Caddy** mem-proxy-nya ke `localhost:8080` (container `siakad_web_prod`). Produksi berjalan di **Docker**, bukan CloudLinux Node.js Selector, dan databasenya **`siakad`** — bukan `sosmartp_stmik`.
+>
+> "Domainesia" di judul ini merujuk pada **penyedia hosting**, yang kini menyediakan VPS tersebut. Ini bukan deployment terpisah dari VPS.
+>
+> **Yang berlaku sekarang:**
+> - Deploy kode → `DEPLOY.md` (Docker) dan `scripts/deploy-vps.sh` (dipanggil GitHub Actions saat push ke `main`)
+> - Rilis data nilai → `RILIS-NILAI-KE-PRODUKSI.md`
+>
+> Dokumen ini disimpan sebagai catatan sejarah. Database `sosmartp_stmik` bila masih ada **bukan** sumber data produksi — jangan membaca apalagi menulis ke sana.
+
 Target: **stmik.sosmartpro.com** · Domainesia cPanel + CloudLinux Node.js Selector + MySQL shared.
 
 Panduan ini sudah diuji & berhasil — ikuti urutan persis.
