@@ -6,6 +6,8 @@ Berbeda dari `DEPLOY-domainesia.md` yang membahas rilis **kode** — dokumen ini
 
 Contoh yang dipakai di sini: **MKUT.201 Fiqih Muamalah, Kelas A, semester 20252, dosen Abdul Mughni, 23 mahasiswa**. Langkahnya berlaku umum untuk kelas mana pun.
 
+> ⚠️ **Ada dua deployment produksi, dan isinya sudah menyimpang.** Dokumen ini menargetkan **Domainesia** — `stmik.sosmartpro.com`, database `sosmartp_stmik`, akses lewat cPanel Terminal. Deployment lain di VPS `202.134.242.202` (database `siakad`, container `siakad_mysql_prod`) **bukan** target rilis nilai. Pembenahan kode MK duplikat yang tercatat "selesai di prod" dikerjakan di VPS itu — jangan asumsikan Domainesia sudah ikut bersih. Selalu jalankan Fase 0 di database yang benar.
+
 ---
 
 ## Prinsip
@@ -46,6 +48,27 @@ WHERE m.nama LIKE '%Muamalah%';
 ```
 
 Catat `id` dan prodinya. Kalau MK yang sama ada di beberapa prodi, pilih yang `jenis = 'wajib_universitas'` bila kelasnya lintas prodi — mahasiswa dari prodi lain hanya bisa ambil kelas MK berjenis itu (`mahasiswa/krs.ts:217`).
+
+> **Baca `jenis` sebelum memutuskan berapa kelas yang dibuat.** MK `wajib_universitas` cukup **satu kelas** untuk semua prodi. MK `wajib_prodi` butuh **kelas terpisah per prodi**. Salah baca di sini berujung membuat kelas yang tidak perlu, atau mahasiswa lintas prodi ditolak saat KRS.
+
+> ⚠️ **Hati-hati MK duplikat hasil migrasi 16 Juli 2026.** Beberapa mata kuliah punya **dua record berbeda dengan nama sama** (kode lama dari migrasi vs kode resmi Kurikulum 2026), kadang dengan `jenis` yang berlawanan. Fiqih Muamalah misalnya muncul sebagai `MKUT.201` **dan** `MKU.202` di kedua prodi. **Kode resmi = yang ada di PDF Kurikulum 2026**; `MKU.202` termasuk yang seharusnya di-merge ke `MKUT.201`.
+>
+> Bahayanya: data historis sering menempel di record yang kodenya salah. Kalau query di atas mengembalikan lebih dari satu baris per prodi, hitung dulu nilai yang menempel di masing-masing sebelum memilih:
+>
+> ```sql
+> SELECT mk.kode, p.kode AS prodi, s.kode AS smt, k.kodeKelas,
+>        COUNT(krs.id) AS n_krs, COUNT(n.id) AS n_nilai
+> FROM Kelas k
+> JOIN MataKuliah mk ON mk.id = k.mataKuliahId
+> JOIN Prodi p ON p.id = mk.prodiId
+> JOIN Semester s ON s.id = k.semesterId
+> LEFT JOIN Krs krs ON krs.kelasId = k.id
+> LEFT JOIN Nilai n ON n.krsId = krs.id
+> WHERE mk.nama LIKE '%Muamalah%'
+> GROUP BY k.id ORDER BY mk.kode, p.kode, s.kode;
+> ```
+>
+> Menaruh nilai baru di record yang salah akan memecah riwayat mahasiswa antara dua MK bernama sama.
 
 ### 0.3 Dosen
 
@@ -269,13 +292,37 @@ WHERE k.kelasId = '<KELAS_ID>';
 
 ## Catatan untuk kelas Fiqih Muamalah 20252
 
-Yang sudah disiapkan di **dev** per 2026-07-20 — semuanya perlu dikerjakan ulang di produksi lewat langkah di atas:
+### Status per 2026-07-20
 
-- Kelas A, dosen Abdul Mughni (NIDN 2120047501), kapasitas 100
-- 23 peserta berstatus `disetujui`
+**Dev — selesai.** Tidak perlu diimpor ulang.
+
+- Kelas A (`7e006c03-…`), MK `MKUT.201` prodi 55201, dosen Abdul Mughni (NIDN 2120047501), kapasitas 100
+- 23 peserta berstatus `disetujui` — **11 mahasiswa TI + 12 mahasiswa SI dalam satu kelas**
 - 23 nilai `draft` dengan komponen tugas/UTS/UAS — 22 A + 1 AB
 - Periode nilai 20252: 1 Juli – 15 Agustus 2026
 
-File impor siap pakai: `impor-nilai-MKUT201-20252.xlsx` (kolom `nim`, `tugas`, `uts`, `uas`, `nilaiAngka`).
+**Produksi (Domainesia) — belum dikerjakan.** Perlu seluruh langkah di atas.
+
+### Keputusan: pakai `MKUT.201`
+
+Fiqih Muamalah punya record ganda (`MKUT.201` dan `MKU.202`). Yang dipakai untuk 20252 adalah **`MKUT.201`**, sesuai kode resmi PDF Kurikulum 2026.
+
+Konsekuensi yang harus dicek di Domainesia: di VPS, `MKU.202` justru yang menyimpan **41 nilai historis semester 20242** (22 TI + 19 SI) sementara `MKUT.201` kosong, dan `jenis` keduanya terbalik dari dev. Kalau pola yang sama muncul di Domainesia, riwayat 20242 dan nilai 20252 akan terpisah di dua MK sampai keduanya di-merge.
+
+### Satu kelas, bukan dua
+
+`MKUT.201` prodi 55201 berjenis `wajib_universitas`, jadi **satu kelas menampung kedua prodi**. Jangan membuat kelas terpisah untuk prodi SI — mahasiswa SI masuk ke kelas yang sama.
+
+### File impor
+
+`impor-nilai-MKUT201-20252.xlsx` (kolom `nim`, `tugas`, `uts`, `uas`, `nilaiAngka`), 23 baris.
 
 Kolom **Kuis** dari rekap asli tidak diimpor — tabel `Nilai` tidak punya field padanannya. Nilai akhir di rekap sudah memperhitungkan kuis, jadi hasil akhirnya tetap benar, tapi rincian kuis tidak tersimpan di sistem.
+
+### Yang perlu disampaikan ke dosen pengampu
+
+Raihan Muhammad Faqih — rekap menulis **B+** untuk nilai 78.5, sistem akan menyimpannya sebagai **AB**. Aplikasi tidak mengenal notasi B+/C+. Sampaikan sebelum finalisasi.
+
+### Hambatan terbesar
+
+**KRS tidak punya impor massal.** 23 peserta harus berstatus `disetujui` sebelum nilai bisa diunggah — lewat KRS mahasiswa masing-masing, atau ditambahkan Akademik satu per satu. Ini bagian paling makan waktu, bukan impor nilainya.
