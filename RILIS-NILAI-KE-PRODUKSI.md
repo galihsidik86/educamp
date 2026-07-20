@@ -6,7 +6,9 @@ Berbeda dari `DEPLOY-domainesia.md` yang membahas rilis **kode** — dokumen ini
 
 Contoh yang dipakai di sini: **MKUT.201 Fiqih Muamalah, Kelas A, semester 20252, dosen Abdul Mughni, 23 mahasiswa**. Langkahnya berlaku umum untuk kelas mana pun.
 
-> ⚠️ **Ada dua deployment produksi, dan isinya sudah menyimpang.** Dokumen ini menargetkan **Domainesia** — `stmik.sosmartpro.com`, database `sosmartp_stmik`, akses lewat cPanel Terminal. Deployment lain di VPS `202.134.242.202` (database `siakad`, container `siakad_mysql_prod`) **bukan** target rilis nilai. Pembenahan kode MK duplikat yang tercatat "selesai di prod" dikerjakan di VPS itu — jangan asumsikan Domainesia sudah ikut bersih. Selalu jalankan Fase 0 di database yang benar.
+> **Produksi = VPS `202.134.242.202`, database `siakad`.** Diverifikasi 2026-07-20: `stmik.sosmartpro.com` me-resolve ke IP tersebut, Caddy di VPS mem-proxy domain itu ke `localhost:8080` (container `siakad_web_prod`), dan `siakad_api_prod` memakai `DATABASE_URL=…@mysql:3306/siakad`.
+>
+> ⚠️ **"Domainesia" adalah penyedia VPS ini, bukan deployment lain.** `DEPLOY-domainesia.md` menjelaskan setup cPanel/CloudLinux lama dengan database `sosmartp_stmik` — setup itu **sudah tidak melayani domain**. Jangan mencari data produksi di sana.
 
 ---
 
@@ -14,7 +16,7 @@ Contoh yang dipakai di sini: **MKUT.201 Fiqih Muamalah, Kelas A, semester 20252,
 
 > **Jangan menyalin database dev ke produksi.**
 
-Database dev (`siakad_tazkia`) dan produksi (`sosmartp_stmik`) punya isi yang berbeda dan hidup masing-masing. Menyalin dev ke produksi akan menimpa data riil mahasiswa lain. Yang dipindahkan hanya **nilai kelas ini**, lewat jalur aplikasi.
+Database dev (`siakad_tazkia`) dan produksi (`siakad`) punya isi yang berbeda dan hidup masing-masing — bahkan kelas ber-`id` sama bisa punya kode MK dan dosen berbeda. Menyalin dev ke produksi akan menimpa data riil mahasiswa lain. Yang dipindahkan hanya **nilai kelas ini**, lewat jalur aplikasi.
 
 > **Nilai masuk lewat portal dosen, bukan lewat SQL.**
 
@@ -24,11 +26,15 @@ Alur `draft → finalized` adalah keputusan akademik dosen pengampu. Menulis lan
 
 ## Fase 0 — Periksa kondisi produksi
 
-Semua query di fase ini **read-only**. Jalankan di Terminal cPanel:
+Semua query di fase ini **read-only**. Jalankan lewat SSH ke VPS:
 
 ```bash
-mysql -u sosmartp_admin -p sosmartp_stmik
+ssh root@202.134.242.202
+cd /opt/siakad
+docker exec -it siakad_mysql_prod mysql -uroot -p"$(grep MYSQL_ROOT_PASSWORD .env | cut -d= -f2)" siakad
 ```
+
+Password DB ada di `/opt/siakad/.env` — jangan menaruhnya di riwayat shell atau di dokumen ini.
 
 ### 0.1 Semester
 
@@ -250,11 +256,17 @@ Lalu konfirmasi dari sisi mahasiswa: login sebagai salah satu peserta, buka **KH
 
 ## Rollback
 
-**Backup sebelum Fase 2:**
+**Backup sebelum Fase 2** (di VPS):
 
 ```bash
-mysqldump -u sosmartp_admin -p sosmartp_stmik Krs Nilai > ~/backup-nilai-$(date +%F-%H%M).sql
+cd /opt/siakad
+PW=$(grep MYSQL_ROOT_PASSWORD .env | cut -d= -f2)
+docker exec siakad_mysql_prod mysqldump -uroot -p"$PW" siakad Krs Nilai \
+  | gzip > backups/pre-<nama-kelas>-$(date +%Y%m%d-%H%M%S).sql.gz
+gzip -t backups/pre-<nama-kelas>-*.sql.gz && echo OK
 ```
+
+Selalu uji integritas gzip-nya — `mysqldump` yang gagal di tengah tetap menghasilkan file.
 
 Batalkan finalisasi satu kelas (kembali ke draft, nilai tetap tersimpan):
 
@@ -301,13 +313,24 @@ WHERE k.kelasId = '<KELAS_ID>';
 - 23 nilai `draft` dengan komponen tugas/UTS/UAS — 22 A + 1 AB
 - Periode nilai 20252: 1 Juli – 15 Agustus 2026
 
-**Produksi (Domainesia) — belum dikerjakan.** Perlu seluruh langkah di atas.
+**Produksi — KRS selesai, nilai menunggu dosen.**
+
+- Kelas **`970ae29c-2898-4f19-8457-bfa953273a14`** — `MKUT.201` prodi **57201**, kelas A, dosen Abdul Mughni (`Kelas.dosenId` dan `KelasDosen` lead sudah konsisten), kapasitas 40
+- 23 peserta `disetujui` didaftarkan 2026-07-20 lewat SQL — 11 TI + 12 SI
+- Tabel `Nilai` **belum disentuh**; Pak Mughni yang mengunggah lewat portal
+- Backup: `/opt/siakad/backups/pre-fiqih-muamalah-20252-20260720-142905.sql.gz`
+
+Kelas `7e006c03` (`MKUT.201` prodi 55201) **tidak dipakai** — dosennya Miftakhus Surur dan sudah berisi data lain (lihat di bawah).
 
 ### Keputusan: pakai `MKUT.201`
 
-Fiqih Muamalah punya record ganda (`MKUT.201` dan `MKU.202`). Yang dipakai untuk 20252 adalah **`MKUT.201`**, sesuai kode resmi PDF Kurikulum 2026.
+Fiqih Muamalah punya record ganda (`MKUT.201` dan `MKU.202`) di kedua prodi. Yang dipakai untuk 20252 adalah **`MKUT.201`**, sesuai kode resmi PDF Kurikulum 2026.
 
-Konsekuensi yang harus dicek di Domainesia: di VPS, `MKU.202` justru yang menyimpan **41 nilai historis semester 20242** (22 TI + 19 SI) sementara `MKUT.201` kosong, dan `jenis` keduanya terbalik dari dev. Kalau pola yang sama muncul di Domainesia, riwayat 20242 dan nilai 20252 akan terpisah di dua MK sampai keduanya di-merge.
+Konsekuensi yang belum dibereskan: di produksi, **`MKU.202` justru menyimpan 41 nilai historis semester 20242** (22 TI + 19 SI) sementara `MKUT.201` kosong. Sampai keduanya di-merge, riwayat 20242 dan nilai 20252 seorang mahasiswa terpisah di dua MK bernama sama.
+
+### Temuan yang belum ditangani
+
+Kelas `7e006c03` (prodi 55201) berisi **satu peserta di luar rekap**: `251552010006` Alesha Ezzahtanissa, nilai **38.8** (= E) berstatus **`finalized`** — sudah terbit ke KHS-nya. Perlu konfirmasi dosen: peserta kelas lain, salah tempat, atau rekap tidak lengkap.
 
 ### Satu kelas, bukan dua
 
