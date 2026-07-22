@@ -12,7 +12,7 @@ export function MahasiswaKartu() {
   const navigate = useNavigate();
   const profil = useProfil();
   const inst = useInstitusiPublic();
-  const logoUrl = inst.data?.logoInverseUrl || inst.data?.logoUrl || '/@ds/assets/logo-tazkia-inverse.svg';
+  const logoUrl = inst.data?.logoInverseUrl || inst.data?.logoUrl || '/brand/mark-stmik-tazkia.svg';
 
   useEffect(() => {
     document.body.classList.add('print-mode', 'kartu-print-mode');

@@ -32,12 +32,16 @@ export function MahasiswaDashboard() {
 
       <div className="kpi-grid">
         <StatCard label="IP Semester" value={isLoading ? '…' : formatIp(data?.ipSemester)} icon={<GraduationCap size={20} />} />
-        <StatCard label="IPK" value={isLoading ? '…' : formatIp(data?.ipk)} icon={<GraduationCap size={20} />} />
+        {/* IPK adalah angka yang paling dicari mahasiswa di halaman ini →
+            satu-satunya kartu `feature`. Tagihan diberi aksen karena
+            menuntut tindakan, bukan sekadar dibaca. */}
+        <StatCard label="IPK" value={isLoading ? '…' : formatIp(data?.ipk)} icon={<GraduationCap size={20} />} tone="feature" />
         <StatCard label="SKS Diambil" value={isLoading ? '…' : (data?.sksAmbil ?? 0)} icon={<ClipboardList size={20} />} />
         <StatCard
           label="Tagihan Aktif"
           value={isLoading ? '…' : formatRupiah(data?.tagihanTotal ?? 0)}
           icon={<Wallet size={20} />}
+          tone="attention"
         />
       </div>
 

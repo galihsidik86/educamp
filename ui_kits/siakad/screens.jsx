@@ -132,7 +132,7 @@ function Krs() {
 const SCHED_COLORS = {
   blue: { bg: "var(--blue-50)", bd: "var(--blue-600)" },
   green: { bg: "var(--green-50)", bd: "var(--green-500)" },
-  gold: { bg: "var(--gold-50)", bd: "var(--gold-500)" },
+  orange: { bg: "var(--orange-50)", bd: "var(--orange-500)" },
   red: { bg: "var(--red-50)", bd: "var(--red-500)" },
 };
 function Jadwal() {

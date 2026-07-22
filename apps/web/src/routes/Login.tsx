@@ -51,7 +51,7 @@ export function Login() {
         <div>
           <span className="login__eyebrow">PORTAL AKADEMIK</span>
           <div className="login__hero">
-            <h1>Assalamu'alaikum,<br/>selamat datang di SIAKAD {namaPendek}</h1>
+            <h1>Assalamu'alaikum,<br/>selamat datang di SILINCAH {namaPendek}</h1>
             <p>Akses Kartu Rencana Studi, jadwal, nilai, keuangan, dan layanan Tri Dharma dalam satu portal.</p>
           </div>
         </div>

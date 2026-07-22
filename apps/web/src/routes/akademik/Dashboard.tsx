@@ -19,8 +19,8 @@ export function AkademikDashboard() {
       <DashboardHero
         eyebrow={data ? `SEMESTER ${data.semester.nama.toUpperCase()}` : 'PORTAL AKADEMIK'}
         title={`Selamat datang, ${a.nama}`}
-        subtitle="Sistem Informasi Akademik Tazkia"
-        right={a.jabatan ? <>{a.jabatan}</> : <>Bagian Akademik</>}
+        subtitle="Sistem Integrasi Layanan Campus Akademik Holistik"
+        tag={a.jabatan ? a.jabatan : 'Bagian Akademik'}
       />
 
       {error && error instanceof ApiError && error.status === 404 && /semester aktif/i.test(error.message) ? (
@@ -43,10 +43,14 @@ export function AkademikDashboard() {
         <StatCard label="Total Dosen" value={isLoading ? '…' : (data?.totalDosen ?? 0)} icon={<Users size={20} />} />
         <StatCard label="Program Studi" value={isLoading ? '…' : (data?.totalProdi ?? 0)} icon={<Building2 size={20} />} />
         <StatCard label="Mata Kuliah" value={isLoading ? '…' : (data?.totalMK ?? 0)} icon={<BookOpen size={20} />} />
-        <StatCard label="Kelas Semester Ini" value={isLoading ? '…' : (data?.totalKelasSemester ?? 0)} icon={<ClipboardList size={20} />} />
-        <StatCard label="KRS Diajukan" value={isLoading ? '…' : (data?.krsPending ?? 0)} icon={<AlertTriangle size={20} />} />
-        <StatCard label="Tagihan Belum Lunas" value={isLoading ? '…' : (data?.tagihanBelumLunas ?? 0)} icon={<Wallet size={20} />} />
-        <StatCard label="Total Belum Lunas" value={isLoading ? '…' : formatRupiah(data?.totalTagihanBelum ?? 0)} icon={<Wallet size={20} />} />
+        {/* Empat kartu pertama = angka rujukan (tone default). Tiga berikutnya
+            menuntut tindakan, jadi diberi aksen oranye; nominal tunggakan
+            jadi satu-satunya kartu `feature` supaya angka terpenting di
+            halaman ini kebaca lebih dulu. */}
+        <StatCard label="Kelas Semester Ini" value={isLoading ? '…' : (data?.totalKelasSemester ?? 0)} icon={<ClipboardList size={20} />} tone="attention" />
+        <StatCard label="KRS Diajukan" value={isLoading ? '…' : (data?.krsPending ?? 0)} icon={<AlertTriangle size={20} />} tone="attention" />
+        <StatCard label="Tagihan Belum Lunas" value={isLoading ? '…' : (data?.tagihanBelumLunas ?? 0)} icon={<Wallet size={20} />} tone="attention" />
+        <StatCard label="Total Belum Lunas" value={isLoading ? '…' : formatRupiah(data?.totalTagihanBelum ?? 0)} icon={<Wallet size={20} />} tone="feature" />
       </div>
 
       <div className="grid-2col">

@@ -11,8 +11,8 @@ If creating visual artifacts (slides, mocks, throwaway prototypes, etc), copy as
 If the user invokes this skill without any other guidance, ask them what they want to build or design, ask some questions, and act as an expert designer who outputs HTML artifacts _or_ production code, depending on the need.
 
 Key facts:
-- Brand: deep Tazkia navy (`--brand` #1D3180) + gold accent (`--accent` #C28D1E) + growth green. Cool slate neutrals.
+- Brand: deep Tazkia navy (`--brand` #1D3180) + oranye accent (`--accent` #F47B20) + growth green. Cool slate neutrals.
 - Type: Plus Jakarta Sans (UI/body), Spectral (serif display), JetBrains Mono (data/NIM/IPK).
 - Language: Bahasa Indonesia, formal-but-warm; Islamic greetings welcome; no emoji in chrome.
-- Icons: Lucide. Motif: subtle Islamic geometric pattern + navy gradients with gold glow.
+- Icons: Lucide. Motif: subtle Islamic geometric pattern + navy gradients with orange glow.
 - Components: `window.TazkiaSIAKADDesignSystem_e8738f` (Button, Input, StatCard, Alert, …). UI kit: `ui_kits/siakad/`.

@@ -1,0 +1,19 @@
+<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="tazkia-geo" width="80" height="80" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="currentColor" stroke-width="1.2">
+        <rect x="26" y="26" width="28" height="28" rx="2" transform="rotate(0 40 40)"></rect>
+        <rect x="26" y="26" width="28" height="28" rx="2" transform="rotate(45 40 40)"></rect>
+        <rect x="-14" y="-14" width="28" height="28" rx="2" transform="rotate(0 0 0)"></rect>
+        <rect x="-14" y="-14" width="28" height="28" rx="2" transform="rotate(45 0 0)"></rect>
+        <rect x="66" y="66" width="28" height="28" rx="2"></rect>
+        <rect x="66" y="66" width="28" height="28" rx="2" transform="rotate(45 80 80)"></rect>
+        <rect x="66" y="-14" width="28" height="28" rx="2"></rect>
+        <rect x="66" y="-14" width="28" height="28" rx="2" transform="rotate(45 80 0)"></rect>
+        <rect x="-14" y="66" width="28" height="28" rx="2"></rect>
+        <rect x="-14" y="66" width="28" height="28" rx="2" transform="rotate(45 0 80)"></rect>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="80" height="80" fill="url(#tazkia-geo)"></rect>
+</svg>

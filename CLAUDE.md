@@ -58,9 +58,12 @@ These apply to **DS components themselves** (the `.jsx` files at the root); the 
 
 - **No raw values in DS.** Use tokens via `var(--...)`. Raw hex (`#xxxxxx`) and literal `px` units are linted as warnings. Spacing comes from `--space-*` / `--pad-*` / `--gap-*`; radii from `--radius-*`; shadows from `--shadow-*`.
 - **Only three font families:** `Plus Jakarta Sans` (UI/body), `Spectral` (display/serif), `JetBrains Mono` (data — NIM, NIDN, IPK, SKS, kode MK, jam). Use `tabular-nums` for any numeric data.
+- **Serif is for documents, not chrome.** `Spectral` (via `var(--font-serif)`, never hardcoded) belongs to formal/printed artefacts: sertifikat, ijazah, transkrip cetak, halaman verifikasi publik. Application chrome — dashboard hero, sidebar wordmark, page titles — uses the sans. A dashboard greeting is UI, not a document.
 - **DS declared props are exhaustive.** Each component allows only the props listed in its `.d.ts` and enforced in `_adherence.oxlintrc.json`. Variants are enumerated — don't invent new ones; add a real variant to the component + CSS + lint rule if needed.
-- **One primary action per view.** Use `Button variant="accent"` (gold) only for celebratory/positive emphasis, never as the default CTA.
-- **Brand chrome.** Navy sidebar with ~5-7% opacity Islamic geometric pattern overlay (`assets/pattern-geometric.svg`) and a gold radial glow on hero/login surfaces. No glassmorphism, no rainbow gradients, no emoji in product chrome.
+- **One primary action per view.** Use `Button variant="accent"` (oranye) only for celebratory/positive emphasis, never as the default CTA.
+- **Brand chrome.** Navy sidebar with ~5-7% opacity Islamic geometric pattern overlay (`apps/web/public/brand/pattern-geometric.svg`) and an orange radial glow on hero/login surfaces. Active nav item is a filled orange pill. No glassmorphism, no rainbow gradients, no emoji in product chrome.
+- **Accent contrast is not optional.** `--accent` (#F47B20) is only 2.73:1 on white — decorative use only (dots, rules, glows, icon tints on dark). Anything carrying **white text** must use `--accent-strong` (4.60:1) or darker; accent-coloured **text on light surfaces** must use `--accent-text` (6.50:1). This is the same trap the old gold accent fell into — see `docs/UI-AUDIT.md` #2.
+- **Brand assets live in `apps/web/public/brand/`.** Reference them as root-absolute URLs (`/brand/…`). Do **not** write `/@ds/assets/…` — the `@ds` Vite alias resolves *imports*, not URL paths, so those silently 404 at runtime.
 - **Copy is Bahasa Indonesia, formal-but-warm.** Standard academic terms (Mahasiswa, KRS, KHS, SKS, IPK, DPA, Semester Ganjil/Genap). Islamic greetings welcome in personal contexts. Sentence case for body/buttons/labels; ALL-CAPS letter-spaced for eyebrows/table heads only. Status is communicated by Badge/dot/`<StatusPill>`, never emoji.
 
 ## Skill packaging

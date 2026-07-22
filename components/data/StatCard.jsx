@@ -1,8 +1,8 @@
 import React from 'react';
 
-export function StatCard({ label, value, icon, delta, deltaDir = 'up', className = '', ...props }) {
+export function StatCard({ label, value, icon, delta, deltaDir = 'up', tone = 'default', className = '', ...props }) {
   return (
-    <div className={['tz-stat', className].filter(Boolean).join(' ')} {...props}>
+    <div className={['tz-stat', `tz-stat--${tone}`, className].filter(Boolean).join(' ')} {...props}>
       <div className="tz-stat__top">
         <span className="tz-stat__label">{label}</span>
         {icon && <span className="tz-stat__icon">{icon}</span>}

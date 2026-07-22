@@ -55,7 +55,7 @@ html, body, #root {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url('/@ds/assets/pattern-geometric.svg');
+  background-image: url('/brand/pattern-geometric.svg');
   background-size: 240px;
   opacity: 0.06;
   pointer-events: none;
@@ -70,23 +70,35 @@ html, body, #root {
   padding: var(--space-2) var(--space-3) var(--space-6);
 }
 
+/* Kotak putih — logo resmi berwarna navy+oranye, jadi butuh alas terang
+   supaya bagian navy-nya tidak lenyap di sidebar navy. */
 .sidebar__brand-mark {
-  width: 40px; height: 40px;
+  width: 46px; height: 46px;
+  flex-shrink: 0;
   border-radius: var(--radius-md);
-  background: color-mix(in oklch, var(--neutral-0) 10%, transparent);
+  background: var(--neutral-0);
+  padding: 6px;
+  box-shadow: var(--shadow-md);
   display: grid; place-items: center;
+}
+.sidebar__brand-mark img {
+  width: 100%; height: 100%;
+  object-fit: contain;
 }
 
 .sidebar__brand-text {
   display: flex; flex-direction: column;
-  font-family: var(--font-serif);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-extra);
+  font-size: var(--text-md);
+  letter-spacing: var(--tracking-wide);
   line-height: var(--leading-tight);
+  min-width: 0;
 }
 
+.sidebar__brand-text > span { overflow-wrap: anywhere; }
+
 .sidebar__brand-text small {
-  font-family: var(--font-sans);
-  font-weight: var(--fw-regular);
+  font-weight: var(--fw-semibold);
   font-size: var(--text-2xs);
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
@@ -109,8 +121,8 @@ html, body, #root {
 }
 .sidebar__search:focus-within {
   background: color-mix(in oklch, var(--neutral-0) 10%, transparent);
-  border-color: color-mix(in oklch, var(--gold-300) 50%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--gold-300) 35%, transparent);
+  border-color: color-mix(in oklch, var(--orange-300) 50%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--orange-300) 35%, transparent);
 }
 .sidebar__search input:focus-visible { outline: none; }
 .sidebar__search-icon {
@@ -235,25 +247,45 @@ html, body, #root {
   background: color-mix(in oklch, var(--neutral-0) 6%, transparent);
 }
 
-/* Item aktif — pill gold-tint jelas + indikator bar di kiri, supaya
-   langsung kebaca item mana yg aktif tanpa perlu baca teks (redesign
-   shell #1: "item aktif yang jelas"). */
+/* Item aktif — pill oranye TERISI, bukan sekadar tint: satu-satunya
+   elemen terisi penuh di sidebar, jadi posisi "saya di mana" kebaca
+   sekilas tanpa memindai teks.
+   Gradien sengaja dimulai dari --accent-strong, BUKAN --accent: oranye
+   brand (#F47B20) cuma 2,73:1 terhadap putih — label putih di atasnya
+   akan gagal WCAG AA. accent-strong→accent-deep = 4,60:1→6,50:1. */
 .sidebar__item--active {
-  background: color-mix(in oklch, var(--accent) 22%, transparent);
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent-deep));
   color: var(--neutral-0);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
+  box-shadow: 0 3px 10px color-mix(in oklch, var(--accent) 35%, transparent);
 }
-.sidebar__item--active::before {
-  content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
-  width: 3px; border-radius: var(--radius-full);
-  background: var(--accent);
+.sidebar__item--active:hover {
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent-deep));
 }
 
 .sidebar__footer {
   margin-top: auto;
-  padding-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid color-mix(in oklch, var(--neutral-0) 10%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+/* Logo SILINCAH sudah memuat wordmark + kepanjangan akronim, jadi footer
+   tidak mengulanginya sebagai teks — cukup logo + baris hak cipta. */
+.sidebar__footer-logo {
+  width: 100%;
+  max-width: 150px;
+  border-radius: var(--radius-sm);
+  background: var(--neutral-0);
+  padding: var(--space-2) var(--space-3);
+}
+.sidebar__footer-logo img { display: block; width: 100%; height: auto; }
+.sidebar__footer-meta {
   font-size: var(--text-2xs);
-  opacity: 0.6;
+  line-height: var(--leading-snug);
+  opacity: 0.65;
 }
 
 /* ----- Topbar ----- */
@@ -271,7 +303,22 @@ html, body, #root {
   position: sticky; top: 0; z-index: var(--z-sticky);
 }
 
-.topbar__title { font-weight: var(--fw-semibold); color: var(--text-strong); }
+/* Judul diberi penanda oranye vertikal — mengikat topbar ke identitas
+   brand tanpa menambah beban visual, sekaligus menjadikan judul halaman
+   titik jangkar mata saat berpindah menu. */
+.topbar__title {
+  display: flex; align-items: center; gap: var(--space-3);
+  font-size: var(--text-md);
+  font-weight: var(--fw-bold);
+  color: var(--brand);
+}
+.topbar__title::before {
+  content: '';
+  flex-shrink: 0;
+  width: 4px; height: 22px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+}
 .topbar__spacer { flex: 1; }
 .topbar__actions { display: flex; align-items: center; gap: var(--space-2); }
 
@@ -368,7 +415,7 @@ html, body, #root {
 .login__brand::before {
   content: "";
   position: absolute; inset: 0;
-  background-image: url('/@ds/assets/pattern-geometric.svg');
+  background-image: url('/brand/pattern-geometric.svg');
   background-size: 280px;
   opacity: 0.07;
 }
@@ -390,7 +437,7 @@ html, body, #root {
   font-size: var(--text-2xs);
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
-  color: var(--gold-300);
+  color: var(--orange-300);
 }
 
 .login__form-wrap {
@@ -681,7 +728,7 @@ html, body, #root {
   cursor: not-allowed;
 }
 
-/* Required indicator: dari merah ke gold accent — tetap kelihatan
+/* Required indicator: dari merah ke aksen oranye — tetap kelihatan
    tapi tidak alarming. Asterisk dgn vertical align fine-tune. */
 .tz-req {
   color: var(--accent-text) !important;
@@ -863,7 +910,7 @@ html, body, #root {
 
 /* <strong> langsung sebagai sub-heading dalam Card (pattern:
    <Card><strong>Deskripsi</strong>...</Card> alih h3).
-   Polish: bigger, dengan gold accent line di kiri. */
+   Polish: bigger, dengan garis aksen oranye di kiri. */
 .tz-card > strong:first-child {
   display: block;
   font-size: var(--text-base);
@@ -1379,7 +1426,7 @@ html, body, #root {
   content: "";
   position: absolute;
   inset: 0;
-  background: url('/@ds/assets/pattern-geometric.svg') center/40mm repeat;
+  background: url('/brand/pattern-geometric.svg') center/40mm repeat;
   opacity: 0.06;
   pointer-events: none;
 }
@@ -1510,22 +1557,10 @@ a {
    sebelumnya mengandalkan cursor:pointer inline utk efek ini sudah
    dimigrasi memakai prop `hover` eksplisit. */
 
-/* Title kanan: small gold accent line — eyebrow brand */
-.topbar__title {
-  position: relative;
-  padding-left: var(--space-3);
-}
-.topbar__title::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 3px;
-  height: 60%;
-  background: var(--accent);
-  border-radius: var(--radius-full);
-  transform: translateY(-50%);
-}
+/* Penanda oranye judul topbar didefinisikan sekali saja di blok
+   "Topbar" di atas (flex + ::before). Versi absolute yang dulu ada di
+   sini dihapus: dua definisi untuk pseudo-element yang sama membuat
+   properti saling menimpa sebagian dan tinggi bar jadi tak terduga. */
 
 /* Avatar dapat subtle brand ring saat trigger user menu di-hover/dibuka */
 .topbar__user-trigger:hover .tz-avatar,
@@ -1559,34 +1594,20 @@ a {
   transform: translateX(2px);
 }
 
-/* Active item gold bar: animated entry — width grow + glow */
-.sidebar__item--active::before {
-  transition: width var(--transition-base) var(--ease-emphasized),
-              box-shadow var(--transition-base);
-  box-shadow: 0 0 8px var(--accent);
-}
+/* Bar indikator kiri sudah tidak dipakai — item aktif kini pill oranye
+   terisi, jadi bar-nya mubazir. Aturan lamanya dihapus daripada
+   menyisakan pseudo-element tanpa `content` yang tak pernah tampil. */
 
-/* Icon di item active dapat brand accent — sedikit tint emas */
+/* Ikon item aktif: putih penuh. Sebelumnya diberi tint oranye + glow —
+   di atas pill oranye terisi itu jadi oranye-di-atas-oranye dan nyaris
+   tak terlihat. */
 .sidebar__item--active > svg,
 .sidebar__item--active > [class*="lucide"] {
-  color: var(--gold-300);
-  filter: drop-shadow(0 0 4px color-mix(in oklch, var(--gold-300) 40%, transparent));
+  color: var(--neutral-0);
 }
 
-/* Brand mark — soft gold radial glow di dalam, brand-aligned */
-.sidebar__brand-mark {
-  position: relative;
-  overflow: hidden;
-}
-.sidebar__brand-mark::after {
-  content: '';
-  position: absolute;
-  inset: -50%;
-  background: radial-gradient(circle at center,
-    color-mix(in oklch, var(--gold-300) 18%, transparent) 0%,
-    transparent 60%);
-  pointer-events: none;
-}
+/* Kotak logo sengaja TANPA glow oranye di dalamnya: alasnya putih dan
+   memuat logo resmi berwarna — semburat aksen hanya mengotori warnanya. */
 
 /* Group header chevron: smoother + slight scale saat hover */
 .sidebar__group-header:hover .sidebar__group-chevron {
@@ -1608,7 +1629,7 @@ a {
   border-radius: var(--radius-full);
 }
 .sidebar::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in oklch, var(--gold-300) 40%, transparent);
+  background: color-mix(in oklch, var(--orange-300) 40%, transparent);
 }
 
 /* ============================================================
@@ -2254,8 +2275,8 @@ body.kartu-print-mode .route-transition {
 }
 
 /* ============================================================
-   Dashboard Hero — brand chrome navy + gold radial + geometric
-   Sesuai CLAUDE.md: pattern overlay 5-7%, gold radial glow.
+   Dashboard Hero — brand chrome navy + glow oranye + geometric
+   Sesuai CLAUDE.md: pattern overlay 5-7%, radial glow aksen.
    ============================================================ */
 
 .dashboard-hero {
@@ -2264,13 +2285,13 @@ body.kartu-print-mode .route-transition {
   border-radius: var(--radius-lg);
   background: linear-gradient(135deg, var(--blue-800) 0%, var(--blue-900) 100%);
   color: var(--neutral-0);
-  padding: var(--space-6) var(--space-7);
+  padding: var(--space-8);
   margin-bottom: var(--space-4);
-  box-shadow: 0 4px 24px -4px color-mix(in oklch, var(--blue-950) 25%, transparent);
+  box-shadow: 0 14px 34px -8px color-mix(in oklch, var(--blue-950) 35%, transparent);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-5);
+  gap: var(--space-6);
   flex-wrap: wrap;
 }
 
@@ -2278,7 +2299,7 @@ body.kartu-print-mode .route-transition {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url('/@ds/assets/pattern-geometric.svg');
+  background-image: url('/brand/pattern-geometric.svg');
   background-size: 240px;
   opacity: 0.07;
   pointer-events: none;
@@ -2291,9 +2312,9 @@ body.kartu-print-mode .route-transition {
   right: -120px;
   width: 380px;
   height: 380px;
-  background: radial-gradient(circle, color-mix(in oklch, var(--gold-300) 28%, transparent) 0%, transparent 65%);
+  background: radial-gradient(circle, color-mix(in oklch, var(--orange-300) 28%, transparent) 0%, transparent 65%);
   pointer-events: none;
-  /* Glow gold brand tetap ada, tapi statis — sebelumnya berdenyut infinite
+  /* Glow aksen brand tetap ada, tapi statis — sebelumnya berdenyut infinite
      8s yang berjalan terus di setiap dashboard (UI-AUDIT.md #7, motion
      overload). Kesan "tenang-berwibawa" lebih cocok utk institusi. */
 }
@@ -2303,33 +2324,38 @@ body.kartu-print-mode .route-transition {
   z-index: 1;
   flex: 1;
   min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .dashboard-hero__eyebrow {
   display: inline-block;
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
-  color: var(--gold-300);
-  font-weight: 700;
-  margin-bottom: var(--space-2);
+  color: var(--orange-300);
+  font-weight: var(--fw-bold);
 }
 
+/* Sans, bukan serif. Sapaan dashboard adalah UI, bukan momen dokumen
+   formal — serif Spectral dipertahankan untuk sertifikat/ijazah/halaman
+   verifikasi publik. Lihat CLAUDE.md "Only three font families". */
 .dashboard-hero__title {
   margin: 0;
-  font-family: var(--font-serif);
   font-size: clamp(var(--text-xl), 3vw, var(--text-3xl));
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-extra);
   line-height: var(--leading-tight);
   color: var(--neutral-0);
-  letter-spacing: -0.01em;
+  letter-spacing: var(--tracking-tighter);
   text-wrap: balance;
 }
 
 .dashboard-hero__subtitle {
-  margin: var(--space-2) 0 0;
+  margin: 0;
   color: color-mix(in oklch, var(--neutral-0) 78%, transparent);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
+  font-weight: var(--fw-medium);
   line-height: var(--leading-normal);
 }
 
@@ -2344,6 +2370,32 @@ body.kartu-print-mode .route-transition {
   font-size: var(--text-sm);
   color: color-mix(in oklch, var(--neutral-0) 92%, transparent);
   white-space: nowrap;
+}
+
+/* Label peran/status — pill beraksen dengan titik. Dipakai lewat prop `tag`
+   (bukan `right`), karena `right` harus tetap bisa memuat elemen sembarang
+   seperti <Select> pemilih anak di portal wali. */
+.dashboard-hero__tag {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  background: color-mix(in oklch, var(--accent) 18%, transparent);
+  border: 1px solid color-mix(in oklch, var(--accent) 45%, transparent);
+  color: var(--orange-200);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+}
+.dashboard-hero__tag::before {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
 }
 
 @media (max-width: 640px) {

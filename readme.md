@@ -11,7 +11,8 @@ Programs include Sistem Informasi and Teknik Informatika.
 
 ## Brand foundation
 The Tazkia identity is anchored in **deep blue** (kecerdasan, stabilitas, *ukhuwah*, keteguhan),
-accented with **emas/gold** (prestasi, nilai keislaman) and supported by **green** (*Tazkia* = tumbuh
+accented with **oranye** (semangat, gerak, layanan — warna aksen pada logo resmi STMIK Tazkia dan
+SILINCAH) and supported by **green** (*Tazkia* = tumbuh
 & berkembang dengan bersih). The institutional values are **T.A.Z.K.I.A**: Tauhid · Amanah ·
 Zero-defect · Knowledge & competence · Istiqomah & innovation · Achievement through teamwork.
 
@@ -59,8 +60,10 @@ not emoji. Status is communicated with badges + dots, never emoji.
 ## VISUAL FOUNDATIONS
 
 **Color.** Deep Tazkia navy is the institutional anchor (`--brand` #1D3180); a brighter blue
-(`--action` #2A45C9) drives interactive elements. Gold (`--accent` #C28D1E) is used sparingly for
-emphasis, achievement, and active accents — never as large fills. Green signals growth/success.
+(`--action` #2A45C9) drives interactive elements. Oranye (`--accent` #F47B20) is used for
+emphasis and active accents. It is **decorative-weight only**: at 2.73:1 on white it may never
+carry white text — use `--accent-strong` (#BE580C, 4.60:1) for filled surfaces and `--accent-text`
+(#99460A, 6.50:1) for accent-coloured text on light backgrounds. Green signals growth/success.
 Neutrals are **cool, slightly blue-tinted** slates. Status palette: success-green, warning-amber,
 danger-red, info-blue, each with fg/surface/border tokens.
 
@@ -75,12 +78,13 @@ Scale runs 11→60px on a ~1.25 ratio; UI body is 15px; minimum data size 11px.
 
 **Backgrounds.** Mostly flat: page = `--surface-page` (#F6F8FB), cards = white. The **only** decorative
 treatments are (1) a subtle **Islamic geometric pattern** (overlapping squares → 8-point stars) at
-~5–7% opacity over navy panels, and (2) navy→deep-navy linear gradients with a soft gold radial glow
+~5–7% opacity over navy panels, and (2) navy→deep-navy linear gradients with a soft orange radial glow
 on hero/login/sidebar surfaces. No photographic backgrounds in chrome; no rainbow gradients.
 
 **Borders, radii, cards.** Corner radii: controls 10px, cards 14px, feature panels 20px; pills 999px
-only for badges/avatars/toggles. Cards = white + 1px `--border-subtle` + soft `--shadow-sm`; never a
-colored left-border-only accent. Inputs have a 1px strong border + subtle inset shadow.
+only for badges/avatars/toggles. Cards = white + 1px `--border-subtle` + soft `--shadow-sm`. The one
+sanctioned coloured left-border is `StatCard`, where it encodes `tone` (navy = reference figure,
+oranye = needs action); a filled navy `tone="feature"` card marks the single headline number per grid. Inputs have a 1px strong border + subtle inset shadow.
 
 **Elevation.** Soft, **cool blue-tinted** shadows, low spread (xs→xl). Modals/popovers use xl.
 Inputs/wells use an inner shadow.
@@ -91,7 +95,7 @@ no infinite decorative loops.
 
 **States.** Hover = darker action color (buttons) or tinted surface (ghost/rows/secondary).
 Press = 0.5px nudge down. Focus = 3px soft-blue focus ring (`--shadow-focus`). Disabled = 50% opacity.
-Active nav = translucent white fill + inset gold edge.
+Active nav = filled orange pill (`--accent-strong`→`--accent-deep`) with white label.
 
 **Transparency/blur.** Used lightly — translucent white fills inside the navy sidebar; pattern
 overlays. No heavy glassmorphism.
@@ -147,10 +151,13 @@ overlays. No heavy glassmorphism.
 ---
 
 ## CAVEATS / TO CONFIRM
-1. **Logo** is a typographic placeholder (navy tile + 8-point geometric star). Please provide the
-   official STMIK Tazkia logo (SVG/PNG) to replace `assets/logo-tazkia*.svg`.
+1. **Logo** — RESOLVED. The official STMIK Tazkia and SILINCAH logos now ship in
+   `apps/web/public/brand/`. `mark-stmik-tazkia.svg` crops the hexagon mark out of the full lockup
+   (measured bbox, raster embedded) so small sizes stay legible. The old typographic placeholders in
+   `assets/logo-tazkia*.svg` are no longer referenced by the app.
 2. **Fonts** load from Google Fonts CDN. For offline/self-hosted production, provide/confirm and we'll
    embed `.woff2` files with local `@font-face` rules.
 3. **Icons** use Lucide (substitution). Confirm or supply the preferred icon set.
-4. **Brand colors** are derived from public Tazkia identity (deep blue + gold). Confirm exact HEX from
-   the official brand guideline if one exists.
+4. **Brand colors** — the accent is now taken from the official logos (oranye #F47B20), replacing the
+   earlier gold guess. The blue scale is still derived from public identity; confirm exact navy HEX
+   against an official brand guideline if one exists.

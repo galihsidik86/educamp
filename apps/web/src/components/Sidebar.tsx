@@ -345,9 +345,10 @@ export function Sidebar({ role, mobileOpen = false, onNavigate }: { role: Role; 
   const location = useLocation();
   const inst = useInstitusiPublic();
   const brandPendek = inst.data?.namaPendek || inst.data?.nama || 'STMIK Tazkia';
-  const brandTagline = inst.data?.tagline || 'SIAKAD';
-  // Sidebar pakai logo invers (untuk background gelap navy), fallback ke aset DS bawaan
-  const brandLogoUrl = inst.data?.logoInverseUrl || inst.data?.logoUrl || '/@ds/assets/logo-tazkia-inverse.svg';
+  const brandTagline = inst.data?.tagline || 'SILINCAH';
+  // Logo resmi berwarna (navy+oranye) di atas kotak putih — versi invers
+  // tidak dipakai lagi karena alasnya sudah terang, bukan navy.
+  const brandLogoUrl = inst.data?.logoUrl || '/brand/mark-stmik-tazkia.svg';
 
   // Cari grup mana yang aktif berdasarkan path saat ini → grup itu auto-expand
   const activeGroupId = useMemo(() => {
@@ -401,7 +402,7 @@ export function Sidebar({ role, mobileOpen = false, onNavigate }: { role: Role; 
     <aside className={`sidebar ${mobileOpen ? 'sidebar--open' : ''}`}>
       <div className="sidebar__brand">
         <div className="sidebar__brand-mark">
-          <img src={brandLogoUrl} alt="" width={20} height={20} />
+          <img src={brandLogoUrl} alt="" />
         </div>
         <div className="sidebar__brand-text">
           <span>{brandTagline}</span>
@@ -486,7 +487,12 @@ export function Sidebar({ role, mobileOpen = false, onNavigate }: { role: Role; 
         );
       })}
 
-      <div className="sidebar__footer">© {new Date().getFullYear()} {brandPendek}</div>
+      <div className="sidebar__footer">
+        <span className="sidebar__footer-logo">
+          <img src="/brand/logo-silincah.jpg" alt="SILINCAH — Sistem Integrasi Layanan Campus Akademik Holistik" />
+        </span>
+        <span className="sidebar__footer-meta">© {new Date().getFullYear()} {brandPendek}</span>
+      </div>
     </aside>
   );
 }

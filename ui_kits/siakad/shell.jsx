@@ -77,7 +77,7 @@ function Login({ onLogin }) {
       <div className="login__brand">
         <img src="../../assets/logo-tazkia-inverse.svg" alt="Tazkia" style={{ height: 48 }} />
         <div style={{ marginTop: "auto", maxWidth: 420 }}>
-          <div className="ds-eyebrow" style={{ color: "var(--gold-300)" }}>STMIK Tazkia · SIAKAD</div>
+          <div className="ds-eyebrow" style={{ color: "var(--orange-300)" }}>STMIK Tazkia · SIAKAD</div>
           <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 42, color: "#fff", lineHeight: 1.1, marginTop: 12, letterSpacing: "-0.02em" }}>Kampus Luar Biasa</h1>
           <p style={{ color: "rgba(255,255,255,0.82)", fontSize: 16, marginTop: 14, lineHeight: 1.6 }}>
             Sistem Informasi Akademik terpadu — KRS, jadwal, nilai, dan layanan Tri Dharma dalam satu portal.

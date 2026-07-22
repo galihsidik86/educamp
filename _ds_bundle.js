@@ -539,7 +539,7 @@ window.DATA = {
       "Rabu-13:00": {
         mk: "Analisis Sistem",
         ruang: "R. 108",
-        c: "gold"
+        c: "orange"
       },
       "Kamis-08:00": {
         mk: "Tata Kelola TI",
@@ -554,7 +554,7 @@ window.DATA = {
       "Jumat-08:00": {
         mk: "Ekonomi Syariah",
         ruang: "R. 401",
-        c: "gold"
+        c: "orange"
       }
     }
   },
@@ -1008,9 +1008,9 @@ const SCHED_COLORS = {
     bg: "var(--green-50)",
     bd: "var(--green-500)"
   },
-  gold: {
-    bg: "var(--gold-50)",
-    bd: "var(--gold-500)"
+  orange: {
+    bg: "var(--orange-50)",
+    bd: "var(--orange-500)"
   },
   red: {
     bg: "var(--red-50)",
@@ -1427,7 +1427,7 @@ function Login({
   }, /*#__PURE__*/React.createElement("div", {
     className: "ds-eyebrow",
     style: {
-      color: "var(--gold-300)"
+      color: "var(--orange-300)"
     }
   }, "STMIK Tazkia \xB7 SIAKAD"), /*#__PURE__*/React.createElement("h1", {
     style: {

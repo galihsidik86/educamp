@@ -29,8 +29,8 @@
 }
 .sb__item svg { width: 19px; height: 19px; flex: 0 0 auto; }
 .sb__item:hover { background: rgba(255,255,255,0.08); color: #fff; }
-.sb__item--active { background: rgba(255,255,255,0.13); color: #fff; font-weight: var(--fw-semibold); box-shadow: inset 3px 0 0 var(--gold-400); }
-.sb__badge { margin-left: auto; background: var(--gold-400); color: var(--blue-950); font-size: 10px; font-weight: 800; border-radius: 999px; padding: 1px 7px; }
+.sb__item--active { background: rgba(255,255,255,0.13); color: #fff; font-weight: var(--fw-semibold); box-shadow: inset 3px 0 0 var(--orange-400); }
+.sb__badge { margin-left: auto; background: var(--orange-400); color: var(--blue-950); font-size: 10px; font-weight: 800; border-radius: 999px; padding: 1px 7px; }
 .sb__user { margin-top: auto; display: flex; align-items: center; gap: 11px; padding: 12px 10px; border-top: 1px solid rgba(255,255,255,0.12); }
 .sb__user .nm { font-size: var(--text-sm); font-weight: 700; color: #fff; line-height: 1.2; }
 .sb__user .rl { font-size: var(--text-xs); color: rgba(187,206,254,0.8); font-family: var(--font-mono); }
@@ -92,7 +92,7 @@
   background: linear-gradient(195deg, var(--blue-800), var(--blue-950)); display: flex; flex-direction: column;
 }
 .login__brand::before { content: ""; position: absolute; inset: 0; background-image: url("../../assets/pattern-geometric.svg"); background-size: 90px; opacity: 0.07; }
-.login__brand::after { content: ""; position: absolute; right: -120px; bottom: -120px; width: 360px; height: 360px; border-radius: 50%; background: radial-gradient(circle, var(--gold-500), transparent 65%); opacity: 0.4; }
+.login__brand::after { content: ""; position: absolute; right: -120px; bottom: -120px; width: 360px; height: 360px; border-radius: 50%; background: radial-gradient(circle, var(--orange-500), transparent 65%); opacity: 0.4; }
 .login__brand > * { position: relative; z-index: 1; }
 .login__form { display: flex; align-items: center; justify-content: center; padding: 40px; background: var(--surface-card); }
 .login__form-inner { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 18px; }

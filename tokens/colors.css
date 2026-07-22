@@ -1,8 +1,13 @@
 /* ============================================================
-   TAZKIA SIAKAD — COLOR TOKENS
+   SILINCAH — COLOR TOKENS
    Brand anchor: Tazkia Blue (kecerdasan, stabilitas, ukhuwah)
-   Accent: Emas / Gold (prestasi, nilai keislaman)
+   Accent: Oranye SILINCAH (semangat, gerak, layanan)
    Support: Tumbuh / Green (bertumbuh & berkembang bersih)
+
+   Aksen diambil dari logo RESMI (STMIK Tazkia & SILINCAH: navy + oranye),
+   menggantikan emas yang sebelumnya hanya tebakan dari identitas publik
+   (lihat "Caveats" di readme.md). Skala biru SENGAJA tidak berubah — navy
+   di logo resmi sudah sejajar dengan blue-800/900 yang jadi jangkar brand.
    ============================================================ */
 
 :root {
@@ -25,17 +30,22 @@
   --blue-900: #172657;
   --blue-950: #0F183A;
 
-  /* ---- Base palette: Emas / Gold (accent) ---- */
-  --gold-50:  #FCF8EC;
-  --gold-100: #F8EDC9;
-  --gold-200: #F0DA8E;
-  --gold-300: #E7C256;
-  --gold-400: #D9A92F;
-  --gold-500: #C28D1E;  /* accent */
-  --gold-600: #A2711A;
-  --gold-700: #80581A;
-  --gold-800: #69481B;
-  --gold-900: #5A3E1B;
+  /* ---- Base palette: Oranye SILINCAH (accent) ----
+     Jangkar: orange-500 = #F47B20, warna oranye pada logo resmi.
+     Nada 600–800 SENGAJA dibuat lebih gelap dari sekadar "oranye digelapkan"
+     supaya teks putih di atasnya lolos WCAG AA — orange-500 sendiri hanya
+     2,73:1 terhadap putih, jadi tidak boleh dipakai sebagai alas teks putih.
+     Rasio kontras terhadap putih: 600 = 4,60:1 · 700 = 6,50:1 · 800 = 9,04:1 */
+  --orange-50:  #FFF4EB;
+  --orange-100: #FFE3CC;
+  --orange-200: #FCC79B;
+  --orange-300: #FAA660;
+  --orange-400: #F78E3B;
+  --orange-500: #F47B20;  /* accent — dekoratif: titik, garis, glow, ikon */
+  --orange-600: #BE580C;  /* alas teks putih (AA) */
+  --orange-700: #99460A;  /* teks aksen di atas surface terang (AA) */
+  --orange-800: #7A380A;
+  --orange-900: #5C2A08;
 
   /* ---- Base palette: Tumbuh / Green (support + success) ---- */
   --green-50:  #E9F8F0;
@@ -90,15 +100,17 @@
   --brand-soft:     var(--blue-50);
   --brand-on:       var(--neutral-0);
 
-  --accent:         var(--gold-500);
-  --accent-strong:  var(--gold-600);
-  --accent-soft:    var(--gold-50);
+  --accent:         var(--orange-500);
+  --accent-strong:  var(--orange-600);
+  --accent-deep:    var(--orange-700);
+  --accent-soft:    var(--orange-50);
   --accent-on:      var(--neutral-0);
-  /* Gold sebagai warna TEKS di atas surface terang (eyebrow, asterisk wajib,
-     outline fokus) — --accent & --accent-strong gagal WCAG AA (~2.95:1 /
-     ~4.27:1) di atas putih. --accent-text (gold-700) ≈ 6.3:1, lolos AA.
-     Untuk background/border/glow dekoratif tetap pakai --accent biasa. */
-  --accent-text:    var(--gold-700);
+  /* Aksen sebagai warna TEKS di atas surface terang (eyebrow, asterisk wajib,
+     link "Kelola") — --accent gagal WCAG AA (2,73:1) di atas putih.
+     --accent-text (orange-700) = 6,50:1, lolos AA.
+     Untuk background/border/glow dekoratif tetap pakai --accent biasa;
+     untuk alas yang MEMBAWA teks putih pakai --accent-strong ke bawah. */
+  --accent-text:    var(--orange-700);
 
   /* Interactive / actions */
   --action:         var(--blue-600);
