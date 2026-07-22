@@ -6,6 +6,7 @@ import { useAdminBkdList, type StatusBkd } from '@/lib/queries-bkd';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { formatTanggalWaktu } from '@/lib/format';
+import { Skeleton } from '@/components/Skeleton';
 
 const STATUS_OPTS: Array<{ v: StatusBkd | ''; label: string }> = [
   { v: 'diajukan', label: 'Menunggu verifikasi' },
@@ -41,7 +42,7 @@ export function AkademikBkd() {
         </div>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Tidak ada laporan">Tidak ada laporan BKD pada filter ini.</Alert>
       )}

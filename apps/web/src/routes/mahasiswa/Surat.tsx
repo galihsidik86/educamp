@@ -8,6 +8,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const JENIS_LABEL: Record<JenisSurat, string> = {
   aktif_kuliah:           'Keterangan Aktif Kuliah',
@@ -60,7 +61,7 @@ export function MahasiswaSurat() {
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada permohonan">Klik "Ajukan Surat" untuk memulai.</Alert>
       )}

@@ -3,6 +3,7 @@ import { Alert, Card } from '@/ds';
 import { ChevronRight, BookOpen } from 'lucide-react';
 import { useMahasiswaMateri } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
+import { Skeleton } from '@/components/Skeleton';
 
 export function MahasiswaMateri() {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ export function MahasiswaMateri() {
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada kelas">KRS belum disetujui atau belum ada kelas semester aktif.</Alert>
       )}

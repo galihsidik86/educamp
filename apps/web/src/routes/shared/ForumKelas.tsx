@@ -3,6 +3,7 @@ import { Alert, Card } from '@/ds';
 import { ChevronRight, MessageSquare } from 'lucide-react';
 import { useForumKelas } from '@/lib/queries-forum';
 import { PageHead } from '@/components/PageHead';
+import { Skeleton } from '@/components/Skeleton';
 
 export function ForumKelasList() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export function ForumKelasList() {
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Tidak ada kelas">Belum ada kelas yang dapat dibuka di forum.</Alert>
       )}

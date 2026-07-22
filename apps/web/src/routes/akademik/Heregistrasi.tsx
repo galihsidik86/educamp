@@ -7,6 +7,7 @@ import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
 import { formatTanggalWaktu, safeHref } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 export function AdminHeregistrasi() {
   const [filters, setFilters] = useState({ status: 'diajukan', q: '' });
@@ -53,7 +54,7 @@ export function AdminHeregistrasi() {
         </div>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && <p className="muted center">Tidak ada pengajuan pada filter ini.</p>}
 
       <div className="stack">

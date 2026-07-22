@@ -10,6 +10,7 @@ import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const STATUS_TABS: Array<{ v: StatusKonsultasi | ''; label: string }> = [
   { v: '', label: 'Semua' },
@@ -51,7 +52,7 @@ export function DosenKonsultasi() {
         ))}
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Tidak ada konsultasi">Tidak ada konsultasi pada filter ini.</Alert>
       )}

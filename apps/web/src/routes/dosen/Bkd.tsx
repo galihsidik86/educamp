@@ -8,6 +8,7 @@ import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Skeleton } from '@/components/Skeleton';
 
 export function DosenBkd() {
   const { data, isLoading, error } = useDosenBkdList();
@@ -38,7 +39,7 @@ export function DosenBkd() {
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
       {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada laporan">Klik "Buat BKD Semester Ini" untuk membuat laporan pertama (otomatis diisi dari data Anda).</Alert>

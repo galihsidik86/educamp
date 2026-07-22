@@ -6,6 +6,7 @@ import { useAkademikTiketList, type KategoriTiket, type StatusTiket } from '@/li
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { formatTanggalWaktu } from '@/lib/format';
+import { Skeleton } from '@/components/Skeleton';
 
 const KATEGORI_OPTS: Array<{ v: KategoriTiket; label: string }> = [
   { v: 'krs', label: 'KRS' },
@@ -62,7 +63,7 @@ export function AkademikTiket() {
         </div>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Tidak ada tiket">Tidak ada tiket pada filter ini.</Alert>
       )}

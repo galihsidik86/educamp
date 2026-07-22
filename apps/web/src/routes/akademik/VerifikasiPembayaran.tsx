@@ -6,6 +6,7 @@ import { useAdminPembayaran, useKeuanganActions, type PembayaranAdmin } from '@/
 import { PageHead } from '@/components/PageHead';
 import { formatRupiah, formatTanggal, formatTanggalWaktu, formatStatus } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 export function AkademikVerifikasiPembayaran() {
   const [status, setStatus] = useState('menunggu');
@@ -59,7 +60,7 @@ export function AkademikVerifikasiPembayaran() {
         <Button variant="primary" size="sm" leftIcon={<Search size={14} />} onClick={() => setActiveQ(q)}>Cari</Button>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Card>
           <div style={{ textAlign: 'center', padding: 'var(--space-5)' }}>

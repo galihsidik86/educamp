@@ -6,6 +6,7 @@ import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 export function AdminPeriodeWisuda() {
   const { data, isLoading, error } = usePeriodeWisuda();
@@ -34,7 +35,7 @@ export function AdminPeriodeWisuda() {
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada periode">Klik "Periode Baru" untuk menambahkan jadwal wisuda.</Alert>

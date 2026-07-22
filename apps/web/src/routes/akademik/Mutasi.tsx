@@ -10,6 +10,7 @@ import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
 import { formatTanggalWaktu, safeHref } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const STATUS_OPTS: Array<{ v: StatusMutasi | ''; label: string }> = [
   { v: 'diajukan', label: 'Menunggu verifikasi' },
@@ -69,7 +70,7 @@ export function AkademikMutasi() {
         </div>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Tidak ada pengajuan">Tidak ada mutasi pada filter ini.</Alert>
       )}

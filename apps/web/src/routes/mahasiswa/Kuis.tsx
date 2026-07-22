@@ -4,6 +4,7 @@ import { ClipboardList, ChevronRight } from 'lucide-react';
 import { useMahasiswaKuisList } from '@/lib/queries-kuis';
 import { PageHead } from '@/components/PageHead';
 import { formatTanggalWaktu } from '@/lib/format';
+import { Skeleton } from '@/components/Skeleton';
 
 export function MahasiswaKuis() {
   const { data, isLoading, error } = useMahasiswaKuisList();
@@ -17,7 +18,7 @@ export function MahasiswaKuis() {
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada kuis">Dosen belum mempublish kuis untuk kelas Anda.</Alert>
       )}

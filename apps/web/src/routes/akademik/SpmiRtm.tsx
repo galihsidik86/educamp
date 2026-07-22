@@ -11,6 +11,7 @@ import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const STATUS_LABEL: Record<StatusRtm, string> = {
   perencanaan: 'Perencanaan',
@@ -63,7 +64,7 @@ export function AkademikSpmiRtm() {
         </div>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Card>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'var(--space-5)', gap: 'var(--space-2)' }}>

@@ -7,6 +7,7 @@ import {
 } from '@/lib/queries-dokumen';
 import { PageHead } from '@/components/PageHead';
 import { formatTanggal } from '@/lib/format';
+import { Skeleton } from '@/components/Skeleton';
 
 const FILE_LABEL: Record<string, string> = {
   pdf: 'PDF', doc: 'DOC', xls: 'XLS', ppt: 'PPT', zip: 'ZIP', link: 'Link', lain: 'File',
@@ -75,7 +76,7 @@ export function DokumenShared() {
         </div>
       </Card>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada dokumen">

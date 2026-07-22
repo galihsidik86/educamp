@@ -11,6 +11,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const STATUS = ['diajukan', 'dalam_seleksi', 'diterima', 'ditolak', 'batal'] as const;
 
@@ -48,7 +49,7 @@ export function AdminBeasiswaPendaftar() {
         </div>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Tidak ada pendaftar">Sesuaikan filter atau belum ada yang daftar.</Alert>
       )}

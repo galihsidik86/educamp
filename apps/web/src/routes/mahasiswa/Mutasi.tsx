@@ -11,6 +11,7 @@ import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
 import { formatTanggalWaktu, safeHref } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const JENIS_OPTS: Array<{ v: JenisMutasi; label: string; desc: string }> = [
   { v: 'cuti', label: 'Cuti akademik', desc: 'Sementara tidak aktif kuliah satu/dua semester' },
@@ -97,7 +98,7 @@ export function MahasiswaMutasi() {
         )}
       </Card>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada pengajuan">Klik "Ajukan Mutasi" untuk membuat pengajuan pertama.</Alert>
       )}

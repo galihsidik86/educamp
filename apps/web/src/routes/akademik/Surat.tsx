@@ -8,6 +8,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const STATUS = ['diajukan', 'disetujui', 'ditolak', 'selesai', 'batal'] as const;
 const JENIS_LABEL: Record<string, string> = {
@@ -50,7 +51,7 @@ export function AdminSuratPage() {
         </div>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Tidak ada permohonan">Sesuaikan filter atau belum ada permohonan.</Alert>
       )}

@@ -10,6 +10,7 @@ import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const JENIS_OPTS: Array<{ v: JenisSertifikat; label: string }> = [
   { v: 'workshop', label: 'Workshop' },
@@ -76,7 +77,7 @@ export function AkademikSertifikat() {
         <Button variant="primary" size="sm" leftIcon={<Search size={14} />} onClick={() => setActiveQ(q)}>Cari</Button>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada sertifikat">Klik "Buat Sertifikat" untuk membuat manual atau tunggu auto-issue dari KKN/MBKM selesai.</Alert>
       )}

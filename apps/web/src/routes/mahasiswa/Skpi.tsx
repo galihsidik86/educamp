@@ -13,6 +13,7 @@ import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
 import { formatTanggal, safeHref } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const JENIS_SERTIFIKAT: Array<{ v: JenisSertifikasi; label: string }> = [
   { v: 'bahasa', label: 'Bahasa' },
@@ -121,7 +122,7 @@ function SertifikatTab() {
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
       {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada sertifikat">Klik "Tambah Sertifikat" untuk mencatat sertifikat pertama.</Alert>
       )}
@@ -267,7 +268,7 @@ function PrestasiTab() {
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
       {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada prestasi">Klik "Tambah Prestasi" untuk mencatat prestasi pertama.</Alert>
       )}

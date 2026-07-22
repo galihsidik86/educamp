@@ -9,7 +9,7 @@ import { useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { RowActions } from '@/components/RowActions';
-import { TableSkeletonRows } from '@/components/Skeleton';
+import { Skeleton, TableSkeletonRows } from '@/components/Skeleton';
 import { useToast } from '@/components/Toast';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { formatTanggalWaktu } from '@/lib/format';
@@ -278,7 +278,7 @@ function SessionsModal({ user, onClose }: { user: AdminUser; onClose: () => void
     <Modal open onClose={onClose} title={`Sesi aktif — ${user.email}`} width={700}>
       <div className="stack" style={{ padding: 'var(--space-4)' }}>
         {err && <Alert variant="danger" title="Gagal">{err}</Alert>}
-        {isLoading && <p className="muted">Memuat…</p>}
+        {isLoading && <Skeleton variant="card" height={140} count={2} />}
         {data && data.items.length === 0 && (
           <Alert variant="info" title="Tidak ada sesi aktif">User belum login atau semua sesi sudah revoked.</Alert>
         )}

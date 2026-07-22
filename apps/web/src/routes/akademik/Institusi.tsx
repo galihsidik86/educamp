@@ -5,6 +5,7 @@ import type { TextareaHTMLAttributes } from 'react';
 import { useInstitusi, useInstitusiActions, type Institusi } from '@/lib/queries-institusi';
 import { PageHead } from '@/components/PageHead';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 function Textarea({ label, ...rest }: { label?: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
@@ -58,7 +59,7 @@ export function AkademikInstitusi() {
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang halaman.</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {savedMsg && <Alert variant="success" title="Tersimpan">{savedMsg}</Alert>}
       {actErr && <Alert variant="danger" title="Gagal menyimpan">{actErr}</Alert>}
 

@@ -22,7 +22,7 @@ import {
 } from '@/lib/queries-spmi';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
-import { TableSkeletonRows } from '@/components/Skeleton';
+import { Skeleton, TableSkeletonRows } from '@/components/Skeleton';
 import { ApiError } from '@/lib/api';
 
 const KATEGORI: Array<{ v: KategoriSurvei; label: string }> = [
@@ -331,7 +331,7 @@ function HasilModal({ surveiId, onClose }: { surveiId: string | null; onClose: (
   if (!surveiId) return null;
   return (
     <Modal open={!!surveiId} onClose={onClose} title="Hasil Survei" width={720}>
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && (
         <div className="stack">
           <Card>

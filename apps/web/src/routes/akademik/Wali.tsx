@@ -10,6 +10,7 @@ import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const HUBUNGAN_LABEL: Record<HubunganWali, string> = {
   ayah: 'Ayah', ibu: 'Ibu', kakak: 'Kakak', saudara: 'Saudara', wali_lain: 'Wali lain',
@@ -44,7 +45,7 @@ export function AkademikWali() {
         <Button variant="primary" size="sm" leftIcon={<Search size={14} />} onClick={() => setActiveQ(q)}>Cari</Button>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada wali">Klik "Tambah Wali" untuk membuat akun wali pertama.</Alert>
       )}

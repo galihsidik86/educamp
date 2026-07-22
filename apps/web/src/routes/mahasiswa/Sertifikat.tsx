@@ -4,6 +4,7 @@ import { Award, Printer, ChevronRight } from 'lucide-react';
 import { useMahasiswaSertifikat, type JenisSertifikat } from '@/lib/queries-sertifikat';
 import { PageHead } from '@/components/PageHead';
 import { formatTanggal } from '@/lib/format';
+import { Skeleton } from '@/components/Skeleton';
 
 const JENIS_LABEL: Record<JenisSertifikat, string> = {
   kkn: 'KKN', mbkm: 'MBKM', edom: 'EDOM',
@@ -22,7 +23,7 @@ export function MahasiswaSertifikat() {
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada sertifikat">

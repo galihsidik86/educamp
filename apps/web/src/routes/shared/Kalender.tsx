@@ -4,6 +4,7 @@ import { CalendarDays } from 'lucide-react';
 import { useKalenderShared, type EventKalender } from '@/lib/queries-kalender';
 import { PageHead } from '@/components/PageHead';
 import { formatTanggal } from '@/lib/format';
+import { Skeleton } from '@/components/Skeleton';
 
 const JENIS_LABEL: Record<EventKalender['jenis'], string> = {
   ujian: 'Ujian',
@@ -41,7 +42,7 @@ export function KalenderShared() {
         </div>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada event">Kalender akademik untuk periode ini belum diisi.</Alert>
       )}

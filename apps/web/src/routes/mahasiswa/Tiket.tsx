@@ -11,6 +11,7 @@ import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const KATEGORI: Array<{ v: KategoriTiket; label: string }> = [
   { v: 'krs', label: 'KRS' },
@@ -59,7 +60,7 @@ export function MahasiswaTiket() {
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
       {actErr && !modalOpen && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada tiket">Klik "Tiket Baru" untuk mengajukan bantuan.</Alert>
       )}

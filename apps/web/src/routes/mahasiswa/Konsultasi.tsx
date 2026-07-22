@@ -7,6 +7,7 @@ import { Modal } from '@/components/Modal';
 import { StatusPill } from '@/components/StatusPill';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 export function MahasiswaKonsultasi() {
   const { data, isLoading, error } = useKonsultasiMahasiswa();
@@ -58,7 +59,7 @@ export function MahasiswaKonsultasi() {
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
       {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada konsultasi">Klik "Ajukan Konsultasi" untuk membuat permintaan pertama.</Alert>
       )}
