@@ -4,12 +4,13 @@ import { CheckCircle2, XCircle, ChevronLeft } from 'lucide-react';
 import { useMahasiswaKuisHasil } from '@/lib/queries-kuis';
 import { PageHead } from '@/components/PageHead';
 import { formatTanggalWaktu } from '@/lib/format';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 export function MahasiswaKuisHasil() {
   const { id } = useParams<{ id: string }>();
   const { data, isLoading, error } = useMahasiswaKuisHasil(id);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Hasil tidak ditemukan.</Alert>;
 
   return (

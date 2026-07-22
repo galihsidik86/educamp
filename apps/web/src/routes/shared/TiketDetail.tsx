@@ -15,6 +15,7 @@ import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 const STATUS_OPTS: Array<{ v: StatusTiket; label: string }> = [
   { v: 'terbuka', label: 'Terbuka' },
@@ -45,7 +46,7 @@ function MahasiswaView({ id }: { id: string }) {
   const [reply, setReply] = useState('');
   const [err, setErr] = useState<string | null>(null);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Tiket tidak ditemukan.</Alert>;
 
   const canReply = data.status !== 'selesai' && data.status !== 'ditutup';
@@ -106,7 +107,7 @@ function AkademikView({ id }: { id: string }) {
   const [reply, setReply] = useState('');
   const [err, setErr] = useState<string | null>(null);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Tiket tidak ditemukan.</Alert>;
 
   const canReply = data.status !== 'ditutup';

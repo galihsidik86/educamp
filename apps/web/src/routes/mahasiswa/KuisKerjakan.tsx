@@ -5,6 +5,7 @@ import { Clock, Save, Send } from 'lucide-react';
 import { useMahasiswaKuisActions, type KuisAttempt } from '@/lib/queries-kuis';
 import { PageHead } from '@/components/PageHead';
 import { ApiError } from '@/lib/api';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 export function MahasiswaKuisKerjakan() {
   const { id } = useParams<{ id: string }>();
@@ -82,7 +83,7 @@ export function MahasiswaKuisKerjakan() {
   };
 
   if (err) return <Alert variant="danger" title="Gagal">{err}</Alert>;
-  if (!session) return <p className="muted">Memuat soal…</p>;
+  if (!session) return <PageLoadingSkeleton />;
 
   const totalJawab = Object.keys(jawaban).length;
   const total = session.soal.length;

@@ -7,6 +7,7 @@ import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 export function MahasiswaTugasDetail() {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +25,7 @@ export function MahasiswaTugasDetail() {
     setIsi(data.submission.isiJawaban ?? '');
   }, [data]);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Tugas tidak ditemukan.</Alert>;
 
   const overdue = new Date(data.deadline).getTime() < Date.now();

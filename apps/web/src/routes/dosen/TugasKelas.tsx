@@ -17,6 +17,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 export function DosenTugasKelas() {
   const { kelasId } = useParams<{ kelasId: string }>();
@@ -39,7 +40,7 @@ export function DosenTugasKelas() {
     catch (e) { alert(e instanceof ApiError ? e.message : 'Gagal'); }
   };
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (!data) return <Alert variant="danger" title="Gagal memuat">Kelas tidak ditemukan.</Alert>;
 
   return (

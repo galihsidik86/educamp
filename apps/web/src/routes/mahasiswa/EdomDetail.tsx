@@ -5,6 +5,7 @@ import { ChevronLeft, Save } from 'lucide-react';
 import { useEdomDetail, useEdomSubmit } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
 import { ApiError } from '@/lib/api';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 const SKALA = [1, 2, 3, 4, 5];
 const SKALA_LABEL = ['Sangat kurang', 'Kurang', 'Cukup', 'Baik', 'Sangat baik'];
@@ -28,7 +29,7 @@ export function MahasiswaEdomDetail() {
     setJawaban(init);
   }, [data]);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (!data) return <Alert variant="danger" title="Gagal">Data tidak ditemukan.</Alert>;
 
   const lengkap = data.aspek.every((a) => jawaban[a.id]);

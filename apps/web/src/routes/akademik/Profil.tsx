@@ -2,10 +2,11 @@ import { Card, Alert } from '@/ds';
 import { useAkademikProfil } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { ChangePasswordCard } from '@/components/ChangePasswordCard';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 export function AkademikProfil() {
   const { data, isLoading, error } = useAkademikProfil();
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
 
   return (

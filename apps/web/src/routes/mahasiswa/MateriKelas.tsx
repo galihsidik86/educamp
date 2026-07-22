@@ -4,6 +4,7 @@ import { ChevronLeft, ExternalLink, Link as LinkIcon, FileText, Video, FileType 
 import { useMahasiswaMateriDetail } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
 import { formatTanggal, safeHref } from '@/lib/format';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 const JENIS_LABEL: Record<string, string> = { link: 'Tautan', file: 'File', text: 'Catatan', video: 'Video' };
 
@@ -21,7 +22,7 @@ export function MahasiswaMateriKelas() {
   const { kelasId } = useParams<{ kelasId: string }>();
   const { data, isLoading, error } = useMahasiswaMateriDetail(kelasId);
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang atau kembali.</Alert>;
 
   return (

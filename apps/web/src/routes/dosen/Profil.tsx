@@ -7,11 +7,12 @@ import { Modal } from '@/components/Modal';
 import { ChangePasswordCard } from '@/components/ChangePasswordCard';
 import { formatStatus } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 export function DosenProfil() {
   const { data, isLoading, error } = useDosenProfil();
   const [editOpen, setEditOpen] = useState(false);
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>;
 
   const gelar = [data.gelarDepan, data.nama, data.gelarBelakang].filter(Boolean).join(' ');

@@ -7,6 +7,7 @@ import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 export function ForumKelasDetail() {
   const { kelasId } = useParams<{ kelasId: string }>();
@@ -31,7 +32,7 @@ export function ForumKelasDetail() {
     } catch (e) { setActErr(e instanceof ApiError ? e.message : 'Gagal'); }
   };
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (!data) return <Alert variant="danger" title="Gagal memuat">Kelas tidak ditemukan.</Alert>;
 
   return (

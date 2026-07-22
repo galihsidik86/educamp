@@ -9,13 +9,14 @@ import { ChangePasswordCard } from '@/components/ChangePasswordCard';
 import { Modal } from '@/components/Modal';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 export function MahasiswaProfil() {
   const { data, isLoading, error } = useProfil();
   const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
 
-  if (isLoading) return <p className="muted">Memuat profil…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (error || !data) return <Alert variant="danger" title="Gagal memuat profil">Coba muat ulang.</Alert>;
 
   const dpa = data.dpa

@@ -6,6 +6,7 @@ import { useForumThread, useForumActions } from '@/lib/queries-forum';
 import { PageHead } from '@/components/PageHead';
 import { formatTanggalWaktu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 export function ForumThreadDetail() {
   const { kelasId, threadId } = useParams<{ kelasId: string; threadId: string }>();
@@ -52,7 +53,7 @@ export function ForumThreadDetail() {
     catch (e) { alert(e instanceof ApiError ? e.message : 'Gagal'); }
   };
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (!data) return <Alert variant="danger" title="Gagal memuat">Thread tidak ditemukan.</Alert>;
 
   return (

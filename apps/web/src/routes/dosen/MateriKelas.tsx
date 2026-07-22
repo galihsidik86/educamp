@@ -7,6 +7,7 @@ import { PageHead } from '@/components/PageHead';
 import { safeHref } from '@/lib/format';
 import { Modal } from '@/components/Modal';
 import { ApiError } from '@/lib/api';
+import { PageLoadingSkeleton } from '@/components/Skeleton';
 
 const JENIS_LABEL: Record<JenisBahanAjar, string> = {
   link: 'Tautan', file: 'File', text: 'Catatan', video: 'Video',
@@ -35,7 +36,7 @@ export function DosenMateriKelas() {
     catch (e) { alert(e instanceof ApiError ? e.message : 'Gagal'); }
   };
 
-  if (isLoading) return <p className="muted">Memuat…</p>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (!data) return <Alert variant="danger" title="Gagal memuat">Kelas tidak ditemukan.</Alert>;
 
   return (
