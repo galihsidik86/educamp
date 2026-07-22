@@ -7,6 +7,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const STATUS_AKTIF = ['diajukan', 'disetujui', 'proposal', 'penelitian', 'sidang'];
 
@@ -65,7 +66,7 @@ export function MahasiswaSkripsi() {
       )}
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
-      {isLoading && <Card><p className="muted" style={{ margin: 0 }}>Memuat…</p></Card>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada pengajuan">Klik "Ajukan Judul" untuk memulai proses skripsi.</Alert>

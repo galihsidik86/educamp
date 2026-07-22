@@ -12,6 +12,7 @@ import { Modal } from '@/components/Modal';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 import { DataPair } from '@/components/DataPair';
+import { Skeleton } from '@/components/Skeleton';
 
 const STATUS_LABEL: Record<StatusAmi, string> = {
   perencanaan: 'Perencanaan',
@@ -75,7 +76,7 @@ export function AkademikSpmiAmi() {
         </div>
       </div>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {data && data.items.length === 0 && (
         <EmptyState
           icon={<ClipboardCheck size={28} />}

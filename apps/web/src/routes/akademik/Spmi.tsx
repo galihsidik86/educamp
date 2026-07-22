@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useSpmiDashboard } from '@/lib/queries-spmi';
 import { DashboardHero } from '@/components/DashboardHero';
+import { Skeleton } from '@/components/Skeleton';
 
 const KAT_STD_LABEL: Record<string, string> = {
   pendidikan: 'Pendidikan', penelitian: 'Penelitian', pengabdian: 'Pengabdian',
@@ -48,7 +49,7 @@ export function AkademikSpmi() {
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang halaman.</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && (
         <>

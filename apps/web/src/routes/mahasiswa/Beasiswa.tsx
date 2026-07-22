@@ -7,6 +7,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
 import { formatTanggal, formatRupiah } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 type Tab = 'tersedia' | 'riwayat';
 
@@ -40,7 +41,7 @@ export function MahasiswaBeasiswa() {
 
       {tab === 'tersedia' && (
         <>
-          {tersedia.isLoading && <Card><p className="muted" style={{ margin: 0 }}>Memuat…</p></Card>}
+          {tersedia.isLoading && <Skeleton variant="card" height={140} count={2} />}
           {tersedia.data && tersedia.data.items.length === 0 && (
             <Alert variant="info" title="Tidak ada beasiswa terbuka">Saat ini belum ada beasiswa yang dibuka pendaftarannya.</Alert>
           )}
@@ -83,7 +84,7 @@ export function MahasiswaBeasiswa() {
 
       {tab === 'riwayat' && (
         <>
-          {riwayat.isLoading && <Card><p className="muted" style={{ margin: 0 }}>Memuat…</p></Card>}
+          {riwayat.isLoading && <Skeleton variant="card" height={140} count={2} />}
           {riwayat.data && riwayat.data.items.length === 0 && (
             <Alert variant="info" title="Belum ada pendaftaran">Anda belum pernah mendaftar beasiswa.</Alert>
           )}

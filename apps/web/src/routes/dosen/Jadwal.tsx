@@ -2,6 +2,7 @@ import { Alert, Card } from '@/ds';
 import { useDosenJadwal } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
 import { capitalize } from '@/lib/format';
+import { Skeleton } from '@/components/Skeleton';
 
 const HARI = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'] as const;
 const SLOTS = ['07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
@@ -28,7 +29,7 @@ export function DosenJadwal() {
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
-      {isLoading && <Card><p className="muted" style={{ margin: 0 }}>Memuat jadwal…</p></Card>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && data.jadwal.length === 0 ? (
         <Alert variant="info" title="Belum ada kelas">Anda belum diberi penugasan mengajar di semester ini.</Alert>

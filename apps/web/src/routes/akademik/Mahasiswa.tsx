@@ -15,7 +15,7 @@ import { RowActions } from '@/components/RowActions';
 import { ApiError } from '@/lib/api';
 import { parseXlsxFile, downloadXlsxTemplate } from '@/lib/xlsx';
 import { Download } from 'lucide-react';
-import { TableSkeletonRows } from '@/components/Skeleton';
+import { Skeleton, TableSkeletonRows } from '@/components/Skeleton';
 
 const STATUS = ['aktif', 'cuti', 'lulus', 'drop_out', 'mengundurkan_diri'];
 
@@ -802,7 +802,7 @@ function OrangTuaSection({ mahasiswaId }: { mahasiswaId: string }) {
     }
   };
 
-  if (q.isLoading) return <div className="muted">Memuat data orang tua…</div>;
+  if (q.isLoading) return <Skeleton variant="card" height={140} count={2} />;
 
   return (
     <div className="stack">

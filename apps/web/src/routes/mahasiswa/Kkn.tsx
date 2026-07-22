@@ -7,6 +7,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { Modal } from '@/components/Modal';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const JENIS = ['Ganjil', 'Genap', 'Pendek'] as const;
 const TAHUN_NOW = new Date().getFullYear();
@@ -56,7 +57,7 @@ export function MahasiswaKkn() {
       />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
-      {isLoading && <Card><p className="muted" style={{ margin: 0 }}>Memuat…</p></Card>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum mendaftar KKN">Klik "Daftar KKN" untuk mendaftar periode berikutnya.</Alert>

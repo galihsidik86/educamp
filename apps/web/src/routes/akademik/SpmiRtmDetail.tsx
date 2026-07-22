@@ -11,6 +11,7 @@ import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 const KEP_LABEL: Record<StatusKeputusan, string> = {
   open: 'Open', in_progress: 'Dilaksanakan', done: 'Selesai', cancelled: 'Dibatalkan',
@@ -49,7 +50,7 @@ export function AkademikSpmiRtmDetail() {
         <ArrowLeft size={14} /> Kembali ke daftar RTM
       </Link>
 
-      {isLoading && <p className="muted">Memuat…</p>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
       {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
 

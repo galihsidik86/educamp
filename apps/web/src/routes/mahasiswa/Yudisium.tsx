@@ -7,6 +7,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { formatTanggal, formatIp } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 import { DataPair } from '@/components/DataPair';
+import { Skeleton } from '@/components/Skeleton';
 
 const PREDIKAT_LABEL: Record<string, string> = {
   cumlaude: 'Cumlaude',
@@ -39,7 +40,7 @@ export function MahasiswaYudisium() {
         subtitle="Pantau kelayakan, daftar wisuda, dan unduh SKL Anda."
       />
 
-      {kelayakan.isLoading && <Card><p className="muted" style={{ margin: 0 }}>Memuat…</p></Card>}
+      {kelayakan.isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {kelayakan.data && (
         <Card>

@@ -3,6 +3,7 @@ import { usePenelitian } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { formatRupiah } from '@/lib/format';
+import { Skeleton } from '@/components/Skeleton';
 
 export function MahasiswaPenelitian() {
   const { data, isLoading, error } = usePenelitian();
@@ -12,7 +13,7 @@ export function MahasiswaPenelitian() {
       <PageHead eyebrow="TRI DHARMA" title="Penelitian" subtitle="Penelitian yang Anda ikuti sebagai anggota/asisten." />
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
-      {isLoading && <Card><p className="muted" style={{ margin: 0 }}>Memuat…</p></Card>}
+      {isLoading && <Skeleton variant="card" height={140} count={2} />}
 
       {data && data.items.length === 0 && (
         <Alert variant="info" title="Belum ada penelitian">

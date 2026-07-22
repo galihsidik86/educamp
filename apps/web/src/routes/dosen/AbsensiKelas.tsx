@@ -6,7 +6,7 @@ import { useDosenPertemuan, useDosenAbsensiActions, useDosenKehadiranRekap, useD
 import { PageHead } from '@/components/PageHead';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { Modal } from '@/components/Modal';
-import { PageLoadingSkeleton } from '@/components/Skeleton';
+import { PageLoadingSkeleton, Skeleton } from '@/components/Skeleton';
 import { formatTanggalWaktu, formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -264,7 +264,7 @@ export function DosenAbsensiKelas() {
 
       {tab === 'rekap' && (
         <>
-          {rekap.isLoading && <p className="muted">Memuat…</p>}
+          {rekap.isLoading && <Skeleton variant="card" height={140} count={2} />}
           {rekap.data && (
             <>
               <div className="muted" style={{ fontSize: 'var(--text-sm)' }}>

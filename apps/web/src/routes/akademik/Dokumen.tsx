@@ -10,7 +10,7 @@ import { useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { RowActions } from '@/components/RowActions';
-import { TableSkeletonRows } from '@/components/Skeleton';
+import { Skeleton, TableSkeletonRows } from '@/components/Skeleton';
 import { formatTanggal, formatTanggalWaktu, safeHref } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 
@@ -229,8 +229,6 @@ function DokumenTab() {
 
       {error && <Alert variant="danger" title="Gagal memuat">Coba muat ulang.</Alert>}
       {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
-      {isLoading && <p className="muted">Memuat…</p>}
-
       <Card>
         <div className="tz-table-wrap">
           <table className="tz-table">
@@ -246,6 +244,7 @@ function DokumenTab() {
               </tr>
             </thead>
             <tbody>
+              {isLoading && <TableSkeletonRows cols={7} rows={5} />}
               {data?.items.length === 0 && <tr><td colSpan={7} className="muted center">Belum ada dokumen.</td></tr>}
               {data?.items.map((d) => (
                 <tr key={d.id} style={{ opacity: d.isAktif ? 1 : 0.6 }}>
@@ -368,7 +367,7 @@ function AksesLogModal({ dokumen, onClose }: { dokumen: Dokumen; onClose: () => 
         <div className="muted" style={{ fontSize: 'var(--text-sm)' }}>
           Total view: <strong>{dokumen.viewCount}</strong> · Total download: <strong>{dokumen.downloadCount}</strong>
         </div>
-        {isLoading && <p className="muted">Memuat…</p>}
+        {isLoading && <Skeleton variant="card" height={140} count={2} />}
         {data && data.items.length === 0 && <Alert variant="info" title="Belum ada log akses" />}
         {data && data.items.length > 0 && (
           <div className="tz-table-wrap">
