@@ -11,6 +11,7 @@ import { PageHead } from '@/components/PageHead';
 import { Modal } from '@/components/Modal';
 import { formatTanggal } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { DataPair } from '@/components/DataPair';
 
 const STATUS_LABEL: Record<StatusAmi, string> = {
   perencanaan: 'Perencanaan',
@@ -122,9 +123,9 @@ function AmiCard({ ami, onDelete }: { ami: Ami; onDelete: () => void }) {
       </div>
 
       <div className="row" style={{ gap: 'var(--space-2)', flexWrap: 'wrap', padding: 'var(--space-2)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)' }}>
-        <Stat icon={<Users size={14} />} label="Auditor" value={ami.auditor?.length ?? 0} />
-        <Stat icon={<Building2 size={14} />} label="Lingkup" value={ami.lingkup?.length ?? 0} />
-        <Stat icon={<FileWarning size={14} />} label="Temuan" value={ami._count?.temuan ?? 0} highlight={(ami._count?.temuan ?? 0) > 0} />
+        <DataPair icon={<Users size={14} />} label="Auditor" value={ami.auditor?.length ?? 0} />
+        <DataPair icon={<Building2 size={14} />} label="Lingkup" value={ami.lingkup?.length ?? 0} />
+        <DataPair icon={<FileWarning size={14} />} label="Temuan" value={ami._count?.temuan ?? 0} tone={(ami._count?.temuan ?? 0) > 0 ? "accent" : "default"} />
       </div>
 
       <div className="row" style={{ gap: 6, marginTop: 'auto', paddingTop: 'var(--space-1)' }}>
@@ -137,14 +138,6 @@ function AmiCard({ ami, onDelete }: { ami: Ami; onDelete: () => void }) {
   );
 }
 
-function Stat({ icon, label, value, highlight }: { icon: React.ReactNode; label: string; value: number; highlight?: boolean }) {
-  return (
-    <div style={{ flex: 1, minWidth: 80 }}>
-      <div className="row muted" style={{ gap: 4, fontSize: 'var(--text-xs)' }}>{icon}<span>{label}</span></div>
-      <div className="mono" style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: highlight ? 'var(--accent)' : 'var(--text-strong)' }}>{value}</div>
-    </div>
-  );
-}
 
 function EmptyState({ icon, title, desc, cta }: { icon: React.ReactNode; title: string; desc: string; cta?: { label: string; onClick: () => void } }) {
   return (

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Alert, Card, Select } from '@/ds';
+import { Alert, Card, Select, StatCard } from '@/ds';
 import { Users, GraduationCap, Wallet, CalendarCheck, ChevronRight, BookOpen } from 'lucide-react';
 import { useWaliProfil, useWaliDashboard } from '@/lib/queries-wali';
 import { PageHead } from '@/components/PageHead';
@@ -50,12 +50,12 @@ export function WaliDashboard() {
 
       {dashboard.data && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-3)' }}>
-            <Kpi icon={<GraduationCap size={20} />} label="IPK" value={dashboard.data.ipk.toFixed(2)} />
-            <Kpi icon={<BookOpen size={20} />} label="SKS Lulus" value={String(dashboard.data.sksLulus)} />
-            <Kpi icon={<BookOpen size={20} />} label="SKS Semester Ini" value={String(dashboard.data.sksAmbil)} />
-            <Kpi icon={<CalendarCheck size={20} />} label="% Hadir" value={dashboard.data.absensi.persenHadir != null ? `${dashboard.data.absensi.persenHadir}%` : '—'} />
-            <Kpi icon={<Wallet size={20} />} label="Tagihan Belum Lunas" value={formatRupiah(dashboard.data.tagihan.belumLunas)} tone={dashboard.data.tagihan.belumLunas > 0 ? 'warn' : undefined} />
+          <div className="kpi-grid">
+            <StatCard icon={<GraduationCap size={20} />} label="IPK" value={dashboard.data.ipk.toFixed(2)} />
+            <StatCard icon={<BookOpen size={20} />} label="SKS Lulus" value={String(dashboard.data.sksLulus)} />
+            <StatCard icon={<BookOpen size={20} />} label="SKS Semester Ini" value={String(dashboard.data.sksAmbil)} />
+            <StatCard icon={<CalendarCheck size={20} />} label="% Hadir" value={dashboard.data.absensi.persenHadir != null ? `${dashboard.data.absensi.persenHadir}%` : '—'} />
+            <StatCard icon={<Wallet size={20} />} label="Tagihan Belum Lunas" value={formatRupiah(dashboard.data.tagihan.belumLunas)} tone={dashboard.data.tagihan.belumLunas > 0 ? 'attention' : 'default'} />
           </div>
 
           <Card>
@@ -121,20 +121,6 @@ export function WaliDashboard() {
   );
 }
 
-function Kpi({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone?: 'warn' | 'danger' }) {
-  const color = tone === 'danger' ? 'var(--danger-fg)' : tone === 'warn' ? 'var(--warning-fg)' : undefined;
-  return (
-    <Card>
-      <div className="row">
-        <div style={{ color: color ?? 'var(--text-muted)' }}>{icon}</div>
-        <div>
-          <div className="muted" style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
-          <div className="mono" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, marginTop: 2, color }}>{value}</div>
-        </div>
-      </div>
-    </Card>
-  );
-}
 
 // Use existing Users icon to satisfy unused import warning
 void Users;

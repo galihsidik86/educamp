@@ -192,6 +192,7 @@
   background: var(--brand);
 }
 .tz-stat--attention::before { background: var(--accent); }
+.tz-stat--danger::before { background: var(--danger-solid); }
 
 /* `feature` — satu angka utama per grid, dibalik jadi kartu navy terisi.
    Kontras teks putih di atas blue-800→blue-700 ≥ 8:1. */
@@ -212,6 +213,10 @@
 .tz-stat__label { font-size: var(--text-sm); color: var(--text-muted); font-weight: var(--fw-semibold); }
 .tz-stat__icon { width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--radius-md); display: inline-flex; align-items: center; justify-content: center; background: var(--brand-soft); color: var(--blue-700); }
 .tz-stat--attention .tz-stat__icon { background: var(--accent-soft); color: var(--accent-text); }
+.tz-stat--danger .tz-stat__icon { background: var(--danger-surface); color: var(--danger-fg); }
+/* Angkanya sendiri ikut memerah — pada tone ini nilainya memang kabar buruk
+   (sinkron gagal, tunggakan), jadi warna tidak cuma di pinggir kartu. */
+.tz-stat--danger .tz-stat__value { color: var(--danger-fg); }
 .tz-stat__icon svg { width: 20px; height: 20px; }
 /* `min-width: 0` + wrap: nilai rupiah panjang ("Rp 25.000.000") sebelumnya
    melewati tepi kartu karena tidak pernah boleh patah. */

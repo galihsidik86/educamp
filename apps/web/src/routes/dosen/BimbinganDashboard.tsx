@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Alert, Card } from '@/ds';
+import { Alert, Card, StatCard } from '@/ds';
 import { Users, AlertTriangle, Activity, BookCheck, Award, ChevronRight } from 'lucide-react';
 import { useDpaDashboard } from '@/lib/queries-dosen';
 import { PageHead } from '@/components/PageHead';
@@ -35,12 +35,12 @@ export function DosenBimbinganDashboard() {
             {' · '}Threshold kehadiran kritis: <strong className="mono">{data.ringkasan.threshold.kehadiranKritis}%</strong>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-3)' }}>
-            <Kpi icon={<Users size={20} />} label="Mahasiswa bimbingan" value={String(data.ringkasan.totalMahasiswa)} />
-            <Kpi icon={<BookCheck size={20} />} label="KRS pending" value={String(data.ringkasan.krsPending)} tone={data.ringkasan.krsPending > 0 ? 'warn' : undefined} />
-            <Kpi icon={<AlertTriangle size={20} />} label={`IPK < ${data.ringkasan.threshold.ipkAtRisk}`} value={String(data.ringkasan.atRiskIpk)} tone={data.ringkasan.atRiskIpk > 0 ? 'danger' : undefined} />
-            <Kpi icon={<Activity size={20} />} label="Kehadiran kritis" value={String(data.ringkasan.kritisKehadiran)} tone={data.ringkasan.kritisKehadiran > 0 ? 'danger' : undefined} />
-            <Kpi icon={<Award size={20} />} label="IPK rata-rata" value={data.ringkasan.ipkRataRata != null ? data.ringkasan.ipkRataRata.toFixed(2) : '—'} />
+          <div className="kpi-grid">
+            <StatCard icon={<Users size={20} />} label="Mahasiswa bimbingan" value={String(data.ringkasan.totalMahasiswa)} />
+            <StatCard icon={<BookCheck size={20} />} label="KRS pending" value={String(data.ringkasan.krsPending)} tone={data.ringkasan.krsPending > 0 ? 'attention' : 'default'} />
+            <StatCard icon={<AlertTriangle size={20} />} label={`IPK < ${data.ringkasan.threshold.ipkAtRisk}`} value={String(data.ringkasan.atRiskIpk)} tone={data.ringkasan.atRiskIpk > 0 ? 'danger' : 'default'} />
+            <StatCard icon={<Activity size={20} />} label="Kehadiran kritis" value={String(data.ringkasan.kritisKehadiran)} tone={data.ringkasan.kritisKehadiran > 0 ? 'danger' : 'default'} />
+            <StatCard icon={<Award size={20} />} label="IPK rata-rata" value={data.ringkasan.ipkRataRata != null ? data.ringkasan.ipkRataRata.toFixed(2) : '—'} />
           </div>
 
           <Card>
@@ -95,17 +95,3 @@ export function DosenBimbinganDashboard() {
   );
 }
 
-function Kpi({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone?: 'warn' | 'danger' }) {
-  const color = tone === 'danger' ? 'var(--danger-fg)' : tone === 'warn' ? 'var(--warning-fg)' : undefined;
-  return (
-    <Card>
-      <div className="row" style={{ alignItems: 'center', gap: 'var(--space-3)' }}>
-        <div style={{ color: color ?? 'var(--text-muted)' }}>{icon}</div>
-        <div>
-          <div className="muted" style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
-          <div className="mono" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, marginTop: 2, color }}>{value}</div>
-        </div>
-      </div>
-    </Card>
-  );
-}

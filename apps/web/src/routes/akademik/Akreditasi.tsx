@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Card, Select } from '@/ds';
+import { Alert, Card, Select, StatCard } from '@/ds';
 import { GraduationCap, Users, BarChart3, Award, Activity, ClipboardList } from 'lucide-react';
 import { useAkreditasi, useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
@@ -41,14 +41,14 @@ export function AkademikAkreditasi() {
 
       {data && (
         <>
-          <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-3)' }}>
-            <KpiCard icon={<Users size={20} />} label="Total mahasiswa" value={data.ringkasan.totalMahasiswa.toString()} />
-            <KpiCard icon={<GraduationCap size={20} />} label="Total dosen" value={data.ringkasan.totalDosen.toString()} />
-            <KpiCard icon={<BarChart3 size={20} />} label="Rasio dosen : mhs" value={data.ringkasan.rasioDosenMahasiswa != null ? `1 : ${data.ringkasan.rasioDosenMahasiswa}` : '—'} />
-            <KpiCard icon={<Award size={20} />} label="IPK rata-rata" value={data.ringkasan.ipkRataRata != null ? data.ringkasan.ipkRataRata.toFixed(2) : '—'} />
-            <KpiCard icon={<Activity size={20} />} label="Masa studi rata-rata" value={data.ringkasan.masaStudiRataRataBulan != null ? `${(data.ringkasan.masaStudiRataRataBulan / 12).toFixed(1)} thn` : '—'} />
-            <KpiCard icon={<ClipboardList size={20} />} label="EDOM rata-rata" value={data.ringkasan.edomRataRata != null ? data.ringkasan.edomRataRata.toFixed(2) : '—'} />
-            <KpiCard icon={<GraduationCap size={20} />} label="Tingkat kelulusan" value={`${data.ringkasan.tingkatKelulusanPersen.toFixed(2)}%`} />
+          <div className="kpi-grid">
+            <StatCard icon={<Users size={20} />} label="Total mahasiswa" value={data.ringkasan.totalMahasiswa.toString()} />
+            <StatCard icon={<GraduationCap size={20} />} label="Total dosen" value={data.ringkasan.totalDosen.toString()} />
+            <StatCard icon={<BarChart3 size={20} />} label="Rasio dosen : mhs" value={data.ringkasan.rasioDosenMahasiswa != null ? `1 : ${data.ringkasan.rasioDosenMahasiswa}` : '—'} />
+            <StatCard icon={<Award size={20} />} label="IPK rata-rata" value={data.ringkasan.ipkRataRata != null ? data.ringkasan.ipkRataRata.toFixed(2) : '—'} />
+            <StatCard icon={<Activity size={20} />} label="Masa studi rata-rata" value={data.ringkasan.masaStudiRataRataBulan != null ? `${(data.ringkasan.masaStudiRataRataBulan / 12).toFixed(1)} thn` : '—'} />
+            <StatCard icon={<ClipboardList size={20} />} label="EDOM rata-rata" value={data.ringkasan.edomRataRata != null ? data.ringkasan.edomRataRata.toFixed(2) : '—'} />
+            <StatCard icon={<GraduationCap size={20} />} label="Tingkat kelulusan" value={`${data.ringkasan.tingkatKelulusanPersen.toFixed(2)}%`} />
           </div>
 
           <Card>
@@ -115,16 +115,3 @@ export function AkademikAkreditasi() {
   );
 }
 
-function KpiCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <Card>
-      <div className="row" style={{ alignItems: 'center', gap: 'var(--space-3)' }}>
-        <div className="muted">{icon}</div>
-        <div>
-          <div className="muted" style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
-          <div className="mono" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, marginTop: 2 }}>{value}</div>
-        </div>
-      </div>
-    </Card>
-  );
-}

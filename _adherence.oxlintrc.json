@@ -118,8 +118,8 @@
         "message": "<StatCard> deltaDir must be one of 'up' | 'down'."
       },
       {
-        "selector": "JSXOpeningElement[name.name='StatCard'] > JSXAttribute[name.name='tone'] > Literal[value!=/^(?:default|attention|feature)$/]",
-        "message": "<StatCard> tone must be one of 'default' | 'attention' | 'feature'."
+        "selector": "JSXOpeningElement[name.name='StatCard'] > JSXAttribute[name.name='tone'] > Literal[value!=/^(?:default|attention|danger|feature)$/]",
+        "message": "<StatCard> tone must be one of 'default' | 'attention' | 'danger' | 'feature'."
       },
       {
         "selector": "JSXOpeningElement[name.name='Switch'] > JSXAttribute > JSXIdentifier[name!=/^(?:label|key|ref|className|style|children)$/]",

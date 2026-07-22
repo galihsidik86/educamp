@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Alert, Button, Card, Input, Select } from '@/ds';
+import { Alert, Button, Card, Input, Select, StatCard } from '@/ds';
 import { Cable, RefreshCw, Play, AlertCircle, CheckCircle2, Clock, Activity, Search } from 'lucide-react';
 import {
   useFeederConfig, useFeederStats, useFeederQueue, useFeederLog, useFeederActions,
@@ -174,12 +174,12 @@ function QueueTab() {
       {actErr && <Alert variant="danger" title="Gagal">{actErr}</Alert>}
       {info && <Alert variant="info" title="Hasil">{info}</Alert>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--space-3)' }}>
-        <Kpi icon={<Clock size={18} />} label="Pending" value={stats.data?.pending ?? 0} tone={(stats.data?.pending ?? 0) > 0 ? 'warn' : undefined} />
-        <Kpi icon={<RefreshCw size={18} />} label="Processing" value={stats.data?.processing ?? 0} />
-        <Kpi icon={<CheckCircle2 size={18} />} label="Sukses" value={stats.data?.success ?? 0} />
-        <Kpi icon={<AlertCircle size={18} />} label="Gagal" value={stats.data?.failed ?? 0} tone={(stats.data?.failed ?? 0) > 0 ? 'danger' : undefined} />
-        <Kpi icon={<Activity size={18} />} label="Skipped (dry-run)" value={stats.data?.skipped ?? 0} />
+      <div className="kpi-grid">
+        <StatCard icon={<Clock size={18} />} label="Pending" value={stats.data?.pending ?? 0} tone={(stats.data?.pending ?? 0) > 0 ? 'attention' : 'default'} />
+        <StatCard icon={<RefreshCw size={18} />} label="Processing" value={stats.data?.processing ?? 0} />
+        <StatCard icon={<CheckCircle2 size={18} />} label="Sukses" value={stats.data?.success ?? 0} />
+        <StatCard icon={<AlertCircle size={18} />} label="Gagal" value={stats.data?.failed ?? 0} tone={(stats.data?.failed ?? 0) > 0 ? 'danger' : 'default'} />
+        <StatCard icon={<Activity size={18} />} label="Skipped (dry-run)" value={stats.data?.skipped ?? 0} />
       </div>
 
       <div className="row" style={{ gap: 'var(--space-3)', alignItems: 'flex-end' }}>
@@ -311,20 +311,6 @@ function LogTab() {
   );
 }
 
-function Kpi({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: number; tone?: 'warn' | 'danger' }) {
-  const color = tone === 'danger' ? 'var(--danger-fg)' : tone === 'warn' ? 'var(--warning-fg)' : undefined;
-  return (
-    <Card>
-      <div className="row" style={{ alignItems: 'center', gap: 'var(--space-3)' }}>
-        <div style={{ color: color ?? 'var(--text-muted)' }}>{icon}</div>
-        <div>
-          <div className="muted" style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
-          <div className="mono" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, marginTop: 2, color }}>{value}</div>
-        </div>
-      </div>
-    </Card>
-  );
-}
 
 function pillFor(s: FeederStatus): string {
   switch (s) {

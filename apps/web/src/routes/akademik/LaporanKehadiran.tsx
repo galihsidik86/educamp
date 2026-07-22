@@ -5,6 +5,7 @@ import { Button } from '@/ds';
 import { useLaporanKehadiran, useProdi } from '@/lib/queries-akademik';
 import { PageHead } from '@/components/PageHead';
 import { PageLoadingSkeleton } from '@/components/Skeleton';
+import { DataPair } from '@/components/DataPair';
 
 export function AkademikLaporanKehadiran() {
   const [filters, setFilters] = useState({ prodiId: '' });
@@ -36,11 +37,11 @@ export function AkademikLaporanKehadiran() {
 
       <Card>
         <div className="row" style={{ gap: 'var(--space-6)', flexWrap: 'wrap' }}>
-          <Stat label="Total Kelas" value={r.totalKelas} />
-          <Stat label="Total Pertemuan" value={r.totalPertemuan} />
-          <Stat label="Presensi Terisi" value={r.totalAbsensiSemua} />
-          <Stat label="Kehadiran Global" value={r.persentaseGlobal != null ? `${r.persentaseGlobal}%` : '—'} />
-          <Stat label="Mahasiswa Kritis" value={r.totalKritis} highlight={r.totalKritis > 0} />
+          <DataPair label="Total Kelas" value={r.totalKelas} />
+          <DataPair label="Total Pertemuan" value={r.totalPertemuan} />
+          <DataPair label="Presensi Terisi" value={r.totalAbsensiSemua} />
+          <DataPair label="Kehadiran Global" value={r.persentaseGlobal != null ? `${r.persentaseGlobal}%` : '—'} />
+          <DataPair label="Mahasiswa Kritis" value={r.totalKritis} tone={r.totalKritis > 0 ? "danger" : "default"} />
         </div>
       </Card>
 
@@ -117,16 +118,3 @@ export function AkademikLaporanKehadiran() {
   );
 }
 
-function Stat({ label, value, highlight = false }: { label: string; value: string | number; highlight?: boolean }) {
-  return (
-    <div>
-      <div className="muted" style={{ fontSize: 'var(--text-2xs)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caps)' }}>{label}</div>
-      <div style={{
-        fontFamily: 'var(--font-mono)',
-        fontSize: 'var(--text-lg)',
-        fontWeight: 'var(--fw-semibold)',
-        color: highlight ? 'var(--danger-fg)' : 'var(--text-strong)',
-      }}>{value}</div>
-    </div>
-  );
-}

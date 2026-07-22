@@ -8,6 +8,7 @@ import { Skeleton, TableSkeletonRows } from '@/components/Skeleton';
 import { formatIp } from '@/lib/format';
 import { Printer, Lock, ClipboardCheck, Search } from 'lucide-react';
 import { Button } from '@/ds';
+import { DataPair } from '@/components/DataPair';
 
 type Tab = 'khs' | 'transkrip';
 
@@ -53,8 +54,8 @@ export function MahasiswaNilai() {
       />
 
       <div className="row" style={{ gap: 'var(--space-6)' }}>
-        <Stat label="IPK Sementara" value={formatIp(transkrip.data?.ipk)} />
-        <Stat label="Total SKS Lulus" value={transkrip.data ? `${transkrip.data.totalSksLulus} SKS` : '—'} />
+        <DataPair label="IPK Sementara" value={formatIp(transkrip.data?.ipk)} />
+        <DataPair label="Total SKS Lulus" value={transkrip.data ? `${transkrip.data.totalSksLulus} SKS` : '—'} />
       </div>
 
       <div className="tablist">
@@ -206,13 +207,5 @@ export function MahasiswaNilai() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="muted" style={{ fontSize: 'var(--text-2xs)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caps)' }}>{label}</div>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{value}</div>
-    </div>
-  );
-}
 
 const capFirst = (s: string) => s ? s[0]!.toUpperCase() + s.slice(1) : s;

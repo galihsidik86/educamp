@@ -8,6 +8,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { PageLoadingSkeleton } from '@/components/Skeleton';
 import { capitalize } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { DataPair } from '@/components/DataPair';
 
 export function DosenBimbinganDetail() {
   const { mahasiswaId } = useParams<{ mahasiswaId: string }>();
@@ -50,9 +51,9 @@ export function DosenBimbinganDetail() {
       {actionOk && <Alert variant="success" title="Berhasil">{actionOk}</Alert>}
 
       <div className="row" style={{ gap: 'var(--space-6)' }}>
-        <Stat label="Total MK" value={data.items.length.toString()} />
-        <Stat label="Total SKS" value={data.totalSks.toString()} />
-        <Stat label="Perlu Validasi" value={diajukan.length.toString()} />
+        <DataPair label="Total MK" value={data.items.length.toString()} />
+        <DataPair label="Total SKS" value={data.totalSks.toString()} />
+        <DataPair label="Perlu Validasi" value={diajukan.length.toString()} />
       </div>
 
       <div className="tz-table-wrap">
@@ -109,11 +110,3 @@ export function DosenBimbinganDetail() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="muted" style={{ fontSize: 'var(--text-2xs)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caps)' }}>{label}</div>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{value}</div>
-    </div>
-  );
-}

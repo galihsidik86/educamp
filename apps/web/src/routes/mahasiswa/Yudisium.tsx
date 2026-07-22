@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { Alert, Button, Card } from '@/ds';
-import { CheckCircle2, XCircle, Printer, X } from 'lucide-react';
+import { Printer, X } from 'lucide-react';
 import { useYudisiumKelayakan, useYudisium, useYudisiumActions, type YudisiumItem } from '@/lib/queries';
 import { PageHead } from '@/components/PageHead';
 import { StatusPill } from '@/components/StatusPill';
 import { formatTanggal, formatIp } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { DataPair } from '@/components/DataPair';
 
 const PREDIKAT_LABEL: Record<string, string> = {
   cumlaude: 'Cumlaude',
@@ -43,19 +44,21 @@ export function MahasiswaYudisium() {
       {kelayakan.data && (
         <Card>
           <div className="row" style={{ gap: 'var(--space-6)', flexWrap: 'wrap' }}>
-            <Metric label="IPK" value={formatIp(kelayakan.data.ipk)} />
-            <Metric label="SKS Lulus" value={kelayakan.data.sksLulus.toString()} />
-            <Metric
+            <DataPair label="IPK" value={formatIp(kelayakan.data.ipk)} />
+            <DataPair label="SKS Lulus" value={kelayakan.data.sksLulus.toString()} />
+            <DataPair
               label="Skripsi Lulus"
               value={kelayakan.data.lulusSkripsi ? 'Ya' : 'Belum'}
-              ok={kelayakan.data.lulusSkripsi}
+              tone={kelayakan.data.lulusSkripsi ? 'success' : 'danger'}
+              statusIcon
             />
-            <Metric
+            <DataPair
               label="Nilai E"
               value={kelayakan.data.adaE ? 'Ada' : 'Tidak'}
-              ok={!kelayakan.data.adaE}
+              tone={!kelayakan.data.adaE ? 'success' : 'danger'}
+              statusIcon
             />
-            <Metric
+            <DataPair
               label="Predikat"
               value={PREDIKAT_LABEL[kelayakan.data.predikat] ?? '—'}
             />
@@ -148,21 +151,3 @@ export function MahasiswaYudisium() {
   );
 }
 
-function Metric({ label, value, ok }: { label: string; value: string; ok?: boolean }) {
-  return (
-    <div>
-      <div className="muted" style={{ fontSize: 'var(--text-2xs)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caps)' }}>{label}</div>
-      <div style={{
-        fontFamily: 'var(--font-mono)',
-        fontSize: 'var(--text-lg)',
-        fontWeight: 'var(--fw-semibold)',
-        color: ok === false ? 'var(--danger-fg)' : ok === true ? 'var(--success-fg)' : 'var(--text-strong)',
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-      }}>
-        {ok === true && <CheckCircle2 size={16} />}
-        {ok === false && <XCircle size={16} />}
-        {value}
-      </div>
-    </div>
-  );
-}

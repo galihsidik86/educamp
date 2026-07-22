@@ -15,8 +15,13 @@ export interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
    * read" from "numbers you act on" without extra copy.
    * - `default`  — angka rujukan netral (aksen navy)
    * - `attention`— butuh tindakan / bisa memburuk (aksen oranye)
+   * - `danger`   — angkanya sendiri kabar buruk, mis. sinkron gagal (merah)
    * - `feature`  — satu angka utama per grid (kartu navy terisi)
+   *
+   * `attention` & `danger` boleh ditentukan dari data
+   * (`tone={gagal > 0 ? 'danger' : 'default'}`); `feature` adalah pilihan
+   * editorial dan harus statis.
    */
-  tone?: 'default' | 'attention' | 'feature';
+  tone?: 'default' | 'attention' | 'danger' | 'feature';
 }
 export function StatCard(props: StatCardProps): JSX.Element;

@@ -10,8 +10,16 @@ angka rujukan dan mana angka yang menuntut tindakan — tanpa menambah teks:
 ```jsx
 <StatCard label="Mahasiswa Aktif"     value="139"  tone="default" />
 <StatCard label="KRS Diajukan"        value="12"   tone="attention" />
+<StatCard label="Sinkron gagal"       value="3"    tone="danger" />
 <StatCard label="Total Belum Lunas"   value="Rp 25.000.000" tone="feature" />
 ```
+
+`attention` & `danger` boleh ditentukan dari data:
+`tone={gagal > 0 ? 'danger' : 'default'}`. `feature` harus statis.
+
+Butuh label+nilai DI DALAM Card (bukan tile berdiri sendiri)? Pakai
+`<DataPair>` — membungkus DataPair dengan Card menghasilkan Card bersarang,
+dan sebaliknya StatCard di dalam Card juga salah.
 
 Pakai `feature` **maksimal satu kali** per grid — begitu ada dua kartu terisi,
 keduanya berhenti menonjol. `attention` bukan status error: itu untuk angka

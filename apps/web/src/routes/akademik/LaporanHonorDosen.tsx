@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { PageHead } from '@/components/PageHead';
 import { formatTanggal } from '@/lib/format';
 import { Skeleton } from '@/components/Skeleton';
+import { DataPair } from '@/components/DataPair';
 
 /** YYYY-MM-DD untuk input type="date". */
 function ymd(d: Date): string {
@@ -163,9 +164,9 @@ export function AkademikLaporanHonorDosen() {
                       )}
                     </div>
                     <div className="row" style={{ gap: 'var(--space-3)' }}>
-                      <MiniStat label="Kelas" value={it.totalKelas} />
-                      <MiniStat label="Pertemuan" value={it.totalPertemuan} highlight />
-                      <MiniStat label="Total SKS" value={it.totalSksPertemuan} />
+                      <DataPair label="Kelas" value={it.totalKelas} />
+                      <DataPair label="Pertemuan" value={it.totalPertemuan} tone="accent" />
+                      <DataPair label="Total SKS" value={it.totalSksPertemuan} />
                     </div>
                   </div>
 
@@ -219,14 +220,6 @@ function SummaryTile({ icon, label, value }: { icon: React.ReactNode; label: str
   );
 }
 
-function MiniStat({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
-  return (
-    <div style={{ minWidth: 80 }}>
-      <div className="muted" style={{ fontSize: 'var(--text-xs)' }}>{label}</div>
-      <div className="mono" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: highlight ? 'var(--accent)' : 'var(--text-strong)' }}>{value}</div>
-    </div>
-  );
-}
 
 function labelJabatan(j: string): string {
   const map: Record<string, string> = { asisten_ahli: 'Asisten Ahli', lektor: 'Lektor', lektor_kepala: 'Lektor Kepala', guru_besar: 'Guru Besar', tenaga_pengajar: 'Tenaga Pengajar' };
